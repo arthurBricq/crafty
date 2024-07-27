@@ -1,71 +1,58 @@
-mod cube;
-
 extern crate glium;
 extern crate winit;
 
 use glium::{Surface, uniform};
-use glium::implement_vertex;
 
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-    tex_coords: [f32; 2],
-}
+mod cube;
+mod camera;
 
-implement_vertex!(Vertex, position, tex_coords);
+use cube::*;
+use crate::camera::view_matrix;
 
 fn main() {
     // We start by creating the EventLoop, this can only be done once per process.
     // This also needs to happen on the main thread to make the program portable.
-    let event_loop = winit::event_loop::EventLoopBuilder::new()
-        .build()
+    let event_loop = winit::event_loop::EventLoopBuilder::new().build()
         .expect("event loop building");
     let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
-        .with_title("Glium tutorial #1")
+        .with_title("Crafty")
         .build(&event_loop);
 
-    let shape = vec![
-        Vertex { position: [-0.5, -0.5], tex_coords: [0.0, 0.0] },
-        Vertex { position: [ 0.5, -0.5], tex_coords: [1.0, 0.0] },
-        Vertex { position: [ 0.5,  0.5], tex_coords: [1.0, 1.0] },
-
-        Vertex { position: [ 0.5,  0.5], tex_coords: [1.0, 1.0] },
-        Vertex { position: [-0.5,  0.5], tex_coords: [0.0, 1.0] },
-        Vertex { position: [-0.5, -0.5], tex_coords: [0.0, 0.0] },
-    ];
-
     // VBO
-    let vertex_buffer = glium::VertexBuffer::new(&display, &shape).unwrap();
+    let vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
-    // Vertex shader (using an uniform variable for position)
+    // Vertex shader
+    // Most basic example with a camera
     let vertex_shader_src = r#"
-    #version 140
+        #version 150
 
-in vec2 position;
-in vec2 tex_coords;
-out vec2 v_tex_coords;
+        in vec3 position;
+        in vec2 tex_coords;
+        out vec2 v_tex_coords;
 
-uniform mat4 matrix;
+        uniform mat4 perspective;
+        uniform mat4 view;
+        uniform mat4 model;
 
-void main() {
-    v_tex_coords = tex_coords;
-    gl_Position = matrix * vec4(position, 0.0, 1.0);
-}
-"#;
+        void main() {
+            gl_Position = perspective * view * model * vec4(position, 1.0);
+            v_tex_coords = tex_coords;
+        }
+    "#;
 
     // Fragment shader
     let fragment_shader_src = r#"
         #version 140
 
-in vec2 v_tex_coords;
-out vec4 color;
+        in vec2 v_tex_coords;
+        out vec4 color;
 
-uniform sampler2D tex;
+        uniform sampler2D tex;
 
-void main() {
-    color = texture(tex, v_tex_coords);
-}
+        void main() {
+            color = texture(tex, v_tex_coords);
+        }
     "#;
 
     // Load the image
@@ -95,27 +82,56 @@ void main() {
                 // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.
                 winit::event::WindowEvent::CloseRequested => window_target.exit(),
                 winit::event::WindowEvent::RedrawRequested => {
+                    let mut target = display.draw();
+                    // target.clear_color(0.0, 0.0, 1.0, 1.0);
+                    target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
+
                     // We update `t`
                     t += 0.02;
 
-                    // We use the sine of t as an offset, this way we get a nice smooth animation
-                    let x_off = t.sin() * 0.5;
+                    let model = [
+                        [1.00, 0.0, 0.0, 0.0],
+                        [0.0, 1.00, 0.0, 0.0],
+                        [0.0, 0.0, 1.00, 0.0],
+                        [0.0, 0.0, 0.0, 1.0f32]
+                    ];
 
-                    // Define our uniforms
-                    // let uniforms = uniform! { x_off: x_off };
-                    let uniforms = uniform! {
-                        matrix: [
-                            [ t.cos(), t.sin(), 0.0, 0.0],
-                            [-t.sin(), t.cos(), 0.0, 0.0],
-                            [0.0, 0.0, 1.0, 0.0],
-                            [0.0, 0.0, 0.0, 1.0],
+                    let view = view_matrix(&[4.0, t.cos(), t.sin()],
+                                           &[-2.0, 0.0, 0.0], &[0.0, 1.0, 0.0]);
+
+                    let perspective = {
+                        let (width, height) = target.get_dimensions();
+                        let aspect_ratio = height as f32 / width as f32;
+                        let fov: f32 = 3.141592 / 3.0;
+                        let zfar = 1024.0;
+                        let znear = 0.1;
+                        let f = 1.0 / (fov / 2.0).tan();
+                        [
+                            [f *   aspect_ratio   ,    0.0,              0.0              ,   0.0],
+                            [         0.0         ,     f ,              0.0              ,   0.0],
+                            [         0.0         ,    0.0,  (zfar+znear)/(zfar-znear)    ,   1.0],
+                            [         0.0         ,    0.0, -(2.0*zfar*znear)/(zfar-znear),   0.0],
                         ]
                     };
 
-                    let mut target = display.draw();
-                    target.clear_color(0.0, 0.0, 1.0, 1.0);
-                    target.draw(&vertex_buffer, &indices, &program, &uniforms,
-                                &Default::default()).unwrap();
+                    // Define our uniforms
+                    let uniforms = uniform! {
+                        model: model,
+                        view: view,
+                        perspective: perspective
+                    };
+
+                    // Configure the GPU to do Depth testing (with a depth buffer)
+                    let params = glium::DrawParameters {
+                        depth: glium::Depth {
+                            test: glium::draw_parameters::DepthTest::IfLess,
+                            write: true,
+                            .. Default::default()
+                        },
+                        .. Default::default()
+                    };
+
+                    target.draw(&vertex_buffer, &indices, &program, &uniforms, &params).unwrap();
                     target.finish().unwrap();
                 }
                 _ => (),
@@ -125,6 +141,5 @@ void main() {
             }
             _ => (),
         };
-    })
-        .unwrap();
+    }).unwrap();
 }
