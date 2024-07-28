@@ -2,22 +2,30 @@ extern crate glium;
 extern crate winit;
 
 use glium::{Surface, uniform};
+use winit::event::ElementState::Pressed;
 use winit::event::RawKeyEvent;
-use crate::camera::view_matrix;
+use winit::keyboard::{KeyCode, PhysicalKey};
+
+use crate::camera::{Camera};
 use crate::cube::VERTICES;
+use crate::world::World;
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer {
-
+    camera: Camera,
+    world: World
 }
 
 impl WorldRenderer {
 
     pub fn new() -> Self {
-        Self {}
+        Self {
+            camera: Camera::new(),
+            world: World::new()
+        }
     }
 
-    pub fn run(&self) {
+    pub fn run(&mut self) {
         // We start by creating the EventLoop, this can only be done once per process.
         // This also needs to happen on the main thread to make the program portable.
         let event_loop = winit::event_loop::EventLoopBuilder::new().build()
@@ -57,6 +65,7 @@ impl WorldRenderer {
         out vec4 color;
 
         uniform sampler2D tex;
+        uniform sampler2D tex2;
 
         void main() {
             color = texture(tex, v_tex_coords);
@@ -75,15 +84,16 @@ impl WorldRenderer {
 
         // Start rendering by creating a new frame
         let mut target = display.draw();
+
         // Which we fill with an opaque blue color
         target.clear_color(0.0, 0.0, 1.0, 1.0);
         target.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms,
                     &Default::default()).unwrap();
+
         // By finishing the frame swap buffers and thereby make it visible on the window
         target.finish().unwrap();
 
         // Now we wait until the program is closed
-        let mut t: f32 = 0.0;
         event_loop.run(move |event, window_target| {
             match event {
                 winit::event::Event::WindowEvent { event, .. } => match event {
@@ -93,19 +103,6 @@ impl WorldRenderer {
                         let mut target = display.draw();
                         // target.clear_color(0.0, 0.0, 1.0, 1.0);
                         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
-
-                        // We update `t`
-                        t += 0.02;
-
-                        let model = [
-                            [1.00, 0.0, 0.0, 0.0],
-                            [0.0, 1.00, 0.0, 0.0],
-                            [0.0, 0.0, 1.00, 0.0],
-                            [0.0, 0.0, 0.0, 1.0f32]
-                        ];
-
-                        let view = view_matrix(&[4.0, t.cos(), t.sin()],
-                                               &[-2.0, 0.0, 0.0], &[0.0, 1.0, 0.0]);
 
                         let perspective = {
                             let (width, height) = target.get_dimensions();
@@ -122,13 +119,6 @@ impl WorldRenderer {
                             ]
                         };
 
-                        // Define our uniforms
-                        let uniforms = uniform! {
-                        model: model,
-                        view: view,
-                        perspective: perspective
-                    };
-
                         // Configure the GPU to do Depth testing (with a depth buffer)
                         let params = glium::DrawParameters {
                             depth: glium::Depth {
@@ -139,7 +129,17 @@ impl WorldRenderer {
                             .. Default::default()
                         };
 
-                        target.draw(&vertex_buffer, &indices, &program, &uniforms, &params).unwrap();
+                        for cube in self.world.cubes() {
+                            // Define our uniforms
+                            let uniforms = uniform! {
+                                model: cube.model_matrix(),
+                                view: self.camera.view_matrix(),
+                                perspective: perspective
+                            };
+
+                            target.draw(&vertex_buffer, &indices, &program, &uniforms, &params).unwrap();
+                        }
+
                         target.finish().unwrap();
                     }
                     _ => (),
@@ -148,13 +148,41 @@ impl WorldRenderer {
                     window.request_redraw();
                 }
                 winit::event::Event::DeviceEvent { event, ..} => match  event {
-                    winit::event::DeviceEvent::Key(key) => {
-                        println!("key tapped: {key:?}");
-                    }
+                    winit::event::DeviceEvent::Key(key) => self.handle_input(key),
                     _ => {}
                 }
                 _ => (),
             };
         }).unwrap();
+    }
+}
+
+impl WorldRenderer {
+    fn handle_input(&mut self, event: RawKeyEvent) {
+        println!("key tapped: {event:?}");
+        if (event.state == Pressed) {
+            match event.physical_key {
+                PhysicalKey::Code(key) => match key {
+                    KeyCode::Digit0 => {}
+                    KeyCode::Digit1 => {}
+                    KeyCode::Digit2 => {}
+                    KeyCode::Digit3 => {}
+                    KeyCode::Digit4 => {}
+                    KeyCode::Digit5 => {}
+                    KeyCode::Digit6 => {}
+                    KeyCode::Digit7 => {}
+                    KeyCode::Digit8 => {}
+                    KeyCode::Digit9 => {}
+                    KeyCode::KeyW => self.camera.forward(),
+                    KeyCode::KeyS => self.camera.backward(),
+                    KeyCode::KeyD => self.camera.left(),
+                    KeyCode::KeyA => self.camera.right(),
+                    KeyCode::KeyJ => self.camera.down(),
+                    KeyCode::KeyK => self.camera.up(),
+                    _ => {}
+                },
+                PhysicalKey::Unidentified(_) => {}
+            }
+        }
     }
 }
