@@ -1,7 +1,9 @@
 extern crate glium;
 extern crate winit;
 
-use glium::{Surface, uniform};
+use std::collections::HashMap;
+use glium::{Display, Surface, Texture2d, uniform};
+use glium::glutin::surface::WindowSurface;
 use winit::event::ElementState::Pressed;
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
@@ -10,18 +12,24 @@ use crate::camera::{Camera};
 use crate::cube::VERTICES;
 use crate::world::World;
 
+pub const TEXT_1_SIDE: &str = "TEXT_1_SIDE";
+pub const GRASS_SIDE: &str = "GRASS_SIDE";
+pub const GRASS_TOP: &str = "GRASS_TOP";
+
 /// The struct in charge of drawing the world
-pub struct WorldRenderer {
+pub struct WorldRenderer<'a> {
     camera: Camera,
-    world: World
+    world: World,
+    texture_library: HashMap<&'a str, Texture2d>
 }
 
-impl WorldRenderer {
+impl<'a> WorldRenderer<'a>{
 
     pub fn new() -> Self {
         Self {
             camera: Camera::new(),
-            world: World::new()
+            world: World::new(),
+            texture_library: HashMap::new()
         }
     }
 
@@ -65,19 +73,16 @@ impl WorldRenderer {
         out vec4 color;
 
         uniform sampler2D tex;
-        uniform sampler2D tex2;
 
         void main() {
             color = texture(tex, v_tex_coords);
         }
     "#;
 
-        // Load images
-        let image = image::load(std::io::Cursor::new(&include_bytes!("/home/arthur/dev/rust/crafty/resources/awesomeface.png")),
-                                image::ImageFormat::Png).unwrap().to_rgba8();
-        let image_dimensions = image.dimensions();
-        let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
-        let texture = glium::texture::Texture2d::new(&display, image).unwrap();
+        // Build texture library
+        self.texture_library.insert(GRASS_SIDE, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_side.png"), &display));
+        self.texture_library.insert(GRASS_TOP, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_top.png"), &display));
+        self.texture_library.insert(TEXT_1_SIDE, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/awesomeface.png"), &display));
 
         // Build the shader program
         let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
@@ -134,7 +139,8 @@ impl WorldRenderer {
                             let uniforms = uniform! {
                                 model: cube.model_matrix(),
                                 view: self.camera.view_matrix(),
-                                perspective: perspective
+                                perspective: perspective,
+                                tex: self.texture_library.get(&GRASS_SIDE).unwrap()
                             };
 
                             target.draw(&vertex_buffer, &indices, &program, &uniforms, &params).unwrap();
@@ -155,11 +161,19 @@ impl WorldRenderer {
             };
         }).unwrap();
     }
-}
 
-impl WorldRenderer {
+    /// Loads a texture and returns it
+    fn load_texture(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2d {
+        let image = image::load(std::io::Cursor::new(bytes),
+                                image::ImageFormat::Png).unwrap().to_rgba8();
+        let image_dimensions = image.dimensions();
+        let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
+        let smiley = Texture2d::new(display, image).unwrap();
+        smiley
+    }
+
     fn handle_input(&mut self, event: RawKeyEvent) {
-        println!("key tapped: {event:?}");
+        // println!("key tapped: {event:?}");
         if (event.state == Pressed) {
             match event.physical_key {
                 PhysicalKey::Code(key) => match key {
