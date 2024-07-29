@@ -50,12 +50,19 @@ pub const VERTICES: [Vertex; 36] = [
     Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 2},
     Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [ 1.0, 0.0], face: 2},
 
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 1.0, 0.0], face: 3},
+    // Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 1.0, 1.0], face: 3},
+    // Vertex { position: [0.5, 0.5, -0.5], tex_coords: [ 1.0, 0.0], face: 3},
+    // Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 0.0, 0.0], face: 3},
+    // Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 0.0, 0.0], face: 3},
+    // Vertex { position: [0.5, -0.5, 0.5], tex_coords: [ 0.0, 1.0], face: 3},
+    // Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 1.0, 1.0], face: 3},
+
+    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 0.0, 1.0], face: 3},
     Vertex { position: [0.5, 0.5, -0.5], tex_coords: [ 1.0, 1.0], face: 3},
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 3},
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 3},
+    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 1.0, 0.0], face: 3},
+    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 1.0, 0.0], face: 3},
     Vertex { position: [0.5, -0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 3},
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 1.0, 0.0], face: 3},
+    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 0.0, 1.0], face: 3},
 
     Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 4},
     Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 1.0, 1.0], face: 4},

@@ -49,11 +49,11 @@ impl Camera {
     }
 
     pub fn forward(&mut self) {
-        self.camera_pos[0] += self.camera_dir[0];
+        self.camera_pos[0] += 1.;
     }
 
     pub fn backward(&mut self) {
-        self.camera_pos[0] -= self.camera_dir[0];
+        self.camera_pos[0] -= 1.;
     }
 
     pub fn up(&mut self) {

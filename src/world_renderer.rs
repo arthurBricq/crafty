@@ -82,11 +82,7 @@ impl<'a> WorldRenderer<'a>{
         uniform sampler2D other;
 
         void main() {
-            if (oFace == 3) {
-                color = texture(tex, v_tex_coords);
-            } else {
-                color = texture(other, v_tex_coords);
-            }
+            color = texture(tex, v_tex_coords);
         }
     "#;
 
