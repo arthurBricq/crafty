@@ -55,6 +55,9 @@ impl<'a> WorldRenderer<'a>{
         in vec2 tex_coords;
         out vec2 v_tex_coords;
 
+        in int face;
+        flat out int oFace;
+
         uniform mat4 perspective;
         uniform mat4 view;
         uniform mat4 model;
@@ -62,6 +65,7 @@ impl<'a> WorldRenderer<'a>{
         void main() {
             gl_Position = perspective * view * model * vec4(position, 1.0);
             v_tex_coords = tex_coords;
+            oFace = face;
         }
     "#;
 
@@ -72,10 +76,17 @@ impl<'a> WorldRenderer<'a>{
         in vec2 v_tex_coords;
         out vec4 color;
 
+        flat in int oFace;
+
         uniform sampler2D tex;
+        uniform sampler2D other;
 
         void main() {
-            color = texture(tex, v_tex_coords);
+            if (oFace == 3) {
+                color = texture(tex, v_tex_coords);
+            } else {
+                color = texture(other, v_tex_coords);
+            }
         }
     "#;
 
@@ -140,7 +151,8 @@ impl<'a> WorldRenderer<'a>{
                                 model: cube.model_matrix(),
                                 view: self.camera.view_matrix(),
                                 perspective: perspective,
-                                tex: self.texture_library.get(&GRASS_SIDE).unwrap()
+                                tex: self.texture_library.get(&GRASS_SIDE).unwrap(),
+                                other: self.texture_library.get(&GRASS_TOP).unwrap()
                             };
 
                             target.draw(&vertex_buffer, &indices, &program, &uniforms, &params).unwrap();
