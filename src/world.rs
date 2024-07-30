@@ -8,7 +8,7 @@ impl World {
     pub fn new() -> Self {
         let mut cubes = Vec::new();
         
-        for i in 0..100 {
+        for i in 0..1000 {
             cubes.push(Cube::new([-i as f32*2., 0., 0.]));
             cubes.push(Cube::new([-i as f32*2., 0., 2.]));
             cubes.push(Cube::new([-i as f32*2., 0., -2.]));

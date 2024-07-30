@@ -19,6 +19,8 @@ impl Cube {
     }
 }
 
+/// A vertex of a cube
+/// The position is expressed into the OpenGL reference frame
 #[derive(Copy, Clone)]
 pub struct Vertex {
     position: [f32; 3],
@@ -71,3 +73,18 @@ pub const VERTICES: [Vertex; 36] = [
     Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 5},
     Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 5}
 ];
+
+
+/// An OpenGL type that contains the information for OpenGL's instancing
+#[derive(Copy, Clone)]
+pub struct InstanceAttr {
+    world_matrix: [[f32; 4]; 4],
+}
+
+implement_vertex!(InstanceAttr, world_matrix);
+
+impl InstanceAttr {
+    pub fn new(world_matrix: [[f32; 4]; 4]) -> Self {
+        Self { world_matrix }
+    }
+}

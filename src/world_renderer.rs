@@ -8,7 +8,7 @@ use winit::event::ElementState::Pressed;
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 use crate::camera::{Camera};
-use crate::cube::VERTICES;
+use crate::cube::{InstanceAttr, VERTICES};
 use crate::world::World;
 
 pub const TEXT_1_SIDE: &str = "TEXT_1_SIDE";
@@ -54,6 +54,7 @@ impl<'a> WorldRenderer<'a>{
 
         in vec3 position;
         in vec2 tex_coords;
+        in mat4 world_matrix;
         out vec2 v_tex_coords;
 
         in int face;
@@ -61,10 +62,10 @@ impl<'a> WorldRenderer<'a>{
 
         uniform mat4 perspective;
         uniform mat4 view;
-        uniform mat4 model;
+        // uniform mat4 model;
 
         void main() {
-            gl_Position = perspective * view * model * vec4(position, 1.0);
+            gl_Position = perspective * view * world_matrix * vec4(position, 1.0);
             v_tex_coords = tex_coords;
             oFace = face;
         }
@@ -100,8 +101,6 @@ impl<'a> WorldRenderer<'a>{
 
         // Which we fill with an opaque blue color
         target.clear_color(0.0, 0.0, 1.0, 1.0);
-        target.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms,
-                    &Default::default()).unwrap();
 
         // By finishing the frame swap buffers and thereby make it visible on the window
         target.finish().unwrap();
@@ -114,7 +113,6 @@ impl<'a> WorldRenderer<'a>{
                     winit::event::WindowEvent::CloseRequested => window_target.exit(),
                     winit::event::WindowEvent::RedrawRequested => {
                         let mut target = display.draw();
-                        // target.clear_color(0.0, 0.0, 1.0, 1.0);
                         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
 
                         let perspective = {
@@ -142,18 +140,29 @@ impl<'a> WorldRenderer<'a>{
                             .. Default::default()
                         };
 
+                        // Build the per-instance position vector
+                        // We use OpenGL's instancing feature which allows us to render huge amounts of 
+                        // cubes at once.
+                        let mut positions: Vec<InstanceAttr> = Vec::new();
                         for cube in self.world.cubes() {
-                            // Define our uniforms
-                            let uniforms = uniform! {
-                                model: cube.model_matrix(),
-                                view: self.cam.view_matrix(),
-                                perspective: perspective,
-                                tex: self.texture_library.get(&GRASS_SIDE).unwrap(),
-                                other: self.texture_library.get(&GRASS_TOP).unwrap()
-                            };
-
-                            target.draw(&vertex_buffer, &indices, &program, &uniforms, &params).unwrap();
+                            positions.push(InstanceAttr::new(cube.model_matrix()));
                         }
+                        let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
+
+                        // Define our uniforms
+                        let uniforms = uniform! {
+                            view: self.cam.view_matrix(),
+                            perspective: perspective,
+                            tex: self.texture_library.get(&GRASS_SIDE).unwrap(),
+                            other: self.texture_library.get(&GRASS_TOP).unwrap()
+                        };
+
+                        target.draw(
+                            (&vertex_buffer, position_buffer.per_instance().unwrap()),
+                            &indices,
+                            &program,
+                            &uniforms,
+                            &params).unwrap();
 
                         target.finish().unwrap();
                     }
