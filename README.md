@@ -16,11 +16,13 @@
       - cubes that are not touching the air (but it still won't be enough)
     - Not so easy ones... (these are just ideas)
       - Instead of drawing cubes, draw faces. Like that, you can always remove 3 faces out of the 6
-      - Binary space partioning, in theory it should be able to remove some cubes ? Maybe the effort is too big for the reward.
+      - Binary space partitioning, in theory it should be able to remove some cubes ? Maybe the effort is too big for the reward.
+  
+- Map format
 
 - Automatic map creation
 
-- Rendering chunk by chunk
+- Rendering chunk by chunk ?
 
 - Multiplayer architecture design
 

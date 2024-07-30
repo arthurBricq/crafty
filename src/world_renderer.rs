@@ -14,6 +14,7 @@ use crate::world::World;
 pub const TEXT_1_SIDE: &str = "TEXT_1_SIDE";
 pub const GRASS_SIDE: &str = "GRASS_SIDE";
 pub const GRASS_TOP: &str = "GRASS_TOP";
+pub const DIRT: &str = "DIRT";
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer<'a> {
@@ -80,18 +81,25 @@ impl<'a> WorldRenderer<'a>{
 
         flat in int oFace;
 
-        uniform sampler2D tex;
-        uniform sampler2D other;
+        uniform sampler2D side;
+        uniform sampler2D top;
+        uniform sampler2D bottom;
 
         void main() {
-            color = texture(tex, v_tex_coords);
+            if (oFace == 4) {
+                color = texture(bottom, v_tex_coords);
+            } else if (oFace == 5) {
+                color = texture(top, v_tex_coords);
+            } else {
+                color = texture(side, v_tex_coords);
+            }
         }
     "#;
 
         // Build texture library
-        self.texture_library.insert(GRASS_SIDE, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_side.png"), &display));
-        self.texture_library.insert(GRASS_TOP, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_top.png"), &display));
-        self.texture_library.insert(TEXT_1_SIDE, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/awesomeface.png"), &display));
+        self.texture_library.insert(GRASS_SIDE, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_block_side.png"), &display));
+        self.texture_library.insert(GRASS_TOP, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_block_top.png"), &display));
+        self.texture_library.insert(DIRT, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/dirt.png"), &display));
 
         // Build the shader program
         let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
@@ -141,7 +149,7 @@ impl<'a> WorldRenderer<'a>{
                         };
 
                         // Build the per-instance position vector
-                        // We use OpenGL's instancing feature which allows us to render huge amounts of 
+                        // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
                         let mut positions: Vec<InstanceAttr> = Vec::new();
                         for cube in self.world.cubes() {
@@ -153,8 +161,9 @@ impl<'a> WorldRenderer<'a>{
                         let uniforms = uniform! {
                             view: self.cam.view_matrix(),
                             perspective: perspective,
-                            tex: self.texture_library.get(&GRASS_SIDE).unwrap(),
-                            other: self.texture_library.get(&GRASS_TOP).unwrap()
+                            side: self.texture_library.get(&GRASS_SIDE).unwrap(),
+                            top: self.texture_library.get(&GRASS_TOP).unwrap(),
+                            bottom: self.texture_library.get(&DIRT).unwrap(),
                         };
 
                         target.draw(

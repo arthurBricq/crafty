@@ -10,14 +10,14 @@ impl World {
         
         for i in 0..1000 {
             cubes.push(Cube::new([-i as f32*2., 0., 0.]));
+            cubes.push(Cube::new([-i as f32*2., 0., 1.]));
+            cubes.push(Cube::new([-i as f32*2., 0., -1.]));
             cubes.push(Cube::new([-i as f32*2., 0., 2.]));
             cubes.push(Cube::new([-i as f32*2., 0., -2.]));
-            cubes.push(Cube::new([-i as f32*2., 0., 5.]));
-            cubes.push(Cube::new([-i as f32*2., 0., -5.]));
 
             cubes.push(Cube::new([-i as f32*2., 2., 0.]));
-            cubes.push(Cube::new([-i as f32*2., 2., 2.]));
-            cubes.push(Cube::new([-i as f32*2., 2., -2.]));
+            cubes.push(Cube::new([-i as f32*2., 2., 1.]));
+            cubes.push(Cube::new([-i as f32*2., 2., -1.]));
             cubes.push(Cube::new([-i as f32*2., 2., 5.]));
             cubes.push(Cube::new([-i as f32*2., 2., -5.]));
 
