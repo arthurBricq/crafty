@@ -7,7 +7,6 @@ use glium::glutin::surface::WindowSurface;
 use winit::event::ElementState::Pressed;
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
-
 use crate::camera::{Camera};
 use crate::cube::VERTICES;
 use crate::world::World;
@@ -18,7 +17,7 @@ pub const GRASS_TOP: &str = "GRASS_TOP";
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer<'a> {
-    camera: Camera,
+    cam: Camera,
     world: World,
     texture_library: HashMap<&'a str, Texture2d>
 }
@@ -27,7 +26,7 @@ impl<'a> WorldRenderer<'a>{
 
     pub fn new() -> Self {
         Self {
-            camera: Camera::new(),
+            cam: Camera::new(),
             world: World::new(),
             texture_library: HashMap::new()
         }
@@ -41,6 +40,8 @@ impl<'a> WorldRenderer<'a>{
         let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
             .with_title("Crafty")
             .build(&event_loop);
+
+        window.set_cursor_visible(false);
 
         // VBO
         let vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
@@ -145,7 +146,7 @@ impl<'a> WorldRenderer<'a>{
                             // Define our uniforms
                             let uniforms = uniform! {
                                 model: cube.model_matrix(),
-                                view: self.camera.view_matrix(),
+                                view: self.cam.view_matrix(),
                                 perspective: perspective,
                                 tex: self.texture_library.get(&GRASS_SIDE).unwrap(),
                                 other: self.texture_library.get(&GRASS_TOP).unwrap()
@@ -163,6 +164,14 @@ impl<'a> WorldRenderer<'a>{
                 }
                 winit::event::Event::DeviceEvent { event, ..} => match  event {
                     winit::event::DeviceEvent::Key(key) => self.handle_input(key),
+                    winit::event::DeviceEvent::Motion {axis, value} => {
+                        if axis == 0 {
+                            self.cam.mousemove(value as f32, 0.0, 0.005);
+                        }
+                        else {
+                            self.cam.mousemove(0.0, -value as f32, 0.005);
+                        }
+                    }
                     _ => {}
                 }
                 _ => (),
@@ -195,12 +204,12 @@ impl<'a> WorldRenderer<'a>{
                     KeyCode::Digit7 => {}
                     KeyCode::Digit8 => {}
                     KeyCode::Digit9 => {}
-                    KeyCode::KeyW => self.camera.forward(),
-                    KeyCode::KeyS => self.camera.backward(),
-                    KeyCode::KeyD => self.camera.left(),
-                    KeyCode::KeyA => self.camera.right(),
-                    KeyCode::KeyJ => self.camera.down(),
-                    KeyCode::KeyK => self.camera.up(),
+                    KeyCode::KeyW => self.cam.forward(1.0),
+                    KeyCode::KeyS => self.cam.forward(-1.0),
+                    KeyCode::KeyD => self.cam.orthogonal(1.0),
+                    KeyCode::KeyA => self.cam.orthogonal(-1.0),
+                    KeyCode::KeyJ => self.cam.up(-1.0),
+                    KeyCode::KeyK => self.cam.up(1.0),
                     _ => {}
                 },
                 PhysicalKey::Unidentified(_) => {}
