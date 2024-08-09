@@ -4,6 +4,8 @@ extern crate winit;
 use std::collections::HashMap;
 use glium::{Display, Surface, Texture2d, uniform};
 use glium::glutin::surface::WindowSurface;
+use glium::texture::Texture1d;
+use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Sampler};
 use winit::event::ElementState::Pressed;
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
@@ -101,6 +103,12 @@ impl<'a> WorldRenderer<'a>{
         self.texture_library.insert(GRASS_TOP, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_block_top.png"), &display));
         self.texture_library.insert(DIRT, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/dirt.png"), &display));
 
+        let behavior = glium::uniforms::SamplerBehavior {
+            minify_filter: MinifySamplerFilter::Nearest,
+            magnify_filter: MagnifySamplerFilter::Nearest,
+            ..Default::default()
+        };
+
         // Build the shader program
         let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
@@ -126,7 +134,7 @@ impl<'a> WorldRenderer<'a>{
                         let perspective = {
                             let (width, height) = target.get_dimensions();
                             let aspect_ratio = height as f32 / width as f32;
-                            let fov: f32 = 3.141592 / 3.0;
+                            let fov: f32 = std::f32::consts::PI / 3.0;
                             let zfar = 1024.0;
                             let znear = 0.1;
                             let f = 1.0 / (fov / 2.0).tan();
@@ -161,9 +169,9 @@ impl<'a> WorldRenderer<'a>{
                         let uniforms = uniform! {
                             view: self.cam.view_matrix(),
                             perspective: perspective,
-                            side: self.texture_library.get(&GRASS_SIDE).unwrap(),
-                            top: self.texture_library.get(&GRASS_TOP).unwrap(),
-                            bottom: self.texture_library.get(&DIRT).unwrap(),
+                            side: Sampler(self.texture_library.get(&GRASS_SIDE).unwrap(), behavior),
+                            top: Sampler(self.texture_library.get(&GRASS_TOP).unwrap(), behavior),
+                            bottom: Sampler(self.texture_library.get(&DIRT).unwrap(), behavior),
                         };
 
                         target.draw(
@@ -203,7 +211,21 @@ impl<'a> WorldRenderer<'a>{
                                 image::ImageFormat::Png).unwrap().to_rgba8();
         let image_dimensions = image.dimensions();
         let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
+
+
         let smiley = Texture2d::new(display, image).unwrap();
+
+        let behavior = glium::uniforms::SamplerBehavior {
+            minify_filter: MinifySamplerFilter::Nearest,
+            magnify_filter: MagnifySamplerFilter::Nearest,
+            ..Default::default()
+        };
+
+        let tmp = glium::uniforms::Sampler(&smiley, behavior);
+
+
+        // smiley
+
         smiley
     }
 

@@ -1,5 +1,7 @@
 use glium::implement_vertex;
+use crate::world_renderer::{DIRT, GRASS_SIDE, GRASS_TOP};
 
+/// A minecraft in the 3D world
 pub struct Cube {
     position: [f32; 3],
 }
@@ -16,6 +18,18 @@ impl Cube {
             [0.0, 0.0, 1.00, 0.0],
             [self.position[0], self.position[1], self.position[2], 1.0f32]
         ]
+    }
+    
+    pub fn top_texture(&self) -> &str {
+        GRASS_TOP
+    }
+    
+    pub fn side_texture(&self) -> &str {
+        GRASS_SIDE
+    }
+    
+    pub fn bottom_texture(&self) -> &str {
+        DIRT
     }
 }
 

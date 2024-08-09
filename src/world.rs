@@ -7,7 +7,7 @@ pub struct World {
 impl World {
     pub fn new() -> Self {
         let mut cubes = Vec::new();
-        
+
         for i in 0..1000 {
             cubes.push(Cube::new([-i as f32*2., 0., 0.]));
             cubes.push(Cube::new([-i as f32*2., 0., 1.]));
@@ -27,7 +27,7 @@ impl World {
             cubes.push(Cube::new([-i as f32*2., 4., 5.]));
             cubes.push(Cube::new([-i as f32*2., 4., -5.]));
         }
-        
+
         Self {
             cubes
         }
