@@ -22,9 +22,9 @@ impl Camera {
         let f = {
             let yaw = self.rotation[0];
             let pitch = self.rotation[1];
-            let dir:[f32;3] = [yaw.cos() * pitch.cos(),
-                               pitch.sin(),
-                               yaw.sin() * pitch.cos()];
+            let dir: [f32; 3] = [yaw.cos() * pitch.cos(),
+                pitch.sin(),
+                yaw.sin() * pitch.cos()];
             dir
         };
 

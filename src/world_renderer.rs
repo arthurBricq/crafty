@@ -10,7 +10,7 @@ use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
 use crate::camera::Camera;
-use crate::cube::{Block, CubeAttr, VERTICES};
+use crate::cube::{Block, VERTICES};
 use crate::world::World;
 
 /// The struct in charge of drawing the world
@@ -20,7 +20,6 @@ pub struct WorldRenderer {
 }
 
 impl WorldRenderer {
-
     pub fn new() -> Self {
         Self {
             cam: Camera::new(),
@@ -134,10 +133,10 @@ impl WorldRenderer {
                             let znear = 0.1;
                             let f = 1.0 / (fov / 2.0).tan();
                             [
-                                [f *   aspect_ratio   ,    0.0,              0.0              ,   0.0],
-                                [         0.0         ,     f ,              0.0              ,   0.0],
-                                [         0.0         ,    0.0,  (zfar+znear)/(zfar-znear)    ,   1.0],
-                                [         0.0         ,    0.0, -(2.0*zfar*znear)/(zfar-znear),   0.0],
+                                [f * aspect_ratio, 0.0, 0.0, 0.0],
+                                [0.0, f, 0.0, 0.0],
+                                [0.0, 0.0, (zfar + znear) / (zfar - znear), 1.0],
+                                [0.0, 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
                             ]
                         };
 
@@ -146,9 +145,9 @@ impl WorldRenderer {
                             depth: glium::Depth {
                                 test: glium::draw_parameters::DepthTest::IfLess,
                                 write: true,
-                                .. Default::default()
+                                ..Default::default()
                             },
-                            .. Default::default()
+                            ..Default::default()
                         };
 
                         // Define our uniforms (same uniforms for all cubes)...
@@ -160,7 +159,7 @@ impl WorldRenderer {
 
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
-                        let positions= self.world.get_cube_attributes();
+                        let positions = self.world.get_cube_attributes();
                         let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
                         target.draw(
                             (&vertex_buffer, position_buffer.per_instance().unwrap()),
@@ -176,13 +175,12 @@ impl WorldRenderer {
                 winit::event::Event::AboutToWait => {
                     window.request_redraw();
                 }
-                winit::event::Event::DeviceEvent { event, ..} => match  event {
+                winit::event::Event::DeviceEvent { event, .. } => match event {
                     winit::event::DeviceEvent::Key(key) => self.handle_input(key),
-                    winit::event::DeviceEvent::Motion {axis, value} => {
+                    winit::event::DeviceEvent::Motion { axis, value } => {
                         if axis == 0 {
                             self.cam.mousemove(value as f32, 0.0, 0.005);
-                        }
-                        else {
+                        } else {
                             self.cam.mousemove(0.0, -value as f32, 0.005);
                         }
                     }

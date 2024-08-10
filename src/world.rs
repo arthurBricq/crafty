@@ -1,19 +1,22 @@
-use crate::chunk::Chunk;
-use crate::cube::Block::{DIRT, GRASS};
-use crate::cube::{Cube, CubeAttr};
+use crate::chunk::{Chunk, CHUNK_SIZE};
+use crate::cube::CubeAttr;
 
 pub struct World {
-    chunks: Vec<Chunk>
+    chunks: Vec<Chunk>,
 }
 
 impl World {
     pub fn new() -> Self {
         let mut chunks = Vec::new();
-        chunks.push(Chunk::new_for_demo([-10., 0.], 1.));
-        chunks.push(Chunk::new_for_demo([-2., 0.], 0.));
+        let s = (CHUNK_SIZE as f32);
+        chunks.push(Chunk::new_for_demo([0., 0.], 0.));
+        chunks.push(Chunk::new_for_demo([-s, 0.], 1.));
+        chunks.push(Chunk::new_for_demo([s, 0.], 1.));
+        chunks.push(Chunk::new_for_demo([0., -s], 1.));
+        chunks.push(Chunk::new_for_demo([0., s], 1.));
         Self { chunks }
     }
-    
+
     /// Returns a list of cube attribute to be drawn on the screen.
     pub fn get_cube_attributes(&self) -> Vec<CubeAttr> {
         let mut positions: Vec<CubeAttr> = Vec::new();
@@ -30,7 +33,6 @@ impl World {
                         }
                     }
                 }
-                
             }
         }
         positions

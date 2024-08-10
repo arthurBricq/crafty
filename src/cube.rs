@@ -1,15 +1,13 @@
 use glium::implement_vertex;
-
-use strum::IntoEnumIterator;
 use strum::EnumIter;
-// use strum_macros::EnumIter;
+use strum::IntoEnumIterator;
 
 /// The kind of cube
 /// Each kind is associated with 3 textures: side, top & bottom.
 #[derive(Clone, Copy, EnumIter, PartialEq)]
 pub enum Block {
     GRASS = 0,
-    DIRT
+    DIRT,
 }
 
 impl Block {
@@ -19,9 +17,9 @@ impl Block {
             Block::DIRT => "dirt".to_string()
         }
     }
-    
+
     /// Returns a list of all the textures to be loaded, in the proper order.
-    pub fn get_texture_files() -> Vec<String>{
+    pub fn get_texture_files() -> Vec<String> {
         let mut names = Vec::new();
         for block_kind in Block::iter() {
             let name = block_kind.file_name();
@@ -37,13 +35,13 @@ impl Block {
 #[derive(Clone, Copy)]
 pub struct Cube {
     position: [f32; 3],
-    block: Block
+    block: Block,
 }
 
 
 impl Cube {
     pub fn new(position: [f32; 3], block: Block) -> Self {
-        Self { position, block}
+        Self { position, block }
     }
 
     pub fn model_matrix(&self) -> [[f32; 4]; 4] {
@@ -72,47 +70,42 @@ pub struct Vertex {
 implement_vertex!(Vertex, position, tex_coords, face);
 
 pub const VERTICES: [Vertex; 36] = [
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords:  [0.0, 0.0], face: 0},
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords:  [1.0, 0.0], face: 0},
-    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [ 1.0, 1.0], face: 0},
-    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [ 1.0, 1.0], face: 0},
-    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 0},
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [ 0.0, 0.0], face: 0},
-
-    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 1},
-    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [ 1.0, 0.0], face: 1},
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 1.0, 1.0], face: 1},
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 1.0, 1.0], face: 1},
-    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [ 0.0, 1.0], face: 1},
-    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 1},
-
-    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [ 0.0, 1.0], face: 2},
-    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [ 1.0, 1.0], face: 2},
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [ 1.0, 0.0], face: 2},
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [ 1.0, 0.0], face: 2},
-    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 2},
-    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [ 0.0, 1.0], face: 2},
-
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 0.0, 1.0], face: 3},
-    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [ 1.0, 1.0], face: 3},
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 1.0, 0.0], face: 3},
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 1.0, 0.0], face: 3},
-    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 3},
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 0.0, 1.0], face: 3},
-
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 4},
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [ 1.0, 1.0], face: 4},
-    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [ 1.0, 0.0], face: 4},
-    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [ 1.0, 0.0], face: 4},
-    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 4},
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 4},
-
-    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 5},
-    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [ 1.0, 1.0], face: 5},
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 1.0, 0.0], face: 5},
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [ 1.0, 0.0], face: 5},
-    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [ 0.0, 0.0], face: 5},
-    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [ 0.0, 1.0], face: 5}
+    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
+    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 },
+    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
+    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
+    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 0 },
+    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
+    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 1 },
+    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 1 },
+    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
+    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
+    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 1 },
+    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 1 },
+    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
+    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 2 },
+    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 2 },
+    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 2 },
+    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 },
+    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
+    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
+    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 },
+    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
+    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
+    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 },
+    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
+    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
+    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 1.0], face: 4 },
+    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
+    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
+    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 4 },
+    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
+    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
+    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 5 },
+    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
+    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
+    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 0.0], face: 5 },
+    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 }
 ];
 
 
@@ -120,7 +113,7 @@ pub const VERTICES: [Vertex; 36] = [
 #[derive(Copy, Clone)]
 pub struct CubeAttr {
     world_matrix: [[f32; 4]; 4],
-    block_id: u8
+    block_id: u8,
 }
 
 implement_vertex!(CubeAttr, world_matrix, block_id);

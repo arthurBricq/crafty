@@ -1,13 +1,13 @@
 use crate::cube::Block::{DIRT, GRASS};
 use crate::cube::Cube;
 
-const CHUNK_SIZE: usize = 8;
+pub const CHUNK_SIZE: usize = 8;
 const CHUNK_HEIGHT: usize = 32;
 pub const CHUNK_FLOOR: usize = 10;
 
 /// A chunk is a (size * size * h) partition of the space that contains cubes
 pub struct Chunk {
-    cubes: [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT]
+    cubes: [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT],
 }
 
 impl Chunk {
@@ -24,10 +24,10 @@ impl Chunk {
             for j in 0..CHUNK_SIZE {
                 cubes[CHUNK_FLOOR - 2][i][j] = Some(Cube::new([center[0] + i as f32, CHUNK_FLOOR as f32 - 2. + z_offset, center[1] + j as f32], DIRT));
                 cubes[CHUNK_FLOOR - 1][i][j] = Some(Cube::new([center[0] + i as f32, CHUNK_FLOOR as f32 - 1. + z_offset, center[1] + j as f32], DIRT));
-                cubes[CHUNK_FLOOR][i][j] =     Some(Cube::new([center[0] + i as f32, CHUNK_FLOOR as f32 + z_offset,      center[1] + j as f32], GRASS));
+                cubes[CHUNK_FLOOR][i][j] = Some(Cube::new([center[0] + i as f32, CHUNK_FLOOR as f32 + z_offset, center[1] + j as f32], GRASS));
             }
         }
-        Self {cubes}
+        Self { cubes }
     }
 
     pub fn cubes(&self) -> [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT] {
