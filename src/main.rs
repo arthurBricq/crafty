@@ -3,6 +3,7 @@ mod cube;
 mod camera;
 mod world_renderer;
 mod world;
+mod chunk;
 
 use crate::world_renderer::WorldRenderer;
 

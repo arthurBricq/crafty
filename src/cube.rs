@@ -1,6 +1,7 @@
 use glium::implement_vertex;
 use crate::world_renderer::{DIRT, GRASS_SIDE, GRASS_TOP};
 
+#[derive(Clone, Copy)]
 /// A minecraft in the 3D world
 pub struct Cube {
     position: [f32; 3],
