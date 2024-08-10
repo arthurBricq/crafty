@@ -1,5 +1,5 @@
 use crate::cube::Block::{DIRT, GRASS};
-use crate::cube::Cube;
+use crate::cube::{Cube, CubeAttr};
 
 pub struct World {
     cubes: Vec<Cube>
@@ -30,5 +30,13 @@ impl World {
 
     pub fn cubes(&self) -> &Vec<Cube> {
         &self.cubes
+    }
+    
+    pub fn get_cube_attributes(&self) -> Vec<CubeAttr> {
+        let mut positions: Vec<CubeAttr> = Vec::new();
+        for cube in self.cubes() {
+            positions.push(CubeAttr::new(cube.model_matrix(), cube.block_id()));
+        }
+        positions
     }
 }

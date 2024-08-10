@@ -151,15 +151,6 @@ impl WorldRenderer {
                             .. Default::default()
                         };
 
-                        // Build the per-instance position vector
-                        // We use OpenGL's instancing feature which allows us to render huge amounts of
-                        // cubes at once.
-                        let mut positions: Vec<CubeAttr> = Vec::new();
-                        for cube in self.world.cubes() {
-                            positions.push(CubeAttr::new(cube.model_matrix(), cube.block_id()));
-                        }
-                        let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
-
                         // Define our uniforms (same uniforms for all cubes)...
                         let uniforms = uniform! {
                             view: self.cam.view_matrix(),
@@ -167,6 +158,10 @@ impl WorldRenderer {
                             textures: samplers
                         };
 
+                        // We use OpenGL's instancing feature which allows us to render huge amounts of
+                        // cubes at once.
+                        let positions= self.world.get_cube_attributes();
+                        let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
                         target.draw(
                             (&vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,
