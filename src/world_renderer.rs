@@ -10,7 +10,7 @@ use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
 use crate::camera::Camera;
-use crate::cube::{Block, InstanceAttr, VERTICES};
+use crate::cube::{Block, CubeAttr, VERTICES};
 use crate::world::World;
 
 /// The struct in charge of drawing the world
@@ -154,9 +154,9 @@ impl WorldRenderer {
                         // Build the per-instance position vector
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
-                        let mut positions: Vec<InstanceAttr> = Vec::new();
+                        let mut positions: Vec<CubeAttr> = Vec::new();
                         for cube in self.world.cubes() {
-                            positions.push(InstanceAttr::new(cube.model_matrix(), cube.block_id()));
+                            positions.push(CubeAttr::new(cube.model_matrix(), cube.block_id()));
                         }
                         let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
 

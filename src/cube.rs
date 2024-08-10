@@ -118,14 +118,14 @@ pub const VERTICES: [Vertex; 36] = [
 
 /// An OpenGL type that contains the information for OpenGL's instancing
 #[derive(Copy, Clone)]
-pub struct InstanceAttr {
+pub struct CubeAttr {
     world_matrix: [[f32; 4]; 4],
     block_id: u8
 }
 
-implement_vertex!(InstanceAttr, world_matrix, block_id);
+implement_vertex!(CubeAttr, world_matrix, block_id);
 
-impl InstanceAttr {
+impl CubeAttr {
     pub fn new(world_matrix: [[f32; 4]; 4], block_id: u8) -> Self {
         Self { world_matrix, block_id }
     }
