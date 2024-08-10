@@ -1,15 +1,16 @@
 extern crate glium;
 extern crate winit;
 
+use std::time::Instant;
 use glium::{Display, Surface, uniform};
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
-use winit::event::ElementState::Pressed;
+use winit::event::ElementState::{Pressed, Released};
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
-use crate::camera::Camera;
+use crate::camera::{Camera, MotionState};
 use crate::cube::{Block, VERTICES};
 use crate::world::World;
 
@@ -116,6 +117,9 @@ impl WorldRenderer {
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
         target.finish().unwrap();
+        
+        // Event loop 
+        let mut t = Instant::now();
         event_loop.run(move |event, window_target| {
             match event {
                 winit::event::Event::WindowEvent { event, .. } => match event {
@@ -149,6 +153,10 @@ impl WorldRenderer {
                             },
                             ..Default::default()
                         };
+                        
+                        // Step the camera with the elapsed time
+                        self.cam.step(t.elapsed());
+                        t = Instant::now();
 
                         // Define our uniforms (same uniforms for all cubes)...
                         let uniforms = uniform! {
@@ -207,30 +215,48 @@ impl WorldRenderer {
     }
 
     fn handle_input(&mut self, event: RawKeyEvent) {
-        // println!("key tapped: {event:?}");
-        if (event.state == Pressed) {
-            match event.physical_key {
-                PhysicalKey::Code(key) => match key {
-                    KeyCode::Digit0 => {}
-                    KeyCode::Digit1 => {}
-                    KeyCode::Digit2 => {}
-                    KeyCode::Digit3 => {}
-                    KeyCode::Digit4 => {}
-                    KeyCode::Digit5 => {}
-                    KeyCode::Digit6 => {}
-                    KeyCode::Digit7 => {}
-                    KeyCode::Digit8 => {}
-                    KeyCode::Digit9 => {}
-                    KeyCode::KeyW => self.cam.forward(1.0),
-                    KeyCode::KeyS => self.cam.forward(-1.0),
-                    KeyCode::KeyD => self.cam.orthogonal(1.0),
-                    KeyCode::KeyA => self.cam.orthogonal(-1.0),
-                    KeyCode::KeyJ => self.cam.up(-1.0),
-                    KeyCode::KeyK => self.cam.up(1.0),
+        match event.physical_key {
+            PhysicalKey::Code(key) => {
+                match key {
+                    KeyCode::KeyW => self.cam.toggle_state(MotionState::W),
+                    KeyCode::KeyS => self.cam.toggle_state(MotionState::S),
+                    KeyCode::KeyD => self.cam.toggle_state(MotionState::D),
+                    KeyCode::KeyA => self.cam.toggle_state(MotionState::A),
+                    KeyCode::KeyK => self.cam.up(),
+                    KeyCode::KeyJ => self.cam.down(),
                     _ => {}
+                }
+            },
+            _ => {}
+        }
+        
+        // println!("key tapped: {event:?}");
+        if event.state == Pressed {
+            match event.physical_key {
+                PhysicalKey::Code(key) => {
+                    // First match is merely for handling the camera
+                    // match key {
+                        // KeyCode::KeyW => self.cam.toggle_state(MotionState::W),
+                        // KeyCode::KeyS => self.cam.toggle_state(MotionState::S),
+                        // KeyCode::KeyD => self.cam.toggle_state(MotionState::D),
+                        // KeyCode::KeyA => self.cam.toggle_state(MotionState::A),
+                        // KeyCode::KeyK => self.cam.up(),
+                        // KeyCode::KeyJ => self.cam.down(),
+                        // _ => {}
+                    // }
+                    
+                    // Second match is for other stuff...
+                    match key {
+                        KeyCode::Digit0 => {}
+                        KeyCode::Digit1 => {}
+                        _ => {}
+                    }
                 },
                 PhysicalKey::Unidentified(_) => {}
             }
-        }
-    }
+        } 
+        // else if event.state == Released {
+        //     self.cam.release();
+        // }
+    } 
 }
