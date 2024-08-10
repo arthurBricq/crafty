@@ -1,3 +1,4 @@
+use crate::cube::Block::{DIRT, GRASS};
 use crate::cube::Cube;
 
 pub struct World {
@@ -9,23 +10,17 @@ impl World {
         let mut cubes = Vec::new();
 
         for i in 0..1000 {
-            cubes.push(Cube::new([-i as f32*2., 0., 0.]));
-            cubes.push(Cube::new([-i as f32*2., 0., 1.]));
-            cubes.push(Cube::new([-i as f32*2., 0., -1.]));
-            cubes.push(Cube::new([-i as f32*2., 0., 2.]));
-            cubes.push(Cube::new([-i as f32*2., 0., -2.]));
+            cubes.push(Cube::new([-i as f32*2., 0., 0.], GRASS));
+            cubes.push(Cube::new([-i as f32*2., 0., 1.], GRASS));
+            cubes.push(Cube::new([-i as f32*2., 0., -1.], GRASS));
+            cubes.push(Cube::new([-i as f32*2., 0., 2.], GRASS));
+            cubes.push(Cube::new([-i as f32*2., 0., -2.], GRASS));
 
-            cubes.push(Cube::new([-i as f32*2., 2., 0.]));
-            cubes.push(Cube::new([-i as f32*2., 2., 1.]));
-            cubes.push(Cube::new([-i as f32*2., 2., -1.]));
-            cubes.push(Cube::new([-i as f32*2., 2., 5.]));
-            cubes.push(Cube::new([-i as f32*2., 2., -5.]));
-
-            cubes.push(Cube::new([-i as f32*2., 4., 0.]));
-            cubes.push(Cube::new([-i as f32*2., 4., 2.]));
-            cubes.push(Cube::new([-i as f32*2., 4., -2.]));
-            cubes.push(Cube::new([-i as f32*2., 4., 5.]));
-            cubes.push(Cube::new([-i as f32*2., 4., -5.]));
+            cubes.push(Cube::new([-i as f32*2., -1., 0.], DIRT));
+            cubes.push(Cube::new([-i as f32*2., -1., 1.], DIRT));
+            cubes.push(Cube::new([-i as f32*2., -1., -1.], DIRT));
+            cubes.push(Cube::new([-i as f32*2., -1., 5.], DIRT));
+            cubes.push(Cube::new([-i as f32*2., -1., -5.], DIRT));
         }
 
         Self {

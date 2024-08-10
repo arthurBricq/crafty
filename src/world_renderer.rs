@@ -1,37 +1,30 @@
 extern crate glium;
 extern crate winit;
 
-use std::collections::HashMap;
-use glium::{Display, Surface, Texture2d, uniform};
+use glium::{Display, Surface, uniform};
 use glium::glutin::surface::WindowSurface;
-use glium::texture::Texture1d;
-use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Sampler};
+use glium::texture::Texture2dArray;
+use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use winit::event::ElementState::Pressed;
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
-use crate::camera::{Camera};
-use crate::cube::{InstanceAttr, VERTICES};
+
+use crate::camera::Camera;
+use crate::cube::{Block, InstanceAttr, VERTICES};
 use crate::world::World;
 
-pub const TEXT_1_SIDE: &str = "TEXT_1_SIDE";
-pub const GRASS_SIDE: &str = "GRASS_SIDE";
-pub const GRASS_TOP: &str = "GRASS_TOP";
-pub const DIRT: &str = "DIRT";
-
 /// The struct in charge of drawing the world
-pub struct WorldRenderer<'a> {
+pub struct WorldRenderer {
     cam: Camera,
     world: World,
-    texture_library: HashMap<&'a str, Texture2d>
 }
 
-impl<'a> WorldRenderer<'a>{
+impl WorldRenderer {
 
     pub fn new() -> Self {
         Self {
             cam: Camera::new(),
             world: World::new(),
-            texture_library: HashMap::new()
         }
     }
 
@@ -56,21 +49,30 @@ impl<'a> WorldRenderer<'a>{
         #version 150
 
         in vec3 position;
-        in vec2 tex_coords;
         in mat4 world_matrix;
-        out vec2 v_tex_coords;
 
+        // The vertex shader has some passthrough for the fragment shader...
+
+        // Which face of the cube is being passed ?
         in int face;
-        flat out int oFace;
+        flat out int face_s;
+
+        // Index of the block to be used
+        in int block_id;
+        flat out int block_id_s;
+
+        // Where is the vertex located on the face ?
+        in vec2 tex_coords;
+        out vec2 v_tex_coords;
 
         uniform mat4 perspective;
         uniform mat4 view;
-        // uniform mat4 model;
 
         void main() {
             gl_Position = perspective * view * world_matrix * vec4(position, 1.0);
             v_tex_coords = tex_coords;
-            oFace = face;
+            face_s = face;
+            block_id_s = block_id;
         }
     "#;
 
@@ -78,50 +80,43 @@ impl<'a> WorldRenderer<'a>{
         let fragment_shader_src = r#"
         #version 140
 
+        // passed-through the vertex shader
+        flat in int face_s;
+        flat in int block_id_s;
         in vec2 v_tex_coords;
-        out vec4 color;
 
-        flat in int oFace;
+        out vec4 color ;
 
-        uniform sampler2D side;
-        uniform sampler2D top;
-        uniform sampler2D bottom;
+        uniform sampler2DArray textures;
 
         void main() {
-            if (oFace == 4) {
-                color = texture(bottom, v_tex_coords);
-            } else if (oFace == 5) {
-                color = texture(top, v_tex_coords);
+            // Each block has 3 types of faces
+            int idx = block_id_s * 3;
+
+            if (face_s == 4) {
+                // bottom
+                color = texture(textures, vec3(v_tex_coords, idx + 2));
+            } else if (face_s == 5) {
+                // top
+                color = texture(textures, vec3(v_tex_coords, idx + 1));
             } else {
-                color = texture(side, v_tex_coords);
+                // sides
+                color = texture(textures, vec3(v_tex_coords, float(idx)));
             }
         }
     "#;
 
-        // Build texture library
-        self.texture_library.insert(GRASS_SIDE, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_block_side.png"), &display));
-        self.texture_library.insert(GRASS_TOP, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/grass_block_top.png"), &display));
-        self.texture_library.insert(DIRT, Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/block/dirt.png"), &display));
-
-        let behavior = glium::uniforms::SamplerBehavior {
-            minify_filter: MinifySamplerFilter::Nearest,
-            magnify_filter: MagnifySamplerFilter::Nearest,
-            ..Default::default()
-        };
+        // Build the texture library, and change the sampler to use the proper filters
+        let textures = self.build_textures_array(&display);
+        let samplers = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
         // Build the shader program
         let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
         // Start rendering by creating a new frame
         let mut target = display.draw();
-
-        // Which we fill with an opaque blue color
         target.clear_color(0.0, 0.0, 1.0, 1.0);
-
-        // By finishing the frame swap buffers and thereby make it visible on the window
         target.finish().unwrap();
-
-        // Now we wait until the program is closed
         event_loop.run(move |event, window_target| {
             match event {
                 winit::event::Event::WindowEvent { event, .. } => match event {
@@ -161,17 +156,15 @@ impl<'a> WorldRenderer<'a>{
                         // cubes at once.
                         let mut positions: Vec<InstanceAttr> = Vec::new();
                         for cube in self.world.cubes() {
-                            positions.push(InstanceAttr::new(cube.model_matrix()));
+                            positions.push(InstanceAttr::new(cube.model_matrix(), cube.block_id()));
                         }
                         let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
 
-                        // Define our uniforms
+                        // Define our uniforms (same uniforms for all cubes)...
                         let uniforms = uniform! {
                             view: self.cam.view_matrix(),
                             perspective: perspective,
-                            side: Sampler(self.texture_library.get(&GRASS_SIDE).unwrap(), behavior),
-                            top: Sampler(self.texture_library.get(&GRASS_TOP).unwrap(), behavior),
-                            bottom: Sampler(self.texture_library.get(&DIRT).unwrap(), behavior),
+                            textures: samplers
                         };
 
                         target.draw(
@@ -205,28 +198,19 @@ impl<'a> WorldRenderer<'a>{
         }).unwrap();
     }
 
-    /// Loads a texture and returns it
-    fn load_texture(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2d {
-        let image = image::load(std::io::Cursor::new(bytes),
-                                image::ImageFormat::Png).unwrap().to_rgba8();
-        let image_dimensions = image.dimensions();
-        let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
-
-
-        let smiley = Texture2d::new(display, image).unwrap();
-
-        let behavior = glium::uniforms::SamplerBehavior {
-            minify_filter: MinifySamplerFilter::Nearest,
-            magnify_filter: MagnifySamplerFilter::Nearest,
-            ..Default::default()
-        };
-
-        let tmp = glium::uniforms::Sampler(&smiley, behavior);
-
-
-        // smiley
-
-        smiley
+    /// Builds the array of 2D textures using all the blocks
+    fn build_textures_array(&self, display: &Display<WindowSurface>) -> Texture2dArray {
+        let root = "/home/arthur/dev/rust/crafty/resources/block/";
+        let extension = ".png";
+        let all_textures = Block::get_texture_files();
+        let source = all_textures.iter().map(|name| {
+            println!(" Adding texture {name} into texture array");
+            let data = std::fs::read(root.to_string() + name + extension).unwrap();
+            let image = image::load(std::io::Cursor::new(data), image::ImageFormat::Png).unwrap().to_rgba8();
+            let image_dimensions = image.dimensions();
+            glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions)
+        }).collect();
+        Texture2dArray::new(display, source).unwrap()
     }
 
     fn handle_input(&mut self, event: RawKeyEvent) {

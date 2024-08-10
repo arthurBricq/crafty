@@ -6,6 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# OpenGL related
 glium = "0.34"
 winit = "0.29"
 image = "0.24"
+# Iterate over the variants of an enum
+strum = { version = "0.26", features = ["derive"] }

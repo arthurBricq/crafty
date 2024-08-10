@@ -1,3 +1,4 @@
+use crate::cube::Block::GRASS;
 use crate::cube::Cube;
 
 const CHUNK_SIZE: usize = 8;
@@ -20,7 +21,7 @@ impl Chunk {
     pub fn fill_for_demo(&mut self)  {
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
-                self.cubes[CHUNK_FLOOR][i][j] = Some(Cube::new([i as f32, CHUNK_FLOOR as f32, j as f32]));
+                self.cubes[CHUNK_FLOOR][i][j] = Some(Cube::new([i as f32, CHUNK_FLOOR as f32, j as f32], GRASS));
             }
         }
     }

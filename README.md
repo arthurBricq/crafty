@@ -24,6 +24,8 @@ The first milestones should be implemented roughly in the following order.
         - Binary space partitioning, in theory it should be able to remove some cubes ? Maybe the effort is too big
           for the reward.
 
+- Render many cubes of different properties
+
 - Map format implementation
     - the map is divided by xy-chunks
     - 
