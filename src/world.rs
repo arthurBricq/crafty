@@ -1,41 +1,37 @@
+use crate::chunk::Chunk;
 use crate::cube::Block::{DIRT, GRASS};
 use crate::cube::{Cube, CubeAttr};
 
 pub struct World {
-    cubes: Vec<Cube>
+    chunks: Vec<Chunk>
 }
 
 impl World {
     pub fn new() -> Self {
-        let mut cubes = Vec::new();
-
-        for i in 0..1000 {
-            cubes.push(Cube::new([-i as f32*2., 0., 0.], GRASS));
-            cubes.push(Cube::new([-i as f32*2., 0., 1.], GRASS));
-            cubes.push(Cube::new([-i as f32*2., 0., -1.], GRASS));
-            cubes.push(Cube::new([-i as f32*2., 0., 2.], GRASS));
-            cubes.push(Cube::new([-i as f32*2., 0., -2.], GRASS));
-
-            cubes.push(Cube::new([-i as f32*2., -1., 0.], DIRT));
-            cubes.push(Cube::new([-i as f32*2., -1., 1.], DIRT));
-            cubes.push(Cube::new([-i as f32*2., -1., -1.], DIRT));
-            cubes.push(Cube::new([-i as f32*2., -1., 5.], DIRT));
-            cubes.push(Cube::new([-i as f32*2., -1., -5.], DIRT));
-        }
-
-        Self {
-            cubes
-        }
-    }
-
-    pub fn cubes(&self) -> &Vec<Cube> {
-        &self.cubes
+        let mut chunks = Vec::new();
+        chunks.push(Chunk::new_for_demo([-10., 0.], 1.));
+        chunks.push(Chunk::new_for_demo([-2., 0.], 0.));
+        Self { chunks }
     }
     
+    /// Returns a list of cube attribute to be drawn on the screen.
     pub fn get_cube_attributes(&self) -> Vec<CubeAttr> {
         let mut positions: Vec<CubeAttr> = Vec::new();
-        for cube in self.cubes() {
-            positions.push(CubeAttr::new(cube.model_matrix(), cube.block_id()));
+        for chunk in &self.chunks {
+            // TODO improve this code
+            // I know that this is not the best way to do this:
+            // 1. It is not optimal ...
+            // 2. It breaks the responsability principle
+            for layer in chunk.cubes() {
+                for row in layer {
+                    for cube in row {
+                        if let Some(c) = cube {
+                            positions.push(CubeAttr::new(c.model_matrix(), c.block_id()));
+                        }
+                    }
+                }
+                
+            }
         }
         positions
     }

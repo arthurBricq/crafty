@@ -1,9 +1,9 @@
-use crate::cube::Block::GRASS;
+use crate::cube::Block::{DIRT, GRASS};
 use crate::cube::Cube;
 
 const CHUNK_SIZE: usize = 8;
 const CHUNK_HEIGHT: usize = 32;
-const CHUNK_FLOOR: usize = 10;
+pub const CHUNK_FLOOR: usize = 10;
 
 /// A chunk is a (size * size * h) partition of the space that contains cubes
 pub struct Chunk {
@@ -18,12 +18,16 @@ impl Chunk {
     }
 
     /// Fills the chunk with a bluit-in world
-    pub fn fill_for_demo(&mut self)  {
+    pub fn new_for_demo(center: [f32; 2], z_offset: f32) -> Self {
+        let mut cubes = [[[None; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
-                self.cubes[CHUNK_FLOOR][i][j] = Some(Cube::new([i as f32, CHUNK_FLOOR as f32, j as f32], GRASS));
+                cubes[CHUNK_FLOOR - 2][i][j] = Some(Cube::new([center[0] + i as f32, CHUNK_FLOOR as f32 - 2. + z_offset, center[1] + j as f32], DIRT));
+                cubes[CHUNK_FLOOR - 1][i][j] = Some(Cube::new([center[0] + i as f32, CHUNK_FLOOR as f32 - 1. + z_offset, center[1] + j as f32], DIRT));
+                cubes[CHUNK_FLOOR][i][j] =     Some(Cube::new([center[0] + i as f32, CHUNK_FLOOR as f32 + z_offset,      center[1] + j as f32], GRASS));
             }
         }
+        Self {cubes}
     }
 
     pub fn cubes(&self) -> [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT] {

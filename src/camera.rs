@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use crate::chunk::CHUNK_FLOOR;
 
 pub struct Camera {
     position: [f32; 3],
@@ -7,11 +8,11 @@ pub struct Camera {
 }
 
 impl Camera {
-    /// based on right hand perspectibe look along the positive z-Axis
+    /// based on right hand perspective look along the positive z-Axis
     pub fn new() -> Self {
         Self {
-            position: [3.0; 3],
-            rotation: [PI - PI/3., 0.0],
+            position: [10.0, CHUNK_FLOOR as f32 + 2., 3.0],
+            rotation: [PI, 0.0],
         }
     }
 
