@@ -56,6 +56,10 @@ impl Cube {
     pub fn block_id(&self) -> u8 {
         self.block as u8
     }
+
+    pub fn position(&self) -> [f32; 3] {
+        self.position
+    }
 }
 
 /// A vertex of a cube

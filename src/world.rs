@@ -8,7 +8,7 @@ pub struct World {
 impl World {
     pub fn new() -> Self {
         let mut chunks = Vec::new();
-        let s = (CHUNK_SIZE as f32);
+        let s = CHUNK_SIZE as f32;
         chunks.push(Chunk::new_for_demo([0., 0.], 0.));
         chunks.push(Chunk::new_for_demo([-s, 0.], 1.));
         chunks.push(Chunk::new_for_demo([s, 0.], 1.));
@@ -17,7 +17,8 @@ impl World {
         Self { chunks }
     }
 
-    /// Returns a list of cube attribute to be drawn on the screen.
+    /// Returns a list of cube attributes to be drawn on the screen.
+    /// Each item on this list will result in a cube drawn in the screen.
     pub fn get_cube_attributes(&self) -> Vec<CubeAttr> {
         let mut positions: Vec<CubeAttr> = Vec::new();
         for chunk in &self.chunks {
@@ -38,7 +39,12 @@ impl World {
         positions
     }
     
-    pub fn is_position_free(&self, pos: [f32;3]) -> bool {
+    pub fn is_position_free(&self, pos: &[f32;3]) -> bool {
+        for chunk in &self.chunks {
+            if chunk.is_in(pos) && !chunk.is_free(pos) {
+                return false;
+            }
+        }
         true
     }
 }

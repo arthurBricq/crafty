@@ -105,7 +105,7 @@ impl<'a> Camera<'a> {
         let dz = elapsed.as_secs_f32() * self.speed[2];
         let new_pos = [self.position[0] + dx, self.position[1] + dy, self.position[2] + dz];
         
-        if self.world.is_position_free(new_pos) {
+        if self.world.is_position_free(&new_pos) {
             // Update the position if the world is free
             self.position[0] += dx;
             self.position[1] += dy;
