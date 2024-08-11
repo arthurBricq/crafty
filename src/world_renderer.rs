@@ -2,11 +2,12 @@ extern crate glium;
 extern crate winit;
 
 use std::time::Instant;
+
 use glium::{Display, Surface, uniform};
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
-use winit::event::ElementState::{Pressed, Released};
+use winit::event::ElementState::Pressed;
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
@@ -15,17 +16,15 @@ use crate::cube::{Block, VERTICES};
 use crate::world::World;
 
 /// The struct in charge of drawing the world
-pub struct WorldRenderer {
-    cam: Camera,
-    world: World,
+pub struct WorldRenderer<'a> {
+    world: &'a World,
+    cam: &'a mut Camera<'a>,
 }
 
-impl WorldRenderer {
-    pub fn new() -> Self {
-        Self {
-            cam: Camera::new(),
-            world: World::new(),
-        }
+impl<'a> WorldRenderer<'a> {
+
+    pub fn new(world: &'a World, cam: &'a mut Camera<'a>) -> Self {
+        Self { world, cam }
     }
 
     pub fn run(&mut self) {
@@ -229,7 +228,7 @@ impl WorldRenderer {
             },
             _ => {}
         }
-        
+
         // println!("key tapped: {event:?}");
         if event.state == Pressed {
             match event.physical_key {
@@ -254,9 +253,10 @@ impl WorldRenderer {
                 },
                 PhysicalKey::Unidentified(_) => {}
             }
-        } 
+        }
         // else if event.state == Released {
         //     self.cam.release();
         // }
-    } 
+    }
+
 }

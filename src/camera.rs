@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 use std::time::Duration;
 use crate::chunk::CHUNK_FLOOR;
+use crate::world::World;
 
 const SPEED_INC: f32 = 0.5;
 const MAX_SPEED: f32 = 2.0;
@@ -12,7 +13,7 @@ pub enum MotionState {
 
 /// First player camera
 /// The state includes the position and the speed
-pub struct Camera {
+pub struct Camera<'a> {
     position: [f32; 3],
     speed: [f32; 3],
     /// Yaw, Pitch
@@ -23,11 +24,16 @@ pub struct Camera {
     s_pressed: bool,
     a_pressed: bool,
     d_pressed: bool,
+    
+    // Collision callcack
+    // collision_callback: Box<dyn FnMut([f32;3]) -> bool + 'a>
+    world: &'a World
 }
 
-impl Camera {
+impl<'a> Camera<'a> {
     /// based on right hand perspective look along the positive z-Axis
-    pub fn new() -> Self {
+    // pub fn new(collision_callback: impl FnMut([f32;3]) -> bool + 'a) -> Self {
+    pub fn new(world: &'a World) -> Self {
         Self {
             position: [10.0, CHUNK_FLOOR as f32 + 2., 3.0],
             speed: [0.; 3],
@@ -36,6 +42,7 @@ impl Camera {
             s_pressed: false,
             a_pressed: false,
             d_pressed: false,
+            world
         }
     }
 
@@ -92,10 +99,19 @@ impl Camera {
             }
         }
         
-        // Update the position
-        self.position[0] += elapsed.as_secs_f32() * self.speed[0];
-        self.position[1] += elapsed.as_secs_f32() * self.speed[1];
-        self.position[2] += elapsed.as_secs_f32() * self.speed[2];
+        // Compute the new position
+        let dx = elapsed.as_secs_f32() * self.speed[0];
+        let dy = elapsed.as_secs_f32() * self.speed[1];
+        let dz = elapsed.as_secs_f32() * self.speed[2];
+        let new_pos = [self.position[0] + dx, self.position[1] + dy, self.position[2] + dz];
+        
+        if self.world.is_position_free(new_pos) {
+            // Update the position if the world is free
+            self.position[0] += dx;
+            self.position[1] += dy;
+            self.position[2] += dz;
+        }
+        
     }
 
     fn clamp_speed(&mut self) {

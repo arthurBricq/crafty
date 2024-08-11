@@ -37,4 +37,8 @@ impl World {
         }
         positions
     }
+    
+    pub fn is_position_free(&self, pos: [f32;3]) -> bool {
+        true
+    }
 }
