@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 
 /// The kind of cube
 /// Each kind is associated with 3 textures: side, top & bottom.
-#[derive(Clone, Copy, EnumIter, PartialEq)]
+#[derive(Clone, Copy, EnumIter, PartialEq, Debug)]
 pub enum Block {
     GRASS = 0,
     DIRT,
@@ -32,7 +32,7 @@ impl Block {
 }
 
 /// Model of a cube in the 3D world.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Cube {
     position: [f32; 3],
     block: Block,
@@ -45,11 +45,14 @@ impl Cube {
     }
 
     pub fn model_matrix(&self) -> [[f32; 4]; 4] {
+        // TODO As you can see, I added 0.5 at each cube model
+        //      It's because I was lazy to edit all the values in `VERTICES` of +0.5, but 
+        //      it would be nice to do it eventually :) 
         [
             [1.00, 0.0, 0.0, 0.0],
             [0.0, 1.00, 0.0, 0.0],
             [0.0, 0.0, 1.00, 0.0],
-            [self.position[0], self.position[1], self.position[2], 1.0f32]
+            [self.position[0] + 0.5, self.position[1] + 0.5, self.position[2] + 0.5, 1.0f32]
         ]
     }
 

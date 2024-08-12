@@ -6,6 +6,7 @@ use crate::world::World;
 const SPEED_INC: f32 = 0.5;
 const MAX_SPEED: f32 = 2.0;
 const MIN_SPEED: f32 = 0.1;
+pub const PLAYER_HEIGHT: f32 = 2.;
 
 pub enum MotionState {
     W,S,A,D,None
@@ -35,7 +36,7 @@ impl<'a> Camera<'a> {
     // pub fn new(collision_callback: impl FnMut([f32;3]) -> bool + 'a) -> Self {
     pub fn new(world: &'a World) -> Self {
         Self {
-            position: [10.0, CHUNK_FLOOR as f32 + 2., 3.0],
+            position: [4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0],
             speed: [0.; 3],
             rotation: [PI, 0.0],
             w_pressed: false,
@@ -47,8 +48,8 @@ impl<'a> Camera<'a> {
     }
 
     pub fn step(&mut self, elapsed: Duration) {
-        println!("speed = {:?}, dt = {:?}", self.speed, elapsed.as_secs_f32());
-        println!("{} {} {} {}", self.w_pressed, self.s_pressed, self.a_pressed, self.d_pressed);
+        // println!("speed = {:?}, dt = {:?}", self.speed, elapsed.as_secs_f32());
+        // println!("{} {} {} {}", self.w_pressed, self.s_pressed, self.a_pressed, self.d_pressed);
         // TODO I have to improve this function.
         //      My idea so far is to say "speed = direction vector"
         //      w pressed => speed += direction vector
@@ -59,14 +60,14 @@ impl<'a> Camera<'a> {
         // Update the speed vector
         if self.w_pressed {
             self.speed[0] += SPEED_INC * self.rotation[0].cos() * self.rotation[1].cos();
-            // self.speed[1] += SPEED_INC * self.rotation[1].sin();
             self.speed[2] += SPEED_INC * self.rotation[0].sin() * self.rotation[1].cos();
+            // self.speed[1] += SPEED_INC * self.rotation[1].sin();
             self.clamp_speed();
         }
         if self.s_pressed {
             self.speed[0] -= SPEED_INC * self.rotation[0].cos() * self.rotation[1].cos();
-            // self.speed[1] -= SPEED_INC * self.rotation[1].sin();
             self.speed[2] -= SPEED_INC * self.rotation[0].sin() * self.rotation[1].cos();
+            // self.speed[1] -= SPEED_INC * self.rotation[1].sin();
             self.clamp_speed();
         }
         if self.d_pressed {
@@ -79,7 +80,6 @@ impl<'a> Camera<'a> {
             self.speed[2] += SPEED_INC * self.rotation[0].cos();
             self.clamp_speed();
         }
-        
         // If no key is being pressed, reduced the speed
         if !self.w_pressed && !self.s_pressed && !self.a_pressed && !self.d_pressed {
             if self.speed[0].abs() > MIN_SPEED {
@@ -98,18 +98,16 @@ impl<'a> Camera<'a> {
                 self.speed[2] = 0.;
             }
         }
-        
-        // Compute the new position
         let dx = elapsed.as_secs_f32() * self.speed[0];
-        let dy = elapsed.as_secs_f32() * self.speed[1];
-        let dz = elapsed.as_secs_f32() * self.speed[2];
-        let new_pos = [self.position[0] + dx, self.position[1] + dy, self.position[2] + dz];
+        let dz = elapsed.as_secs_f32() * self.speed[1];
+        let dy = elapsed.as_secs_f32() * self.speed[2];
         
-        if self.world.is_position_free(&new_pos) {
+        if self.world.is_position_free(& [self.position[0] + dx, self.position[1] - PLAYER_HEIGHT + 1.0 + dz, self.position[2] + dy]) {
             // Update the position if the world is free
-            self.position[0] += dx;
-            self.position[1] += dy;
-            self.position[2] += dz;
+            self.position = [self.position[0] + dx, self.position[1] + dz, self.position[2] + dy];
+        } else { 
+            // Stop the player
+            self.speed = [0.;3]
         }
         
     }
@@ -128,6 +126,19 @@ impl<'a> Camera<'a> {
             MotionState::D => self.d_pressed = !self.d_pressed,
             MotionState::None => {}
         }
+        
+        // let s: f32 = 0.5;
+        // match state {
+        //     MotionState::W => self.position[0] -= s,
+        //     MotionState::S => self.position[0] += s,
+        //     MotionState::A => self.position[2] -= s,
+        //     MotionState::D => self.position[2] += s,
+        //     MotionState::None => {}
+        // }
+        // 
+        // println!("---");
+        // println!("is free = {}", self.world.is_position_free(&self.position));
+        
     }
 
     pub fn up(&mut self) {
