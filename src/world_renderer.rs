@@ -225,6 +225,7 @@ impl<'a> WorldRenderer<'a> {
                     KeyCode::KeyA => self.cam.toggle_state(MotionState::A),
                     KeyCode::KeyK => self.cam.up(),
                     KeyCode::KeyJ => self.cam.down(),
+                    KeyCode::Space => self.cam.jump(),
                     _ => {}
                 }
             },

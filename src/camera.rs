@@ -87,7 +87,6 @@ impl<'a> Camera<'a> {
         // Free-fall handling
         let is_falling = self.world.is_position_free_falling(&next_pos_amplified);
         let dz_fall = self.gravity_handler.step(is_falling, elapsed);
-        println!("{is_falling} -> {dz_fall}");
         next_pos[1] -= dz_fall;;
 
         // Position update
@@ -105,6 +104,10 @@ impl<'a> Camera<'a> {
             MotionState::D => self.d_pressed = !self.d_pressed,
             MotionState::None => {}
         }
+    }
+    
+    pub fn jump(&mut self) {
+        self.gravity_handler.jump();
     }
 
     pub fn up(&mut self) {
