@@ -5,6 +5,7 @@ mod world_renderer;
 mod world;
 mod chunk;
 mod vector;
+mod gravity;
 
 use crate::camera::Camera;
 use crate::world::World;

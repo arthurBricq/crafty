@@ -1,3 +1,4 @@
+use crate::camera::PLAYER_HEIGHT;
 use crate::cube::Block::{DIRT, GRASS};
 use crate::cube::{Block, Cube};
 use crate::vector::Vector3;
@@ -30,13 +31,13 @@ impl Chunk {
     }
 
     /// Fills the chunk with a bluit-in world
-    pub fn new_for_demo(corner: [f32; 2], z_offset: usize) -> Self {
+    pub fn new_for_demo(corner: [f32; 2], z_offset: i32) -> Self {
         let mut cubes = [[[None; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
-                cubes[CHUNK_FLOOR - 2 + z_offset][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR + z_offset) as f32 - 2. , corner[1] + j as f32], DIRT));
-                cubes[CHUNK_FLOOR - 1 + z_offset][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR + z_offset) as f32 - 1., corner[1] + j as f32], DIRT));
-                cubes[CHUNK_FLOOR + z_offset][i][j] = Some(Cube::new([corner[0] + i as f32,     (CHUNK_FLOOR + z_offset) as f32, corner[1] + j as f32], GRASS));
+                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 2. , corner[1] + j as f32], DIRT));
+                cubes[(CHUNK_FLOOR as i32 - 1 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 1., corner[1] + j as f32], DIRT));
+                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32,     (CHUNK_FLOOR as i32 + z_offset) as f32, corner[1] + j as f32], GRASS));
             }
         }
         Self { cubes, corner }
@@ -85,7 +86,7 @@ impl Chunk {
     
     /// Returns true if the position in the chunk is not part of a cube.
     /// The function does not check that the cube is chunk, and will crash if it is not.
-    pub fn is_free(&self, pos: &Vector3) -> bool {
+    pub fn is_position_free(&self, pos: &Vector3) -> bool {
         let (i_z, i_x, i_y) = self.get_indices(pos);
         let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
         let result = !in_bound || self.cubes[i_z][i_x][i_y].is_none();
@@ -93,6 +94,11 @@ impl Chunk {
         //     println!("{pos:?} is rejected by {i_z}, {i_x}, {i_y} -> {:?}", self.cubes[i_z][i_x][i_y].unwrap());
         // }
         result
+    }
+    
+    pub fn is_position_free_falling(&self, pos: &Vector3) -> bool {
+        // We simply check if the cube below the player is occupied.
+        self.is_position_free(&Vector3::new(pos[0], pos[1] - 1., pos[2]))
     }
     
     pub fn print_all_cubes(&self) {
@@ -134,7 +140,7 @@ mod tests {
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
-                    assert!(chunk.is_free(&Vector3::new(i as f32,k as f32,j as f32)));
+                    assert!(chunk.is_position_free(&Vector3::new(i as f32, k as f32, j as f32)));
                 }
             }
         }
@@ -147,9 +153,9 @@ mod tests {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if k != 10 {
-                        assert!(chunk.is_free(&Vector3::new(i as f32,k as f32,j as f32)));
+                        assert!(chunk.is_position_free(&Vector3::new(i as f32, k as f32, j as f32)));
                     } else {
-                        assert!(!chunk.is_free(&Vector3::new(i as f32,k as f32,j as f32)));
+                        assert!(!chunk.is_position_free(&Vector3::new(i as f32, k as f32, j as f32)));
                     }
                 }
             }
@@ -160,19 +166,30 @@ mod tests {
     fn test_free_check_2() {
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(9, GRASS);
-        assert!(chunk.is_free(&Vector3::new(4.0, 10.1, 4.0)));
+        assert!(chunk.is_position_free(&Vector3::new(4.0, 10.1, 4.0)));
     }
 
     #[test]
     fn test_free_check_3() {
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(0, GRASS);
-        assert!(!chunk.is_free(&Vector3::new(4.0, 0.1, 4.0)));
-        assert!(!chunk.is_free(&Vector3::new(4.0, 0.5, 4.0)));
-        assert!(!chunk.is_free(&Vector3::new(4.0, 0.9, 4.0)));
-        assert!(chunk.is_free(&Vector3::new(4.0, 1.1, 4.0)));
-        assert!(chunk.is_free(&Vector3::new(4.0, 1.2, 4.0)));
-        assert!(chunk.is_free(&Vector3::new(4.0, 1.5, 4.0)));
+        assert!(!chunk.is_position_free(&Vector3::new(4.0, 0.1, 4.0)));
+        assert!(!chunk.is_position_free(&Vector3::new(4.0, 0.5, 4.0)));
+        assert!(!chunk.is_position_free(&Vector3::new(4.0, 0.9, 4.0)));
+        assert!(chunk.is_position_free(&Vector3::new(4.0, 1.1, 4.0)));
+        assert!(chunk.is_position_free(&Vector3::new(4.0, 1.2, 4.0)));
+        assert!(chunk.is_position_free(&Vector3::new(4.0, 1.5, 4.0)));
+    }
+    
+    #[test]
+    fn test_free_fall_1() {
+        let mut chunk = Chunk::new([0., 0.]);
+        chunk.fill_layer(0, GRASS);
+        let x = 4.;
+        let y = 4.;
+        assert!(!chunk.is_position_free_falling(&Vector3::new(x, 0., y)));
+        assert!(chunk.is_position_free_falling(&Vector3::new(x, 2., y)));
+        assert!(chunk.is_position_free_falling(&Vector3::new(x, 3., y)));
     }
 
 }

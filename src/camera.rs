@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 use std::time::Duration;
 use crate::chunk::CHUNK_FLOOR;
+use crate::gravity::GravityHandler;
 use crate::vector::Vector3;
 use crate::world::World;
 
@@ -22,15 +23,21 @@ pub enum MotionState {
 pub struct Camera<'a> {
     /// Position of the camera
     position: Vector3,
+    
     /// Orientation of the camera Yaw, Pitch
     rotation: [f32; 2],
+    
     // state: MotionState
     w_pressed: bool,
     s_pressed: bool,
     a_pressed: bool,
     d_pressed: bool,
+    
     /// Reference to the world is necessary for collision detection.
     world: &'a World,
+    
+    /// For handling free-fall
+    gravity_handler: GravityHandler
 }
 
 impl<'a> Camera<'a> {
@@ -45,6 +52,7 @@ impl<'a> Camera<'a> {
             a_pressed: false,
             d_pressed: false,
             world,
+            gravity_handler: GravityHandler::new()
         }
     }
 
@@ -54,8 +62,6 @@ impl<'a> Camera<'a> {
         let l = self.ground_direction_right();
         let mut next_pos = self.position.clone();
         let mut next_pos_amplified = self.position.clone();
-        // compute motion amplitude as a function of the elpased time to reach a desired speed
-        // speed = distance / time    ==>    distance = speed * time
         let amplitude = SPEED * elapsed.as_secs_f32();
         let ratio = 10.;
         if self.w_pressed {
@@ -74,9 +80,17 @@ impl<'a> Camera<'a> {
             next_pos -= l * amplitude;
             next_pos_amplified -= l * amplitude * ratio
         }
-
-        // Collision detection
+        
+        // Collision detection (xz-plane)
         let is_free = self.world.is_position_free(&next_pos_amplified);
+        
+        // Free-fall handling
+        let is_falling = self.world.is_position_free_falling(&next_pos_amplified);
+        let dz_fall = self.gravity_handler.step(is_falling, elapsed);
+        println!("{is_falling} -> {dz_fall}");
+        next_pos[1] -= dz_fall;;
+
+        // Position update
         if is_free {
             self.position = next_pos
         }

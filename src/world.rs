@@ -9,7 +9,7 @@ pub struct World {
 
 impl World {
     pub fn new() -> Self {
-        let mut chunks = Vec::new();
+        let chunks = Vec::new();
         Self { chunks }
     }
     
@@ -18,11 +18,12 @@ impl World {
         self.chunks.push(Chunk::new_for_demo([0., 0.], 0));
         self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 1., 2.), COBBELSTONE);
         self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 2., 2.), COBBELSTONE);
-        
-        self.chunks.push(Chunk::new_for_demo([-s, 0.], 2));
+
+        self.chunks.push(Chunk::new_for_demo([-s, 0.], -2));
         self.chunks.push(Chunk::new_for_demo([s, 0.], 2));
         self.chunks.push(Chunk::new_for_demo([0., -s], 2));
         self.chunks.push(Chunk::new_for_demo([0., s], 2));
+        self.chunks.push(Chunk::new_for_demo([-2.*s, 0.], -4));
     }
 
     /// Returns a list of cube attributes to be drawn on the screen.
@@ -46,17 +47,29 @@ impl World {
         }
         positions
     }
-    
+
     /// Returns true if the player can move to this position.
     pub fn is_position_free(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
             if chunk.is_in(pos) {
-                if !chunk.is_free(pos) {
+                if !chunk.is_position_free(pos) {
                     return false;
-                } 
+                }
                 // else {
                 //     println!("{pos:?} is free");
                 // }
+            }
+        }
+        true
+    }
+
+    /// Returns true if the given position is free falling
+    pub fn is_position_free_falling(&self, pos: &Vector3) -> bool {
+        for chunk in &self.chunks {
+            if chunk.is_in(pos) {
+                if !chunk.is_position_free_falling(pos) {
+                    return false;
+                }
             }
         }
         true
@@ -76,7 +89,7 @@ mod tests {
         let s = CHUNK_SIZE as f32;
         world.chunks.push(Chunk::new_for_demo([-s, 0.], 0));
         world.chunks[0].print_all_cubes();
-        
+
         // Assert some positions
         assert!(!world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 1.5, 4.0)));
         assert!(!world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 0.5, 4.0)));
