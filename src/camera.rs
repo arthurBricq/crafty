@@ -1,12 +1,13 @@
 use std::f32::consts::PI;
 use std::time::Duration;
+
 use crate::chunk::CHUNK_FLOOR;
 use crate::gravity::GravityHandler;
 use crate::vector::Vector3;
 use crate::world::World;
 
 /// Travel speed [m/s] or [cube/s]
-const SPEED: f32 = 2.0; 
+const SPEED: f32 = 2.0;
 
 pub const PLAYER_HEIGHT: f32 = 2.;
 
@@ -23,19 +24,19 @@ pub enum MotionState {
 pub struct Camera<'a> {
     /// Position of the camera
     position: Vector3,
-    
+
     /// Orientation of the camera Yaw, Pitch
     rotation: [f32; 2],
-    
+
     // state: MotionState
     w_pressed: bool,
     s_pressed: bool,
     a_pressed: bool,
     d_pressed: bool,
-    
+
     /// Reference to the world is necessary for collision detection.
     world: &'a World,
-    
+
     /// For handling free-fall
     gravity_handler: GravityHandler
 }
@@ -80,10 +81,10 @@ impl<'a> Camera<'a> {
             next_pos -= l * amplitude;
             next_pos_amplified -= l * amplitude * ratio
         }
-        
+
         // Collision detection (xz-plane)
         let is_free = self.world.is_position_free(&next_pos_amplified);
-        
+
         // Free-fall handling
         let is_falling = self.world.is_position_free_falling(&next_pos_amplified);
         let dz_fall = self.gravity_handler.step(is_falling, elapsed);
@@ -105,7 +106,7 @@ impl<'a> Camera<'a> {
             MotionState::None => {}
         }
     }
-    
+
     pub fn jump(&mut self) {
         self.gravity_handler.jump();
     }
@@ -131,6 +132,21 @@ impl<'a> Camera<'a> {
 
     fn ground_direction_right(&self) -> Vector3 {
         Vector3::new(self.rotation[0].sin(), 0., -self.rotation[0].cos())
+    }
+
+    pub fn perspective_matrix(&self, dim: (u32, u32)) -> [[f32; 4]; 4] {
+        let (width, height) = dim;
+        let aspect_ratio = height as f32 / width as f32;
+        let fov: f32 = std::f32::consts::PI / 3.0;
+        let zfar = 1024.0;
+        let znear = 0.1;
+        let f = 1.0 / (fov / 2.0).tan();
+        [
+            [f * aspect_ratio, 0.0, 0.0, 0.0],
+            [0.0, f, 0.0, 0.0],
+            [0.0, 0.0, (zfar + znear) / (zfar - znear), 1.0],
+            [0.0, 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
+        ]
     }
 
     /// Returns the view matrix, from the given camera parameters

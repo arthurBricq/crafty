@@ -6,6 +6,7 @@ mod world;
 mod chunk;
 mod vector;
 mod gravity;
+mod graphics;
 
 use crate::camera::Camera;
 use crate::world::World;

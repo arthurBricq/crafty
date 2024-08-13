@@ -1,4 +1,3 @@
-use glium::implement_vertex;
 use strum::EnumIter;
 use strum::IntoEnumIterator;
 
@@ -64,71 +63,5 @@ impl Cube {
 
     pub fn position(&self) -> [f32; 3] {
         self.position
-    }
-}
-
-/// A vertex of a cube
-/// The position is expressed into the OpenGL reference frame
-#[derive(Copy, Clone)]
-pub struct Vertex {
-    position: [f32; 3],
-    tex_coords: [f32; 2],
-    face: u8,
-}
-
-implement_vertex!(Vertex, position, tex_coords, face);
-
-pub const VERTICES: [Vertex; 36] = [
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 },
-    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
-    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
-    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 0 },
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
-    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 1 },
-    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 1 },
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
-    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 1 },
-    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 1 },
-    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 2 },
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 2 },
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 2 },
-    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 },
-    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
-    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 },
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 },
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
-    Vertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 1.0], face: 4 },
-    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    Vertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    Vertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 4 },
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
-    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
-    Vertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 5 },
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    Vertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    Vertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 0.0], face: 5 },
-    Vertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 }
-];
-
-
-/// An OpenGL type that contains the information for OpenGL's instancing
-#[derive(Copy, Clone)]
-pub struct CubeAttr {
-    world_matrix: [[f32; 4]; 4],
-    block_id: u8,
-}
-
-implement_vertex!(CubeAttr, world_matrix, block_id);
-
-impl CubeAttr {
-    pub fn new(world_matrix: [[f32; 4]; 4], block_id: u8) -> Self {
-        Self { world_matrix, block_id }
     }
 }

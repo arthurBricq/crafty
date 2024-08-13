@@ -12,7 +12,8 @@ use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
 use crate::camera::{Camera, MotionState};
-use crate::cube::{Block, VERTICES};
+use crate::cube::Block;
+use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::world::World;
 
 /// The struct in charge of drawing the world
@@ -39,78 +40,15 @@ impl<'a> WorldRenderer<'a> {
         window.set_cursor_visible(false);
 
         // VBO
-        let vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
+        let cube_vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-
-        // Vertex shader
-        // Most basic example with a camera
-        let vertex_shader_src = r#"
-        #version 150
-
-        in vec3 position;
-        in mat4 world_matrix;
-
-        // The vertex shader has some passthrough for the fragment shader...
-
-        // Which face of the cube is being passed ?
-        in int face;
-        flat out int face_s;
-
-        // Index of the block to be used
-        in int block_id;
-        flat out int block_id_s;
-
-        // Where is the vertex located on the face ?
-        in vec2 tex_coords;
-        out vec2 v_tex_coords;
-
-        uniform mat4 perspective;
-        uniform mat4 view;
-
-        void main() {
-            gl_Position = perspective * view * world_matrix * vec4(position, 1.0);
-            v_tex_coords = tex_coords;
-            face_s = face;
-            block_id_s = block_id;
-        }
-    "#;
-
-        // Fragment shader
-        let fragment_shader_src = r#"
-        #version 140
-
-        // passed-through the vertex shader
-        flat in int face_s;
-        flat in int block_id_s;
-        in vec2 v_tex_coords;
-
-        out vec4 color ;
-
-        uniform sampler2DArray textures;
-
-        void main() {
-            // Each block has 3 types of faces
-            int idx = block_id_s * 3;
-
-            if (face_s == 4) {
-                // bottom
-                color = texture(textures, vec3(v_tex_coords, idx + 2));
-            } else if (face_s == 5) {
-                // top
-                color = texture(textures, vec3(v_tex_coords, idx + 1));
-            } else {
-                // sides
-                color = texture(textures, vec3(v_tex_coords, float(idx)));
-            }
-        }
-    "#;
 
         // Build the texture library, and change the sampler to use the proper filters
         let textures = self.build_textures_array(&display);
         let samplers = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
         // Build the shader program
-        let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
+        let program = glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None).unwrap();
 
         // Start rendering by creating a new frame
         let mut target = display.draw();
@@ -127,21 +65,6 @@ impl<'a> WorldRenderer<'a> {
                     winit::event::WindowEvent::RedrawRequested => {
                         let mut target = display.draw();
                         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
-
-                        let perspective = {
-                            let (width, height) = target.get_dimensions();
-                            let aspect_ratio = height as f32 / width as f32;
-                            let fov: f32 = std::f32::consts::PI / 3.0;
-                            let zfar = 1024.0;
-                            let znear = 0.1;
-                            let f = 1.0 / (fov / 2.0).tan();
-                            [
-                                [f * aspect_ratio, 0.0, 0.0, 0.0],
-                                [0.0, f, 0.0, 0.0],
-                                [0.0, 0.0, (zfar + znear) / (zfar - znear), 1.0],
-                                [0.0, 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
-                            ]
-                        };
 
                         // Configure the GPU to do Depth testing (with a depth buffer)
                         let params = glium::DrawParameters {
@@ -160,7 +83,7 @@ impl<'a> WorldRenderer<'a> {
                         // Define our uniforms (same uniforms for all cubes)...
                         let uniforms = uniform! {
                             view: self.cam.view_matrix(),
-                            perspective: perspective,
+                            perspective: self.cam.perspective_matrix(target.get_dimensions()),
                             textures: samplers
                         };
 
@@ -169,7 +92,7 @@ impl<'a> WorldRenderer<'a> {
                         let positions = self.world.get_cube_attributes();
                         let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
                         target.draw(
-                            (&vertex_buffer, position_buffer.per_instance().unwrap()),
+                            (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,
                             &program,
                             &uniforms,
@@ -215,7 +138,7 @@ impl<'a> WorldRenderer<'a> {
 
     fn handle_input(&mut self, event: RawKeyEvent) {
         println!("key tapped: {event:?}");
-        
+
         match event.physical_key {
             PhysicalKey::Code(key) => {
                 match key {

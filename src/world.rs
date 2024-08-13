@@ -1,6 +1,6 @@
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
 use crate::cube::Block::COBBELSTONE;
-use crate::cube::CubeAttr;
+use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
 
 pub struct World {
