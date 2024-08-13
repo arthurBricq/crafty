@@ -1,34 +1,36 @@
 use std::f32::consts::PI;
 use std::time::Duration;
 use crate::chunk::CHUNK_FLOOR;
+use crate::vector::Vector3;
 use crate::world::World;
 
-const SPEED_INC: f32 = 0.5;
-const MAX_SPEED: f32 = 2.0;
-const MIN_SPEED: f32 = 0.1;
+/// Travel speed [m/s] or [cube/s]
+const SPEED: f32 = 2.0; 
+
 pub const PLAYER_HEIGHT: f32 = 2.;
 
 pub enum MotionState {
-    W,S,A,D,None
+    W,
+    S,
+    A,
+    D,
+    None,
 }
 
 /// First player camera
 /// The state includes the position and the speed
 pub struct Camera<'a> {
-    position: [f32; 3],
-    speed: [f32; 3],
-    /// Yaw, Pitch
+    /// Position of the camera
+    position: Vector3,
+    /// Orientation of the camera Yaw, Pitch
     rotation: [f32; 2],
-    
     // state: MotionState
     w_pressed: bool,
     s_pressed: bool,
     a_pressed: bool,
     d_pressed: bool,
-    
-    // Collision callcack
-    // collision_callback: Box<dyn FnMut([f32;3]) -> bool + 'a>
-    world: &'a World
+    /// Reference to the world is necessary for collision detection.
+    world: &'a World,
 }
 
 impl<'a> Camera<'a> {
@@ -36,86 +38,49 @@ impl<'a> Camera<'a> {
     // pub fn new(collision_callback: impl FnMut([f32;3]) -> bool + 'a) -> Self {
     pub fn new(world: &'a World) -> Self {
         Self {
-            position: [4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0],
-            speed: [0.; 3],
+            position: Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
             rotation: [PI, 0.0],
             w_pressed: false,
             s_pressed: false,
             a_pressed: false,
             d_pressed: false,
-            world
+            world,
         }
     }
 
     pub fn step(&mut self, elapsed: Duration) {
-        // println!("speed = {:?}, dt = {:?}", self.speed, elapsed.as_secs_f32());
-        // println!("{} {} {} {}", self.w_pressed, self.s_pressed, self.a_pressed, self.d_pressed);
-        // TODO I have to improve this function.
-        //      My idea so far is to say "speed = direction vector"
-        //      w pressed => speed += direction vector
-        //      d pressed => speed -= direction vector
-        //      etc...
-        //      But it is definitely not so easy, how to implement the deceleration ?
-        
-        // Update the speed vector
+        // Compute the next position
+        let f = self.ground_direction_forward();
+        let l = self.ground_direction_right();
+        let mut next_pos = self.position.clone();
+        let mut next_pos_amplified = self.position.clone();
+        // compute motion amplitude as a function of the elpased time to reach a desired speed
+        // speed = distance / time    ==>    distance = speed * time
+        let amplitude = SPEED * elapsed.as_secs_f32();
+        let ratio = 10.;
         if self.w_pressed {
-            self.speed[0] += SPEED_INC * self.rotation[0].cos() * self.rotation[1].cos();
-            self.speed[2] += SPEED_INC * self.rotation[0].sin() * self.rotation[1].cos();
-            // self.speed[1] += SPEED_INC * self.rotation[1].sin();
-            self.clamp_speed();
+            next_pos += f * amplitude;
+            next_pos_amplified += f * amplitude * ratio
         }
         if self.s_pressed {
-            self.speed[0] -= SPEED_INC * self.rotation[0].cos() * self.rotation[1].cos();
-            self.speed[2] -= SPEED_INC * self.rotation[0].sin() * self.rotation[1].cos();
-            // self.speed[1] -= SPEED_INC * self.rotation[1].sin();
-            self.clamp_speed();
+            next_pos -= f * amplitude;
+            next_pos_amplified -= f * amplitude * ratio
         }
         if self.d_pressed {
-            self.speed[0] += SPEED_INC * self.rotation[0].sin();
-            self.speed[2] -= SPEED_INC * self.rotation[0].cos();
-            self.clamp_speed();
+            next_pos += l * amplitude;
+            next_pos_amplified += l * amplitude * ratio
         }
         if self.a_pressed {
-            self.speed[0] -= SPEED_INC * self.rotation[0].sin();
-            self.speed[2] += SPEED_INC * self.rotation[0].cos();
-            self.clamp_speed();
+            next_pos -= l * amplitude;
+            next_pos_amplified -= l * amplitude * ratio
         }
-        // If no key is being pressed, reduced the speed
-        if !self.w_pressed && !self.s_pressed && !self.a_pressed && !self.d_pressed {
-            if self.speed[0].abs() > MIN_SPEED {
-                self.speed[0] /= 2.;
-            } else {
-                self.speed[0] = 0.;
-            }
-            if self.speed[1].abs() > MIN_SPEED {
-                self.speed[1] /= 2.;
-            } else {
-                self.speed[1] = 0.;
-            }
-            if self.speed[2].abs() > MIN_SPEED {
-                self.speed[2] /= 2.;
-            } else {
-                self.speed[2] = 0.;
-            }
-        }
-        let dx = elapsed.as_secs_f32() * self.speed[0];
-        let dz = elapsed.as_secs_f32() * self.speed[1];
-        let dy = elapsed.as_secs_f32() * self.speed[2];
-        
-        if self.world.is_position_free(& [self.position[0] + dx, self.position[1] - PLAYER_HEIGHT + 1.0 + dz, self.position[2] + dy]) {
-            // Update the position if the world is free
-            self.position = [self.position[0] + dx, self.position[1] + dz, self.position[2] + dy];
-        } else { 
-            // Stop the player
-            self.speed = [0.;3]
-        }
-        
-    }
 
-    fn clamp_speed(&mut self) {
-        self.speed[0] = self.speed[0].clamp(-MAX_SPEED, MAX_SPEED);
-        self.speed[1] = self.speed[1].clamp(-MAX_SPEED, MAX_SPEED);
-        self.speed[2] = self.speed[2].clamp(-MAX_SPEED, MAX_SPEED);
+        // Collision detection
+        let is_free = self.world.is_position_free(&next_pos_amplified);
+        if is_free {
+            self.position = next_pos
+        }
+        // println!("free={is_free}, pos={next_pos:?}, tested={next_pos_amplified:?}");
     }
 
     pub fn toggle_state(&mut self, state: MotionState) {
@@ -126,19 +91,6 @@ impl<'a> Camera<'a> {
             MotionState::D => self.d_pressed = !self.d_pressed,
             MotionState::None => {}
         }
-        
-        // let s: f32 = 0.5;
-        // match state {
-        //     MotionState::W => self.position[0] -= s,
-        //     MotionState::S => self.position[0] += s,
-        //     MotionState::A => self.position[2] -= s,
-        //     MotionState::D => self.position[2] += s,
-        //     MotionState::None => {}
-        // }
-        // 
-        // println!("---");
-        // println!("is free = {}", self.world.is_position_free(&self.position));
-        
     }
 
     pub fn up(&mut self) {
@@ -149,42 +101,36 @@ impl<'a> Camera<'a> {
         self.position[1] -= 1.;
     }
 
+    /// Returns the normalized direction vector
+    fn direction(&self) -> Vector3 {
+        let yaw = self.rotation[0];
+        let pitch = self.rotation[1];
+        Vector3::new(yaw.cos() * pitch.cos(), pitch.sin(), yaw.sin() * pitch.cos())
+    }
+
+    fn ground_direction_forward(&self) -> Vector3 {
+        Vector3::new(self.rotation[0].cos(), 0., self.rotation[0].sin())
+    }
+
+    fn ground_direction_right(&self) -> Vector3 {
+        Vector3::new(self.rotation[0].sin(), 0., -self.rotation[0].cos())
+    }
+
     /// Returns the view matrix, from the given camera parameters
     pub fn view_matrix(&self) -> [[f32; 4]; 4] {
         // Compute the normalised direction vector
-        let f = {
-            let yaw = self.rotation[0];
-            let pitch = self.rotation[1];
-            let dir: [f32; 3] = [yaw.cos() * pitch.cos(),
-                pitch.sin(),
-                yaw.sin() * pitch.cos()];
-            dir
-        };
-
-        let camera_up: [f32; 3] = [0., 1., 0.];
-
-        let s = [camera_up[1] * f[2] - camera_up[2] * f[1],
-            camera_up[2] * f[0] - camera_up[0] * f[2],
-            camera_up[0] * f[1] - camera_up[1] * f[0]];
-
-        let s_norm = {
-            let len = s[0] * s[0] + s[1] * s[1] + s[2] * s[2];
-            let len = len.sqrt();
-            [s[0] / len, s[1] / len, s[2] / len]
-        };
-
-        let u = [f[1] * s_norm[2] - f[2] * s_norm[1],
-            f[2] * s_norm[0] - f[0] * s_norm[2],
-            f[0] * s_norm[1] - f[1] * s_norm[0]];
-
-        let p = [-self.position[0] * s_norm[0] - self.position[1] * s_norm[1] - self.position[2] * s_norm[2],
+        let forward = self.direction();
+        let camera_up = Vector3::new(0., 1., 0.);
+        let mut s = camera_up.cross(&forward);
+        s.normalize();
+        let u = forward.cross(&s);
+        let p = [-self.position[0] * s[0] - self.position[1] * s[1] - self.position[2] * s[2],
             -self.position[0] * u[0] - self.position[1] * u[1] - self.position[2] * u[2],
-            -self.position[0] * f[0] - self.position[1] * f[1] - self.position[2] * f[2]];
-
+            -self.position[0] * forward[0] - self.position[1] * forward[1] - self.position[2] * forward[2]];
         [
-            [s_norm[0], u[0], f[0], 0.0],
-            [s_norm[1], u[1], f[1], 0.0],
-            [s_norm[2], u[2], f[2], 0.0],
+            [s[0], u[0], forward[0], 0.0],
+            [s[1], u[1], forward[1], 0.0],
+            [s[2], u[2], forward[2], 0.0],
             [p[0], p[1], p[2], 1.0],
         ]
     }

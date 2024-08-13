@@ -8,13 +8,15 @@ use strum::IntoEnumIterator;
 pub enum Block {
     GRASS = 0,
     DIRT,
+    COBBELSTONE
 }
 
 impl Block {
     fn file_name(&self) -> String {
         match self {
             Block::GRASS => "grass_block".to_string(),
-            Block::DIRT => "dirt".to_string()
+            Block::DIRT => "dirt".to_string(),
+            Block::COBBELSTONE => "cobblestone".to_string(),
         }
     }
 
@@ -46,8 +48,8 @@ impl Cube {
 
     pub fn model_matrix(&self) -> [[f32; 4]; 4] {
         // TODO As you can see, I added 0.5 at each cube model
-        //      It's because I was lazy to edit all the values in `VERTICES` of +0.5, but 
-        //      it would be nice to do it eventually :) 
+        //      It's because I was lazy to edit all the values in `VERTICES` of +0.5, but
+        //      it would be nice to do it eventually :)
         [
             [1.00, 0.0, 0.0, 0.0],
             [0.0, 1.00, 0.0, 0.0],

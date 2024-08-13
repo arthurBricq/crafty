@@ -1,5 +1,6 @@
 use crate::cube::Block::{DIRT, GRASS};
 use crate::cube::{Block, Cube};
+use crate::vector::Vector3;
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 
@@ -51,6 +52,14 @@ impl Chunk {
         }
     }
 
+    pub fn set_cube(&mut self, at: Vector3, kind: Block) {
+        let (i_z, i_x, i_y) = self.get_indices(&at);
+        let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
+        if in_bound {
+            self.cubes[i_z][i_x][i_y] = Some(Cube::new(at.as_array(), kind))
+        }
+    }
+
     pub fn cubes(&self) -> &ChunkData {
         &self.cubes
     }
@@ -60,20 +69,30 @@ impl Chunk {
     }
 
     /// Returns true if the position is in the chunk
-    pub fn is_in(&self, pos: &[f32;3]) -> bool {
+    pub fn is_in(&self, pos: &Vector3) -> bool {
         // Note that in the received position, the 'y' (from the plane) position is actually the third value
         // of the vector...
         pos[0] >= self.corner[0] - CHUNK_MARGIN && pos[0] < (self.corner[0] + CHUNK_MARGIN + CHUNK_SIZE as f32) &&
             pos[2] >= self.corner[1] - CHUNK_MARGIN && pos[2] < (self.corner[1] + CHUNK_MARGIN + CHUNK_SIZE as f32)
     }
-    
-    /// Returns true if the position in the chunk is not part of a cube.
-    /// The function does not check that the cube is chunk, and will crash if it is not.
-    pub fn is_free(&self, pos: &[f32;3]) -> bool {
+
+    fn get_indices(&self, pos: &Vector3) -> (usize, usize, usize) {
         let i_x = (pos[0] - self.corner[0]) as usize;
         let i_z = pos[1] as usize;
         let i_y = (pos[2] - self.corner[1]) as usize;
-        i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE && self.cubes[i_z][i_x][i_y].is_none()
+        (i_z, i_x, i_y)
+    }
+    
+    /// Returns true if the position in the chunk is not part of a cube.
+    /// The function does not check that the cube is chunk, and will crash if it is not.
+    pub fn is_free(&self, pos: &Vector3) -> bool {
+        let (i_z, i_x, i_y) = self.get_indices(pos);
+        let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
+        let result = !in_bound || self.cubes[i_z][i_x][i_y].is_none();
+        // if !result && in_bound {
+        //     println!("{pos:?} is rejected by {i_z}, {i_x}, {i_y} -> {:?}", self.cubes[i_z][i_x][i_y].unwrap());
+        // }
+        result
     }
     
     pub fn print_all_cubes(&self) {
@@ -94,16 +113,17 @@ impl Chunk {
 mod tests {
     use crate::chunk::{Chunk, CHUNK_HEIGHT, CHUNK_SIZE};
     use crate::cube::Block::GRASS;
+    use crate::vector::Vector3;
 
     #[test]
     fn test_bounding_area() {
         let chunk = Chunk::new([0., 0.]);
-        assert!(chunk.is_in(&[0.,0.,0.]));
-        assert!(chunk.is_in(&[1.,30.,1.]));
-        assert!(!chunk.is_in(&[-1.,30.,1.]));
-        
-        // After 7.sssssss
-        assert!(!chunk.is_in(&[4.,30.,7.5]));
+        assert!(chunk.is_in(&Vector3::new(0.,0.,0.)));
+        assert!(chunk.is_in(&Vector3::new(1.,30.,1.)));
+        assert!(!chunk.is_in(&Vector3::new(-1.,30.,1.)));
+        assert!(chunk.is_in(&Vector3::new(4.,30.,7.5)));
+        assert!(!chunk.is_in(&Vector3::new(4.,30.,8.5)));
+        assert!(!chunk.is_in(&Vector3::new(9.,30.,4.5)));
     }
     
     #[test]
@@ -114,7 +134,7 @@ mod tests {
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
-                    assert!(chunk.is_free(&[i as f32,k as f32,j as f32]));
+                    assert!(chunk.is_free(&Vector3::new(i as f32,k as f32,j as f32)));
                 }
             }
         }
@@ -127,9 +147,9 @@ mod tests {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if k != 10 {
-                        assert!(chunk.is_free(&[i as f32,k as f32,j as f32]));
+                        assert!(chunk.is_free(&Vector3::new(i as f32,k as f32,j as f32)));
                     } else {
-                        assert!(!chunk.is_free(&[i as f32,k as f32,j as f32]));
+                        assert!(!chunk.is_free(&Vector3::new(i as f32,k as f32,j as f32)));
                     }
                 }
             }
@@ -140,19 +160,19 @@ mod tests {
     fn test_free_check_2() {
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(9, GRASS);
-        assert!(chunk.is_free(&[4.0, 10.1, 4.0]));
+        assert!(chunk.is_free(&Vector3::new(4.0, 10.1, 4.0)));
     }
 
     #[test]
     fn test_free_check_3() {
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(0, GRASS);
-        assert!(!chunk.is_free(&[4.0, 0.1, 4.0]));
-        assert!(!chunk.is_free(&[4.0, 0.5, 4.0]));
-        assert!(!chunk.is_free(&[4.0, 0.9, 4.0]));
-        assert!(chunk.is_free(&[4.0, 1.1, 4.0]));
-        assert!(chunk.is_free(&[4.0, 1.2, 4.0]));
-        assert!(chunk.is_free(&[4.0, 1.5, 4.0]));
+        assert!(!chunk.is_free(&Vector3::new(4.0, 0.1, 4.0)));
+        assert!(!chunk.is_free(&Vector3::new(4.0, 0.5, 4.0)));
+        assert!(!chunk.is_free(&Vector3::new(4.0, 0.9, 4.0)));
+        assert!(chunk.is_free(&Vector3::new(4.0, 1.1, 4.0)));
+        assert!(chunk.is_free(&Vector3::new(4.0, 1.2, 4.0)));
+        assert!(chunk.is_free(&Vector3::new(4.0, 1.5, 4.0)));
     }
 
 }

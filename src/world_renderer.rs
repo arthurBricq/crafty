@@ -214,6 +214,8 @@ impl<'a> WorldRenderer<'a> {
     }
 
     fn handle_input(&mut self, event: RawKeyEvent) {
+        println!("key tapped: {event:?}");
+        
         match event.physical_key {
             PhysicalKey::Code(key) => {
                 match key {
@@ -229,22 +231,10 @@ impl<'a> WorldRenderer<'a> {
             _ => {}
         }
 
-        // println!("key tapped: {event:?}");
+        // Second match is for other stuff...
         if event.state == Pressed {
             match event.physical_key {
                 PhysicalKey::Code(key) => {
-                    // First match is merely for handling the camera
-                    // match key {
-                        // KeyCode::KeyW => self.cam.toggle_state(MotionState::W),
-                        // KeyCode::KeyS => self.cam.toggle_state(MotionState::S),
-                        // KeyCode::KeyD => self.cam.toggle_state(MotionState::D),
-                        // KeyCode::KeyA => self.cam.toggle_state(MotionState::A),
-                        // KeyCode::KeyK => self.cam.up(),
-                        // KeyCode::KeyJ => self.cam.down(),
-                        // _ => {}
-                    // }
-                    
-                    // Second match is for other stuff...
                     match key {
                         KeyCode::Digit0 => {}
                         KeyCode::Digit1 => {}
@@ -254,9 +244,6 @@ impl<'a> WorldRenderer<'a> {
                 PhysicalKey::Unidentified(_) => {}
             }
         }
-        // else if event.state == Released {
-        //     self.cam.release();
-        // }
     }
 
 }

@@ -9,9 +9,10 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
 ### Current list of features
 
 - Rendering textured cubes of different kinds with OpenGL
-- OpenGL instancing allows to render thousands of cubes very fast.
-- Basic First player camera
-- The world is divided in chunks of equal sizes
+  - OpenGL instancing allows to render thousands of cubes very fast.
+- First Player Camera
+- Detection of collision
+- World is divided in chunks of equal sizes
 
 ### Missing features (short term milestones)
 

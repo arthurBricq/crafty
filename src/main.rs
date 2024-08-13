@@ -4,6 +4,7 @@ mod camera;
 mod world_renderer;
 mod world;
 mod chunk;
+mod vector;
 
 use crate::camera::Camera;
 use crate::world::World;

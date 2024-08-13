@@ -1,5 +1,7 @@
-use crate::chunk::{Chunk, CHUNK_SIZE};
+use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
+use crate::cube::Block::COBBELSTONE;
 use crate::cube::CubeAttr;
+use crate::vector::Vector3;
 
 pub struct World {
     chunks: Vec<Chunk>,
@@ -14,6 +16,9 @@ impl World {
     pub fn fill_for_demo(&mut self) {
         let s = CHUNK_SIZE as f32;
         self.chunks.push(Chunk::new_for_demo([0., 0.], 0));
+        self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 1., 2.), COBBELSTONE);
+        self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 2., 2.), COBBELSTONE);
+        
         self.chunks.push(Chunk::new_for_demo([-s, 0.], 2));
         self.chunks.push(Chunk::new_for_demo([s, 0.], 2));
         self.chunks.push(Chunk::new_for_demo([0., -s], 2));
@@ -42,14 +47,16 @@ impl World {
         positions
     }
     
-    pub fn is_position_free(&self, pos: &[f32;3]) -> bool {
+    /// Returns true if the player can move to this position.
+    pub fn is_position_free(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
             if chunk.is_in(pos) {
                 if !chunk.is_free(pos) {
                     return false;
-                } else {
-                    println!("{pos:?} is free");
-                }
+                } 
+                // else {
+                //     println!("{pos:?} is free");
+                // }
             }
         }
         true
@@ -59,6 +66,7 @@ impl World {
 #[cfg(test)]
 mod tests {
     use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
+    use crate::vector::Vector3;
     use crate::world::World;
 
     #[test]
@@ -70,11 +78,11 @@ mod tests {
         world.chunks[0].print_all_cubes();
         
         // Assert some positions
-        assert!(!world.is_position_free(&[-4.0, CHUNK_FLOOR as f32 - 1.5, 4.0]));
-        assert!(!world.is_position_free(&[-4.0, CHUNK_FLOOR as f32 - 0.5, 4.0]));
-        assert!(!world.is_position_free(&[-4.0, CHUNK_FLOOR as f32 + 0.5, 4.0]));
-        assert!(world.is_position_free(&[-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0]));
-        assert!(world.is_position_free(&[-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0]));
+        assert!(!world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 1.5, 4.0)));
+        assert!(!world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 0.5, 4.0)));
+        assert!(!world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 0.5, 4.0)));
+        assert!(world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
+        assert!(world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
     }
     
     #[test]
@@ -83,6 +91,6 @@ mod tests {
         // Adding one chunk
         world.chunks.push(Chunk::new_for_demo([0., 0.], 0));
         world.chunks[0].print_all_cubes();
-        assert!(world.is_position_free(&[4.0, 10.2, 3.0]));
+        assert!(world.is_position_free(&Vector3::new(4.0, 10.2, 3.0)));
     }
 }
