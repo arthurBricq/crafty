@@ -62,7 +62,7 @@ impl<'a> WorldRenderer<'a> {
         // Build the texture library, and change the sampler to use the proper filters
         let textures = self.build_textures_array(&display);
         let samplers = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
-        
+
         // Load other textures that are used
         let selected_texture = Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/selected.png"), &display);
 
@@ -105,7 +105,7 @@ impl<'a> WorldRenderer<'a> {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
-                                
+
                             }
                         }
                         t = Instant::now();
@@ -200,7 +200,7 @@ impl<'a> WorldRenderer<'a> {
         }).collect();
         Texture2dArray::new(display, source).unwrap()
     }
-    
+
     /// Loads a texture and returns it
     fn load_texture(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2d {
         let image = image::load(std::io::Cursor::new(bytes),
@@ -235,7 +235,12 @@ impl<'a> WorldRenderer<'a> {
                 PhysicalKey::Code(key) => {
                     match key {
                         KeyCode::Digit0 => {}
-                        KeyCode::Digit1 => {}
+                        KeyCode::KeyP => {
+                            println!("=================");
+                            println!("Debug Information");
+                            println!("=================");
+                            self.cam.debug();
+                        }
                         _ => {}
                     }
                 },

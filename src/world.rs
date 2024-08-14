@@ -19,16 +19,17 @@ impl World {
         self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 1., 2.), COBBELSTONE);
         self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 2., 2.), COBBELSTONE);
 
-        self.chunks.push(Chunk::new_for_demo([-s, 0.], -2));
         self.chunks.push(Chunk::new_for_demo([s, 0.], 2));
         self.chunks.push(Chunk::new_for_demo([0., -s], 2));
         self.chunks.push(Chunk::new_for_demo([0., s], 2));
-        self.chunks.push(Chunk::new_for_demo([-2.*s, 0.], -4));
+
+        self.chunks.push(Chunk::new_for_demo([-s, 0.], 0));
+        self.chunks.push(Chunk::new_for_demo([-2.*s, 0.], 0));
     }
 
     /// Returns a list of cube attributes to be drawn on the screen.
     /// Each item on this list will result in a cube drawn in the screen.
-    /// 
+    ///
     /// 'selected_cube': the currently selected cube, that will be rendered differently.
     pub fn get_cube_attributes(&self, selected_cube: Option<Vector3>) -> Vec<CubeAttr> {
         let mut positions: Vec<CubeAttr> = Vec::new();

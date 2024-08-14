@@ -43,7 +43,10 @@ pub struct Camera<'a> {
 
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
-    selected: Option<Vector3>
+    selected: Option<Vector3>,
+    
+    /// True if the next step of the camera must be for debug
+    debug_next_iter: bool,
 }
 
 impl<'a> Camera<'a> {
@@ -59,7 +62,8 @@ impl<'a> Camera<'a> {
             d_pressed: false,
             world,
             gravity_handler: GravityHandler::new(),
-            selected: None
+            selected: None,
+            debug_next_iter: false
         }
     }
 
@@ -102,16 +106,26 @@ impl<'a> Camera<'a> {
         }
 
         self.compute_selected_cube();
+        self.debug_next_iter = false;
     }
 
     fn compute_selected_cube(&mut self) {
+        if self.debug_next_iter { 
+            println!("* Computation of selected block"); 
+        }
         let unit_direction = self.direction();
         for i in 1..10 {
             // TODO Not sure if '* 0.5' is actually important here
             let query = self.position + unit_direction * i as f32 * 0.5;
+            if self.debug_next_iter {
+                println!("    - {query:?}");
+            }
             // If the query position is not free, it means that we have found the selected cube
             if !self.world.is_position_free(&query) {
-                self.selected = Some(Vector3::new(query.x() as i32 as f32, query.y() as i32 as f32, query.z() as i32 as f32));
+                if self.debug_next_iter {
+                    println!("     SELECTED");
+                }
+                self.selected = Some(Vector3::new(query.x().floor(), query.y().floor(), query.z().floor()));
                 return;
             }
         }
@@ -138,6 +152,12 @@ impl<'a> Camera<'a> {
 
     pub fn down(&mut self) {
         self.position[1] -= 1.;
+    }
+    
+    pub fn debug(&mut self) {
+        self.debug_next_iter = true;
+        println!("* Camera - position   : {:?}", self.position);
+        println!("*        - orientation: {:?}", self.direction());
     }
 
     /// Returns the normalized direction vector
