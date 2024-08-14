@@ -1,6 +1,6 @@
 # Crafty
 
-(The begining of) A MineCraft clone coded with OpenGL, fully in Rust !
+(The beginning of) A MineCraft clone coded with OpenGL, fully in Rust !
 
 Note that the entire **game engine** is written by ourselves, using **only a driver to OpenGL** !
 
@@ -14,6 +14,8 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
 - First Player Camera
 - Detection of collision
 - Gravity, Free-Fall, Jumping
+- Easy way to import textures into the game
+- Easy way to presents `Tiles` on the screen (menus)
 
 ### Missing features (short term milestones)
 

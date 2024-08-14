@@ -14,18 +14,25 @@ use winit::keyboard::{KeyCode, PhysicalKey};
 use crate::camera::{Camera, MotionState};
 use crate::cube::Block;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
+use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
+use crate::graphics::tile::TileManager;
 use crate::world::World;
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer<'a> {
     world: &'a World,
     cam: &'a mut Camera<'a>,
+    tile_manager: TileManager
 }
 
 impl<'a> WorldRenderer<'a> {
 
     pub fn new(world: &'a World, cam: &'a mut Camera<'a>) -> Self {
-        Self { world, cam }
+        Self {
+            world,
+            cam,
+            tile_manager: TileManager::new()
+        }
     }
 
     pub fn run(&mut self) {
@@ -39,21 +46,25 @@ impl<'a> WorldRenderer<'a> {
 
         window.set_cursor_visible(false);
 
-        // VBO
+        // Construct the buffer of vertices (for single objects, we use OpenGL's instancing to multiply them)
         let cube_vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
+        let rect_vertex_buffer = glium::VertexBuffer::new(&display, &RECT_VERTICES).unwrap();
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
         // Build the texture library, and change the sampler to use the proper filters
         let textures = self.build_textures_array(&display);
         let samplers = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
-        // Build the shader program
-        let program = glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None).unwrap();
+        // Build the shader programs
+        let cube_program = glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None).unwrap();
+        let rect_program = glium::Program::from_source(&display, RECT_VERTEX_SHADER, RECT_FRAGMENT_SHADER, None).unwrap();
 
         // Start rendering by creating a new frame
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
         target.finish().unwrap();
+
+        self.tile_manager.add_cross();
         
         // Event loop 
         let mut t = Instant::now();
@@ -75,10 +86,12 @@ impl<'a> WorldRenderer<'a> {
                             },
                             ..Default::default()
                         };
-                        
+
                         // Step the camera with the elapsed time
                         self.cam.step(t.elapsed());
                         t = Instant::now();
+
+                        // I) Draw the cubes
 
                         // Define our uniforms (same uniforms for all cubes)...
                         let uniforms = uniform! {
@@ -94,8 +107,18 @@ impl<'a> WorldRenderer<'a> {
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,
-                            &program,
+                            &cube_program,
                             &uniforms,
+                            &params).unwrap();
+
+                        // II) Drawn the tiles
+                        let rect_uniforms = uniform! {};
+                        let rects_buffer = glium::VertexBuffer::dynamic(&display, self.tile_manager.rects()).unwrap();
+                        target.draw(
+                            (&rect_vertex_buffer, rects_buffer.per_instance().unwrap()),
+                            &indices,
+                            &rect_program,
+                            &rect_uniforms,
                             &params).unwrap();
 
                         target.finish().unwrap();

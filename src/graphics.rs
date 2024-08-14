@@ -4,4 +4,5 @@
 pub mod cube;
 
 pub mod rectangle;
-mod tile;
+pub mod tile;
+pub mod color;
