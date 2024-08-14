@@ -56,7 +56,7 @@ impl Vector3 {
     pub fn z(&self) -> f32 {
         self.z
     }
-    
+
     pub fn as_array(&self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
@@ -70,6 +70,10 @@ impl Vector3 {
             y: other.y - self.y,
             z: other.z - self.z,
         }
+    }
+
+    pub fn equals(&self, pos: &[f32;3]) -> bool {
+        self.x == pos[0] && self.y == pos[1] && self.z == pos[2]
     }
 }
 

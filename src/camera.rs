@@ -29,6 +29,7 @@ pub struct Camera<'a> {
     rotation: [f32; 2],
 
     // state: MotionState
+    // TODO Maybe we can build a better encapsulation of this logic
     w_pressed: bool,
     s_pressed: bool,
     a_pressed: bool,
@@ -38,7 +39,11 @@ pub struct Camera<'a> {
     world: &'a World,
 
     /// For handling free-fall
-    gravity_handler: GravityHandler
+    gravity_handler: GravityHandler,
+
+    /// Position that the camera is currently pointing to
+    /// If there is no cube, it is set to none
+    selected: Option<Vector3>
 }
 
 impl<'a> Camera<'a> {
@@ -53,7 +58,8 @@ impl<'a> Camera<'a> {
             a_pressed: false,
             d_pressed: false,
             world,
-            gravity_handler: GravityHandler::new()
+            gravity_handler: GravityHandler::new(),
+            selected: None
         }
     }
 
@@ -92,9 +98,24 @@ impl<'a> Camera<'a> {
 
         // Position update
         if is_free {
-            self.position = next_pos
+            self.position = next_pos;
         }
-        // println!("free={is_free}, pos={next_pos:?}, tested={next_pos_amplified:?}");
+
+        self.compute_selected_cube();
+    }
+
+    fn compute_selected_cube(&mut self) {
+        let unit_direction = self.direction();
+        for i in 1..10 {
+            // TODO Not sure if '* 0.5' is actually important here
+            let query = self.position + unit_direction * i as f32 * 0.5;
+            // If the query position is not free, it means that we have found the selected cube
+            if !self.world.is_position_free(&query) {
+                self.selected = Some(Vector3::new(query.x() as i32 as f32, query.y() as i32 as f32, query.z() as i32 as f32));
+                return;
+            }
+        }
+        self.selected = None
     }
 
     pub fn toggle_state(&mut self, state: MotionState) {
@@ -178,4 +199,10 @@ impl<'a> Camera<'a> {
             self.rotation[1] += vertical * sensitivity;
         }
     }
+
+    /// Returns the optional position of the cube that the player is looking at.
+    pub fn selected(&self) -> Option<Vector3> {
+        self.selected
+    }
+    
 }

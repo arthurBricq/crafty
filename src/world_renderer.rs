@@ -3,7 +3,7 @@ extern crate winit;
 
 use std::time::Instant;
 
-use glium::{Display, Surface, uniform};
+use glium::{Display, Surface, Texture2d, uniform};
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
@@ -12,10 +12,12 @@ use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
 use crate::camera::{Camera, MotionState};
+use crate::chunk::CHUNK_FLOOR;
 use crate::cube::Block;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::tile::TileManager;
+use crate::vector::Vector3;
 use crate::world::World;
 
 /// The struct in charge of drawing the world
@@ -54,6 +56,9 @@ impl<'a> WorldRenderer<'a> {
         // Build the texture library, and change the sampler to use the proper filters
         let textures = self.build_textures_array(&display);
         let samplers = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
+        
+        // Load other textures that are used
+        let selected_texture = Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/selected.png"), &display);
 
         // Build the shader programs
         let cube_program = glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None).unwrap();
@@ -97,12 +102,14 @@ impl<'a> WorldRenderer<'a> {
                         let uniforms = uniform! {
                             view: self.cam.view_matrix(),
                             perspective: self.cam.perspective_matrix(target.get_dimensions()),
-                            textures: samplers
+                            textures: samplers,
+                            selected_texture: &selected_texture
                         };
 
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
-                        let positions = self.world.get_cube_attributes();
+                        let positions = self.world.get_cube_attributes(self.cam.selected());
+                        // let positions = self.world.get_cube_attributes(Some(Vector3::new(5.0, CHUNK_FLOOR as f32, 5.0)));
                         let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
@@ -145,7 +152,12 @@ impl<'a> WorldRenderer<'a> {
     }
 
     /// Builds the array of 2D textures using all the blocks
+    /// Each block is associated with 3 textures: side, top and bottom
+    /// All these textures are loaded into one single texture array, that is fed to OpenGL.
+    /// The fragment shader responsible for the cubes is then in charge of selecting the correct element of this array.
     fn build_textures_array(&self, display: &Display<WindowSurface>) -> Texture2dArray {
+        // Get the path of the block textures
+        // TODO don't use hard-coded links
         let root = "/home/arthur/dev/rust/crafty/resources/block/";
         let extension = ".png";
         let all_textures = Block::get_texture_files();
@@ -157,6 +169,15 @@ impl<'a> WorldRenderer<'a> {
             glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions)
         }).collect();
         Texture2dArray::new(display, source).unwrap()
+    }
+    
+    /// Loads a texture and returns it
+    fn load_texture(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2d {
+        let image = image::load(std::io::Cursor::new(bytes),
+                                image::ImageFormat::Png).unwrap().to_rgba8();
+        let image_dimensions = image.dimensions();
+        let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
+        Texture2d::new(display, image).unwrap()
     }
 
     fn handle_input(&mut self, event: RawKeyEvent) {

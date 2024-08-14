@@ -28,18 +28,21 @@ impl World {
 
     /// Returns a list of cube attributes to be drawn on the screen.
     /// Each item on this list will result in a cube drawn in the screen.
-    pub fn get_cube_attributes(&self) -> Vec<CubeAttr> {
+    /// 
+    /// 'selected_cube': the currently selected cube, that will be rendered differently.
+    pub fn get_cube_attributes(&self, selected_cube: Option<Vector3>) -> Vec<CubeAttr> {
         let mut positions: Vec<CubeAttr> = Vec::new();
         for chunk in &self.chunks {
             // TODO improve this code
             // I know that this is not the best way to do this:
             // 1. It is not optimal ...
-            // 2. It breaks the responsability principle
+            // 2. It breaks the responsibility principle
             for layer in chunk.cubes() {
                 for row in layer {
                     for cube in row {
                         if let Some(c) = cube {
-                            positions.push(CubeAttr::new(c.model_matrix(), c.block_id()));
+                            let is_selected = selected_cube.is_some() && selected_cube.unwrap().equals(&c.position());
+                            positions.push(CubeAttr::new(c.model_matrix(), c.block_id(), is_selected));
                         }
                     }
                 }
@@ -48,16 +51,13 @@ impl World {
         positions
     }
 
-    /// Returns true if the player can move to this position.
+    /// Returns true if there is a cube at this position
     pub fn is_position_free(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
             if chunk.is_in(pos) {
                 if !chunk.is_position_free(pos) {
                     return false;
                 }
-                // else {
-                //     println!("{pos:?} is free");
-                // }
             }
         }
         true

@@ -18,6 +18,10 @@ pub const CUBE_VERTEX_SHADER: &str = r#"
         in int block_id;
         flat out int block_id_s;
 
+        // Is the cube currently selected
+        in int is_selected;
+        flat out int is_selected_s;
+
         // Where is the vertex located on the face ?
         in vec2 tex_coords;
         out vec2 v_tex_coords;
@@ -30,6 +34,7 @@ pub const CUBE_VERTEX_SHADER: &str = r#"
             v_tex_coords = tex_coords;
             face_s = face;
             block_id_s = block_id;
+            is_selected_s = is_selected;
         }
     "#;
 
@@ -40,11 +45,14 @@ pub const CUBE_FRAGMENT_SHADER: &str = r#"
         // passed-through the vertex shader
         flat in int face_s;
         flat in int block_id_s;
+        flat in int is_selected_s;
         in vec2 v_tex_coords;
 
         out vec4 color ;
 
         uniform sampler2DArray textures;
+        
+        uniform sampler2D selected_texture;
 
         void main() {
             // Each block has 3 types of faces
@@ -59,6 +67,10 @@ pub const CUBE_FRAGMENT_SHADER: &str = r#"
             } else {
                 // sides
                 color = texture(textures, vec3(v_tex_coords, float(idx)));
+            }
+
+            if (is_selected_s != 0) {
+                color = mix(color, texture(selected_texture, v_tex_coords), 0.5);
             }
         }
     "#;
@@ -119,12 +131,14 @@ pub const VERTICES: [CubeVertex; 36] = [
 pub struct CubeAttr {
     world_matrix: [[f32; 4]; 4],
     block_id: u8,
+    /// We use an integer, since booleans are not supported
+    is_selected: u8
 }
 
-implement_vertex!(CubeAttr, world_matrix, block_id);
+implement_vertex!(CubeAttr, world_matrix, block_id, is_selected);
 
 impl CubeAttr {
-    pub fn new(world_matrix: [[f32; 4]; 4], block_id: u8) -> Self {
-        Self { world_matrix, block_id }
+    pub fn new(world_matrix: [[f32; 4]; 4], block_id: u8, is_selected: bool) -> Self {
+        Self { world_matrix, block_id, is_selected: is_selected as u8 }
     }
 }
