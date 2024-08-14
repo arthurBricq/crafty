@@ -52,7 +52,9 @@ pub const CUBE_FRAGMENT_SHADER: &str = r#"
 
         uniform sampler2DArray textures;
         
+        // uniforms for the selected block
         uniform sampler2D selected_texture;
+        uniform float selected_intensity;
 
         void main() {
             // Each block has 3 types of faces
@@ -70,7 +72,7 @@ pub const CUBE_FRAGMENT_SHADER: &str = r#"
             }
 
             if (is_selected_s != 0) {
-                color = mix(color, texture(selected_texture, v_tex_coords), 0.5);
+                color = mix(color, texture(selected_texture, v_tex_coords), selected_intensity);
             }
         }
     "#;

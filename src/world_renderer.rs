@@ -12,19 +12,23 @@ use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
 use crate::camera::{Camera, MotionState};
-use crate::chunk::CHUNK_FLOOR;
 use crate::cube::Block;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::tile::TileManager;
-use crate::vector::Vector3;
 use crate::world::World;
+
+const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer<'a> {
     world: &'a World,
     cam: &'a mut Camera<'a>,
-    tile_manager: TileManager
+    tile_manager: TileManager,
+    
+    // Logic for when the user is clicking
+    is_cliking: bool,
+    click_time: f32,
 }
 
 impl<'a> WorldRenderer<'a> {
@@ -33,7 +37,9 @@ impl<'a> WorldRenderer<'a> {
         Self {
             world,
             cam,
-            tile_manager: TileManager::new()
+            tile_manager: TileManager::new(),
+            is_cliking: false,
+            click_time: 0.0,
         }
     }
 
@@ -93,7 +99,15 @@ impl<'a> WorldRenderer<'a> {
                         };
 
                         // Step the camera with the elapsed time
-                        self.cam.step(t.elapsed());
+                        let dt = t.elapsed();
+                        self.cam.step(dt);
+                        if self.is_cliking {
+                            self.click_time += dt.as_secs_f32();
+                            if self.click_time >= CLICK_TIME_TO_BREAK {
+                                // Break the cube
+                                
+                            }
+                        }
                         t = Instant::now();
 
                         // I) Draw the cubes
@@ -103,7 +117,8 @@ impl<'a> WorldRenderer<'a> {
                             view: self.cam.view_matrix(),
                             perspective: self.cam.perspective_matrix(target.get_dimensions()),
                             textures: samplers,
-                            selected_texture: &selected_texture
+                            selected_texture: &selected_texture,
+                            selected_intensity: if self.is_cliking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
                         };
 
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
@@ -143,6 +158,21 @@ impl<'a> WorldRenderer<'a> {
                         } else {
                             self.cam.mousemove(0.0, -value as f32, 0.005);
                         }
+                    },
+                    winit::event::DeviceEvent::Button {button, state} => {
+                        println!("---");
+                        if button == 1 {
+                            println!("{state:?}");
+                            // Left click
+                            // TODO delete a cube
+                            self.is_cliking = state == Pressed;
+                            if !self.is_cliking {
+                                self.click_time = 0.;
+                            }
+                        } else if button == 3 {
+                            // Right click
+                            // TODO place a cube
+                        }
                     }
                     _ => {}
                 }
@@ -181,7 +211,7 @@ impl<'a> WorldRenderer<'a> {
     }
 
     fn handle_input(&mut self, event: RawKeyEvent) {
-        println!("key tapped: {event:?}");
+        // println!("key tapped: {event:?}");
 
         match event.physical_key {
             PhysicalKey::Code(key) => {

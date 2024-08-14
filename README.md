@@ -27,7 +27,7 @@ The first milestones should be implemented roughly in the following order.
         - cubes that are not touching the air
 
 - Client must be able to edit the map
-    - Show the currently selected block
+    - Show the currently selected block (done)
     - Deletion of cubes
     - Addition of cubes
 
