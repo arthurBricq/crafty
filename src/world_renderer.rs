@@ -7,7 +7,7 @@ use glium::{Display, Surface, Texture2d, uniform};
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
-use winit::event::ElementState::Pressed;
+use winit::event::ElementState::{Pressed, Released};
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
 use crate::actions::Action::Destroy;
@@ -100,14 +100,16 @@ impl WorldRenderer {
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
-                        self.cam.step(dt, &self.world);
-                        if self.is_cliking {
+                        if self.cam.selected().is_some() && self.is_cliking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
                                 self.world.apply_action(Destroy {at: self.cam.selected().unwrap()});
+                                self.is_cliking = false;
+                                self.click_time = 0.;
                             }
                         }
+                        self.cam.step(dt, &self.world);
                         t = Instant::now();
 
                         // I) Draw the cubes
@@ -160,13 +162,14 @@ impl WorldRenderer {
                         }
                     },
                     winit::event::DeviceEvent::Button {button, state} => {
-                        println!("---");
                         if button == 1 {
-                            println!("{state:?}");
                             // Left click
                             // TODO delete a cube
-                            self.is_cliking = state == Pressed;
-                            if !self.is_cliking {
+                            if !self.is_cliking && state == Pressed {
+                                self.is_cliking = true;
+                            }
+                            else if self.is_cliking && state == Released {
+                                self.is_cliking = false;
                                 self.click_time = 0.;
                             }
                         } else if button == 3 {

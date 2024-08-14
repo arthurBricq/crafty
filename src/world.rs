@@ -84,9 +84,9 @@ impl World {
     }
     
     fn destroy_cube(&mut self, at: Vector3) {
-        for chunk in &self.chunks {
+        for chunk in &mut self.chunks {
             if chunk.is_in(&at) {
-                
+                chunk.destroy_cube(at);
                 return;
             }
         }
