@@ -19,15 +19,23 @@ const CHUNK_MARGIN: f32 = 0.2;
 ///
 pub struct Chunk {
     cubes: ChunkData,
-    corner: [f32; 2]
+    corner: [f32; 2],
 }
 
 impl Chunk {
-    pub fn new(corner: [f32;2]) -> Self {
+    pub fn new(corner: [f32; 2]) -> Self {
         Self {
             cubes: [[[None; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT],
             corner,
         }
+    }
+
+    pub fn cubes(&self) -> &ChunkData {
+        &self.cubes
+    }
+
+    pub fn corner(&self) -> [f32; 2] {
+        self.corner
     }
 
     /// Fills the chunk with a bluit-in world
@@ -35,14 +43,14 @@ impl Chunk {
         let mut cubes = [[[None; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
-                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 2. , corner[1] + j as f32], DIRT));
+                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 2., corner[1] + j as f32], DIRT));
                 cubes[(CHUNK_FLOOR as i32 - 1 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 1., corner[1] + j as f32], DIRT));
-                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32,     (CHUNK_FLOOR as i32 + z_offset) as f32, corner[1] + j as f32], GRASS));
+                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32, corner[1] + j as f32], GRASS));
             }
         }
         Self { cubes, corner }
     }
-    
+
     /// Fills a full layer of the chunk with one kind of block
     pub fn fill_layer(&mut self, h: usize, kind: Block) {
         for i in 0..CHUNK_SIZE {
@@ -61,12 +69,12 @@ impl Chunk {
         }
     }
 
-    pub fn cubes(&self) -> &ChunkData {
-        &self.cubes
-    }
-
-    pub fn corner(&self) -> [f32; 2] {
-        self.corner
+    pub fn destroy_cube(&mut self, at: Vector3) {
+        let (i_z, i_x, i_y) = self.get_indices(&at);
+        let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
+        if in_bound {
+            self.cubes[i_z][i_x][i_y] = None
+        }
     }
 
     /// Returns true if the position is in the chunk
@@ -83,24 +91,21 @@ impl Chunk {
         let i_y = (pos[2] - self.corner[1]) as usize;
         (i_z, i_x, i_y)
     }
-    
+
     /// Returns true if the position in the chunk is not part of a cube.
     /// The function does not check that the cube is chunk, and will crash if it is not.
     pub fn is_position_free(&self, pos: &Vector3) -> bool {
         let (i_z, i_x, i_y) = self.get_indices(pos);
         let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
         let result = !in_bound || self.cubes[i_z][i_x][i_y].is_none();
-        // if !result && in_bound {
-        //     println!("{pos:?} is rejected by {i_z}, {i_x}, {i_y} -> {:?}", self.cubes[i_z][i_x][i_y].unwrap());
-        // }
         result
     }
-    
+
     pub fn is_position_free_falling(&self, pos: &Vector3) -> bool {
         // We simply check if the cube below the player is occupied.
         self.is_position_free(&Vector3::new(pos[0], pos[1] - 1., pos[2]))
     }
-    
+
     pub fn print_all_cubes(&self) {
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
@@ -111,7 +116,6 @@ impl Chunk {
                 }
             }
         }
-        
     }
 }
 
@@ -124,18 +128,18 @@ mod tests {
     #[test]
     fn test_bounding_area() {
         let chunk = Chunk::new([0., 0.]);
-        assert!(chunk.is_in(&Vector3::new(0.,0.,0.)));
-        assert!(chunk.is_in(&Vector3::new(1.,30.,1.)));
-        assert!(!chunk.is_in(&Vector3::new(-1.,30.,1.)));
-        assert!(chunk.is_in(&Vector3::new(4.,30.,7.5)));
-        assert!(!chunk.is_in(&Vector3::new(4.,30.,8.5)));
-        assert!(!chunk.is_in(&Vector3::new(9.,30.,4.5)));
+        assert!(chunk.is_in(&Vector3::new(0., 0., 0.)));
+        assert!(chunk.is_in(&Vector3::new(1., 30., 1.)));
+        assert!(!chunk.is_in(&Vector3::new(-1., 30., 1.)));
+        assert!(chunk.is_in(&Vector3::new(4., 30., 7.5)));
+        assert!(!chunk.is_in(&Vector3::new(4., 30., 8.5)));
+        assert!(!chunk.is_in(&Vector3::new(9., 30., 4.5)));
     }
-    
+
     #[test]
     fn test_free_check_1() {
         let mut chunk = Chunk::new([0., 0.]);
-        
+
         // First, assert positions are free when there are no cubes at all
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
@@ -144,10 +148,10 @@ mod tests {
                 }
             }
         }
-        
+
         // Fill the 10-th layer
         chunk.fill_layer(10, GRASS);
-        
+
         // Assert that only positions on the 10.th layer are not free
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
@@ -180,7 +184,7 @@ mod tests {
         assert!(chunk.is_position_free(&Vector3::new(4.0, 1.2, 4.0)));
         assert!(chunk.is_position_free(&Vector3::new(4.0, 1.5, 4.0)));
     }
-    
+
     #[test]
     fn test_free_fall_1() {
         let mut chunk = Chunk::new([0., 0.]);
@@ -191,5 +195,4 @@ mod tests {
         assert!(chunk.is_position_free_falling(&Vector3::new(x, 2., y)));
         assert!(chunk.is_position_free_falling(&Vector3::new(x, 3., y)));
     }
-
 }

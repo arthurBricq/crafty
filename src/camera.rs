@@ -21,7 +21,7 @@ pub enum MotionState {
 
 /// First player camera
 /// The state includes the position and the speed
-pub struct Camera<'a> {
+pub struct Camera {
     /// Position of the camera
     position: Vector3,
 
@@ -35,24 +35,21 @@ pub struct Camera<'a> {
     a_pressed: bool,
     d_pressed: bool,
 
-    /// Reference to the world is necessary for collision detection.
-    world: &'a World,
-
     /// For handling free-fall
     gravity_handler: GravityHandler,
 
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
     selected: Option<Vector3>,
-    
+
     /// True if the next step of the camera must be for debug
     debug_next_iter: bool,
 }
 
-impl<'a> Camera<'a> {
+impl Camera {
     /// based on right hand perspective look along the positive z-Axis
     // pub fn new(collision_callback: impl FnMut([f32;3]) -> bool + 'a) -> Self {
-    pub fn new(world: &'a World) -> Self {
+    pub fn new() -> Self {
         Self {
             position: Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
             rotation: [PI, 0.0],
@@ -60,14 +57,13 @@ impl<'a> Camera<'a> {
             s_pressed: false,
             a_pressed: false,
             d_pressed: false,
-            world,
             gravity_handler: GravityHandler::new(),
             selected: None,
             debug_next_iter: false
         }
     }
 
-    pub fn step(&mut self, elapsed: Duration) {
+    pub fn step(&mut self, elapsed: Duration, world: &World) {
         // Compute the next position
         let f = self.ground_direction_forward();
         let l = self.ground_direction_right();
@@ -93,10 +89,10 @@ impl<'a> Camera<'a> {
         }
 
         // Collision detection (xz-plane)
-        let is_free = self.world.is_position_free(&next_pos_amplified);
+        let is_free = world.is_position_free(&next_pos_amplified);
 
         // Free-fall handling
-        let is_falling = self.world.is_position_free_falling(&next_pos_amplified);
+        let is_falling = world.is_position_free_falling(&next_pos_amplified);
         let dz_fall = self.gravity_handler.step(is_falling, elapsed);
         next_pos[1] -= dz_fall;;
 
@@ -105,13 +101,13 @@ impl<'a> Camera<'a> {
             self.position = next_pos;
         }
 
-        self.compute_selected_cube();
+        self.compute_selected_cube(world);
         self.debug_next_iter = false;
     }
 
-    fn compute_selected_cube(&mut self) {
-        if self.debug_next_iter { 
-            println!("* Computation of selected block"); 
+    fn compute_selected_cube(&mut self, world: &World) {
+        if self.debug_next_iter {
+            println!("* Computation of selected block");
         }
         let unit_direction = self.direction();
         for i in 1..10 {
@@ -121,7 +117,7 @@ impl<'a> Camera<'a> {
                 println!("    - {query:?}");
             }
             // If the query position is not free, it means that we have found the selected cube
-            if !self.world.is_position_free(&query) {
+            if !world.is_position_free(&query) {
                 if self.debug_next_iter {
                     println!("     SELECTED");
                 }
@@ -153,7 +149,7 @@ impl<'a> Camera<'a> {
     pub fn down(&mut self) {
         self.position[1] -= 1.;
     }
-    
+
     pub fn debug(&mut self) {
         self.debug_next_iter = true;
         println!("* Camera - position   : {:?}", self.position);
@@ -224,5 +220,5 @@ impl<'a> Camera<'a> {
     pub fn selected(&self) -> Option<Vector3> {
         self.selected
     }
-    
+
 }

@@ -10,7 +10,7 @@ use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use winit::event::ElementState::Pressed;
 use winit::event::RawKeyEvent;
 use winit::keyboard::{KeyCode, PhysicalKey};
-
+use crate::actions::Action::Destroy;
 use crate::camera::{Camera, MotionState};
 use crate::cube::Block;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
@@ -21,9 +21,9 @@ use crate::world::World;
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
 /// The struct in charge of drawing the world
-pub struct WorldRenderer<'a> {
-    world: &'a World,
-    cam: &'a mut Camera<'a>,
+pub struct WorldRenderer {
+    world: World,
+    cam:   Camera,
     tile_manager: TileManager,
     
     // Logic for when the user is clicking
@@ -31,9 +31,9 @@ pub struct WorldRenderer<'a> {
     click_time: f32,
 }
 
-impl<'a> WorldRenderer<'a> {
+impl WorldRenderer {
 
-    pub fn new(world: &'a World, cam: &'a mut Camera<'a>) -> Self {
+    pub fn new(world: World, cam: Camera) -> Self {
         Self {
             world,
             cam,
@@ -100,12 +100,12 @@ impl<'a> WorldRenderer<'a> {
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
-                        self.cam.step(dt);
+                        self.cam.step(dt, &self.world);
                         if self.is_cliking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
-
+                                self.world.apply_action(Destroy {at: self.cam.selected().unwrap()});
                             }
                         }
                         t = Instant::now();

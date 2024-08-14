@@ -16,7 +16,9 @@ use crate::world_renderer::WorldRenderer;
 fn main() {
     let mut world = World::new();
     world.fill_for_demo();
-    let mut cam = Camera::new(&world);
-    let mut renderer = WorldRenderer::new(&world, &mut cam);
+    let cam = Camera::new();
+    let mut renderer = WorldRenderer::new(world, cam);
     renderer.run();
 }
+
+

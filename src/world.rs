@@ -1,3 +1,4 @@
+use crate::actions::Action;
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
 use crate::cube::Block::COBBELSTONE;
 use crate::graphics::cube::CubeAttr;
@@ -74,6 +75,21 @@ impl World {
             }
         }
         true
+    }
+    
+    pub fn apply_action(&mut self, action: Action) {
+        match action { 
+            Action::Destroy { at } => self.destroy_cube(at)
+        }
+    }
+    
+    fn destroy_cube(&mut self, at: Vector3) {
+        for chunk in &self.chunks {
+            if chunk.is_in(&at) {
+                
+                return;
+            }
+        }
     }
 }
 
