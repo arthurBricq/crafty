@@ -64,7 +64,7 @@ impl WorldRenderer {
         let samplers = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
         // Load other textures that are used
-        let selected_texture = Self::load_texture(include_bytes!("/home/arthur/dev/rust/crafty/resources/selected.png"), &display);
+        let selected_texture = Self::load_texture(std::fs::read("./resources/selected.png").unwrap().as_slice(), &display);
 
         // Build the shader programs
         let cube_program = glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None).unwrap();
@@ -190,8 +190,7 @@ impl WorldRenderer {
     /// The fragment shader responsible for the cubes is then in charge of selecting the correct element of this array.
     fn build_textures_array(&self, display: &Display<WindowSurface>) -> Texture2dArray {
         // Get the path of the block textures
-        // TODO don't use hard-coded links
-        let root = "/home/arthur/dev/rust/crafty/resources/block/";
+        let root = "./resources/block/";
         let extension = ".png";
         let all_textures = Block::get_texture_files();
         let source = all_textures.iter().map(|name| {
