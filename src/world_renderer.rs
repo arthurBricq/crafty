@@ -8,8 +8,9 @@ use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use winit::event::ElementState::{Pressed, Released};
-use winit::event::RawKeyEvent;
+use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
+use winit::window::{Fullscreen, Window};
 use crate::actions::Action::Destroy;
 use crate::camera::{Camera, MotionState};
 use crate::cube::Block;
@@ -27,8 +28,12 @@ pub struct WorldRenderer {
     tile_manager: TileManager,
     
     // Logic for when the user is clicking
+    // TODO encapsulate that in another struct
     is_cliking: bool,
     click_time: f32,
+
+    /// Is the window displayed in fullscreen ?
+    fullscreen: bool,
 }
 
 impl WorldRenderer {
@@ -40,6 +45,7 @@ impl WorldRenderer {
             tile_manager: TileManager::new(),
             is_cliking: false,
             click_time: 0.0,
+            fullscreen: false
         }
     }
 
@@ -149,40 +155,18 @@ impl WorldRenderer {
                     }
                     _ => (),
                 },
-                winit::event::Event::AboutToWait => {
-                    window.request_redraw();
-                }
+                winit::event::Event::AboutToWait => window.request_redraw(),
                 winit::event::Event::DeviceEvent { event, .. } => match event {
-                    winit::event::DeviceEvent::Key(key) => self.handle_input(key),
-                    winit::event::DeviceEvent::Motion { axis, value } => {
-                        if axis == 0 {
-                            self.cam.mousemove(value as f32, 0.0, 0.005);
-                        } else {
-                            self.cam.mousemove(0.0, -value as f32, 0.005);
-                        }
-                    },
-                    winit::event::DeviceEvent::Button {button, state} => {
-                        if button == 1 {
-                            // Left click
-                            // TODO delete a cube
-                            if !self.is_cliking && state == Pressed {
-                                self.is_cliking = true;
-                            }
-                            else if self.is_cliking && state == Released {
-                                self.is_cliking = false;
-                                self.click_time = 0.;
-                            }
-                        } else if button == 3 {
-                            // Right click
-                            // TODO place a cube
-                        }
-                    }
+                    winit::event::DeviceEvent::Key(key) => self.handle_key_event(key, &window),
+                    winit::event::DeviceEvent::Motion { axis, value } => self.handle_motion_event(axis, value),
+                    winit::event::DeviceEvent::Button {button, state} => self.handle_button_event(button, state),
                     _ => {}
                 }
                 _ => (),
             };
         }).unwrap();
     }
+
 
     /// Builds the array of 2D textures using all the blocks
     /// Each block is associated with 3 textures: side, top and bottom
@@ -212,9 +196,7 @@ impl WorldRenderer {
         Texture2d::new(display, image).unwrap()
     }
 
-    fn handle_input(&mut self, event: RawKeyEvent) {
-        // println!("key tapped: {event:?}");
-
+    fn handle_key_event(&mut self, event: RawKeyEvent, window: &Window) {
         match event.physical_key {
             PhysicalKey::Code(key) => {
                 match key {
@@ -243,11 +225,47 @@ impl WorldRenderer {
                             println!("=================");
                             self.cam.debug();
                         }
+                        KeyCode::F11 => self.toggle_fullscreen(&window),
                         _ => {}
                     }
                 },
                 PhysicalKey::Unidentified(_) => {}
             }
+        }
+    }
+    
+    fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
+        if button == 1 {
+            // Left click
+            // TODO delete a cube
+            if !self.is_cliking && state == Pressed {
+                self.is_cliking = true;
+            } else if self.is_cliking && state == Released {
+                self.is_cliking = false;
+                self.click_time = 0.;
+            }
+        } else if button == 3 {
+            // Right click
+            // TODO place a cube
+        }
+    }
+
+    fn handle_motion_event(&mut self, axis: AxisId, value: f64) {
+        if axis == 0 {
+            self.cam.mousemove(value as f32, 0.0, 0.005);
+        } else {
+            self.cam.mousemove(0.0, -value as f32, 0.005);
+        }
+    }
+
+    fn toggle_fullscreen(&mut self, window: &Window) {
+        if self.fullscreen {
+            window.set_fullscreen(None);
+            self.fullscreen = false;
+        } else {
+            let monitor_handle = window.available_monitors().next().unwrap();
+            window.set_fullscreen(Some(Fullscreen::Borderless(Some(monitor_handle))));
+            self.fullscreen = true;
         }
     }
 

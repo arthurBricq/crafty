@@ -2,7 +2,7 @@ use std::time::Duration;
 
 const MAX_FALL_SPEED: f32 = 2.0;
 const GRAVITY: f32 = 9.81;
-const JUMP_INITIAL_SPEED: f32 = 3.0;
+const JUMP_INITIAL_SPEED: f32 = 5.0;
 
 /// A struct to help entities deal with gravity
 pub struct GravityHandler {

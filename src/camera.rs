@@ -41,9 +41,6 @@ pub struct Camera {
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
     selected: Option<Vector3>,
-
-    /// True if the next step of the camera must be for debug
-    debug_next_iter: bool,
 }
 
 impl Camera {
@@ -59,7 +56,6 @@ impl Camera {
             d_pressed: false,
             gravity_handler: GravityHandler::new(),
             selected: None,
-            debug_next_iter: false
         }
     }
 
@@ -102,27 +98,19 @@ impl Camera {
         }
 
         self.compute_selected_cube(world);
-        self.debug_next_iter = false;
     }
 
+    /// Set the attribute `selected` to the cube currently being selected 
     fn compute_selected_cube(&mut self, world: &World) {
-        if self.debug_next_iter {
-            println!("* Computation of selected block");
-        }
+        const STEP: f32 = 0.5;
+        const REACH_DISTANCE: f32 = 5.0;
         let unit_direction = self.direction();
-        for i in 1..10 {
-            // TODO Not sure if '* 0.5' is actually important here
-            let query = self.position + unit_direction * i as f32 * 0.5;
-            if self.debug_next_iter {
-                println!("    - {query:?}");
-            }
+        for i in 1..(REACH_DISTANCE / STEP) as usize {
+            let query = self.position + unit_direction * i as f32 * STEP;
             // If the query position is not free, it means that we have found the selected cube
             if !world.is_position_free(&query) {
-                if self.debug_next_iter {
-                    println!("     SELECTED");
-                }
                 self.selected = Some(Vector3::new(query.x().floor(), query.y().floor(), query.z().floor()));
-                return;
+                return
             }
         }
         self.selected = None
@@ -151,7 +139,6 @@ impl Camera {
     }
 
     pub fn debug(&mut self) {
-        self.debug_next_iter = true;
         println!("* Camera - position   : {:?}", self.position);
         println!("*        - orientation: {:?}", self.direction());
     }

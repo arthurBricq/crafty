@@ -19,31 +19,31 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
 
 ### Missing features (short term milestones)
 
-The first milestones should be implemented roughly in the following order.
+- Better implementation of the collision detection 
+    - Why not refactoring to use the same code that is used to detect the 'selected' cube ? 
 
-- Remove cubes that are not visible to improve the FPS with a lot of cubes
-    - Easy empirical rules (easy to implement)
-        - cubes behind the player
-        - cubes that are not touching the air
+- Tiles library: 
+    - Display text (no linebreaks)
+    - Display menu
+
+- OpenGl improvements: remove cubes that are not visible to improve the FPS with a lot of cubes
+      - cubes behind the player
+      - cubes that are not touching the air
+
+- OpenGL improvements: full-screen mode
 
 - Client must be able to edit the map
     - Show the currently selected block (done)
-    - Deletion of cubes
+    - Deletion of cubes (done)
     - Addition of cubes
-
-- Realistic first camera player
-    - Support 'gravity' and 'flying' modes
-
-- Display menus and text
-    - This is a huge milestone... At least we must be able to display some things on the screen, like the items.
 
 - Multiplayer architecture design & Multiplayer implementation through server / client
     - The server holds the full map and sends the chunk to the players as they move
     - Action model to edit the map
     - Drawing players differently
 
-- Edition of the map by the player: add cubes and delete cubes
+- Automatic & Infinite map creation
 
-- Automatic map creation
+- Entities: display other players
 
-- Infinite map creation
+- Entities: add monsters
