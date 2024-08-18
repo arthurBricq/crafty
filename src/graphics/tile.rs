@@ -2,12 +2,12 @@ use crate::graphics::color::Color::LightGray;
 use crate::graphics::rectangle::RectVertexAttr;
 
 /// A tile is a rectangle drawn on the screen, such as a menu.
-pub struct TileManager {
+pub struct HUDManager {
     /// List of the tiles to be presented on the screen
     rects: Vec<RectVertexAttr>
 }
 
-impl TileManager {
+impl HUDManager {
     pub fn new() -> Self {
         Self { rects: Vec::new() }
     }

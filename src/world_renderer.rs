@@ -17,7 +17,7 @@ use crate::cube::Block;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
-use crate::graphics::tile::TileManager;
+use crate::graphics::tile::HUDManager;
 use crate::world::World;
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
@@ -26,7 +26,7 @@ const CLICK_TIME_TO_BREAK: f32 = 2.0;
 pub struct WorldRenderer {
     world: World,
     cam:   Camera,
-    tile_manager: TileManager,
+    tile_manager: HUDManager,
     fps_manager: FpsManager,
     
     // Logic for when the user is clicking
@@ -44,7 +44,7 @@ impl WorldRenderer {
         Self {
             world,
             cam,
-            tile_manager: TileManager::new(),
+            tile_manager: HUDManager::new(),
             fps_manager: FpsManager::new(),
             is_left_clicking: false,
             click_time: 0.0,
@@ -239,7 +239,7 @@ impl WorldRenderer {
             }
         }
     }
-    
+
     fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
         if button == 1 {
             // Left click

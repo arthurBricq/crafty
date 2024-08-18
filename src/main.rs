@@ -11,6 +11,7 @@ mod actions;
 mod fps;
 
 use crate::camera::Camera;
+use crate::vector::Vector3;
 use crate::world::World;
 use crate::world_renderer::WorldRenderer;
 
