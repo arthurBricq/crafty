@@ -5,6 +5,7 @@ use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
 
 pub struct World {
+    // TODO is there a better data structure to keep all the chunks ?
     chunks: Vec<Chunk>,
 }
 
