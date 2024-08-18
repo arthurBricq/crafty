@@ -197,6 +197,7 @@ impl WorldRenderer {
     }
 
     fn handle_key_event(&mut self, event: RawKeyEvent, window: &Window) {
+        // Handle keys related to motion (toggle is important here)
         match event.physical_key {
             PhysicalKey::Code(key) => {
                 match key {
@@ -213,7 +214,7 @@ impl WorldRenderer {
             _ => {}
         }
 
-        // Second match is for other stuff...
+        // Second match is for other stuff that only needs to be detected when pressed
         if event.state == Pressed {
             match event.physical_key {
                 PhysicalKey::Code(key) => {
@@ -226,6 +227,7 @@ impl WorldRenderer {
                             self.cam.debug();
                         }
                         KeyCode::F11 => self.toggle_fullscreen(&window),
+                        KeyCode::Escape => std::process::exit(1),
                         _ => {}
                     }
                 },

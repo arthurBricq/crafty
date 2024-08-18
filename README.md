@@ -25,12 +25,11 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
 - Tiles library: 
     - Display text (no linebreaks)
     - Display menu
+    - First menu can be the 'HELP' menu: shows all the commands
 
 - OpenGl improvements: remove cubes that are not visible to improve the FPS with a lot of cubes
       - cubes behind the player
       - cubes that are not touching the air
-
-- OpenGL improvements: full-screen mode
 
 - Client must be able to edit the map
     - Show the currently selected block (done)
