@@ -25,7 +25,9 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
 - Tiles library: 
     - Display text (no linebreaks)
     - Display menu
-    - First menu can be the 'HELP' menu: shows all the commands
+    - Two 'menus' can be added:
+        - the 'HELP' menu: shows all the commands
+        - the 'DEBUG' mode: shows the FPS on the screen, with some information, such as the number of cubes being rendered, the position, the orientation (like in minecraft) !
 
 - OpenGl improvements: remove cubes that are not visible to improve the FPS with a lot of cubes
       - cubes behind the player

@@ -14,6 +14,7 @@ use winit::window::{Fullscreen, Window};
 use crate::actions::Action::Destroy;
 use crate::camera::{Camera, MotionState};
 use crate::cube::Block;
+use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::tile::TileManager;
@@ -26,10 +27,11 @@ pub struct WorldRenderer {
     world: World,
     cam:   Camera,
     tile_manager: TileManager,
+    fps_manager: FpsManager,
     
     // Logic for when the user is clicking
     // TODO encapsulate that in another struct
-    is_cliking: bool,
+    is_left_clicking: bool,
     click_time: f32,
 
     /// Is the window displayed in fullscreen ?
@@ -43,7 +45,8 @@ impl WorldRenderer {
             world,
             cam,
             tile_manager: TileManager::new(),
-            is_cliking: false,
+            fps_manager: FpsManager::new(),
+            is_left_clicking: false,
             click_time: 0.0,
             fullscreen: false
         }
@@ -106,12 +109,13 @@ impl WorldRenderer {
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
-                        if self.cam.selected().is_some() && self.is_cliking {
+                        self.fps_manager.step(dt);
+                        if self.cam.selected().is_some() && self.is_left_clicking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
                                 self.world.apply_action(Destroy {at: self.cam.selected().unwrap()});
-                                self.is_cliking = false;
+                                self.is_left_clicking = false;
                                 self.click_time = 0.;
                             }
                         }
@@ -126,7 +130,7 @@ impl WorldRenderer {
                             perspective: self.cam.perspective_matrix(target.get_dimensions()),
                             textures: samplers,
                             selected_texture: &selected_texture,
-                            selected_intensity: if self.is_cliking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
+                            selected_intensity: if self.is_left_clicking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
                         };
 
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
@@ -239,11 +243,10 @@ impl WorldRenderer {
     fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
         if button == 1 {
             // Left click
-            // TODO delete a cube
-            if !self.is_cliking && state == Pressed {
-                self.is_cliking = true;
-            } else if self.is_cliking && state == Released {
-                self.is_cliking = false;
+            if !self.is_left_clicking && state == Pressed {
+                self.is_left_clicking = true;
+            } else if self.is_left_clicking && state == Released {
+                self.is_left_clicking = false;
                 self.click_time = 0.;
             }
         } else if button == 3 {

@@ -8,6 +8,7 @@ mod vector;
 mod gravity;
 mod graphics;
 mod actions;
+mod fps;
 
 use crate::camera::Camera;
 use crate::world::World;
