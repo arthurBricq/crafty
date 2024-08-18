@@ -20,14 +20,13 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
 ### Missing features (short term milestones)
 
 - Better implementation of the collision detection 
-    - Why not refactoring to use the same code that is used to detect the 'selected' cube ? 
 
-- Tiles library: 
+- Tiles library [Arnaud]: 
     - Display text (no linebreaks)
     - Display menu
     - Two 'menus' can be added:
         - the 'HELP' menu: shows all the commands
-        - the 'DEBUG' mode: shows the FPS on the screen, with some information, such as the number of cubes being rendered, the position, the orientation (like in minecraft) !
+        - the 'DEBUG' mode: shows the FPS on the screen, the number of cubes being rendered, the position, the orientation (like in minecraft) !
 
 - OpenGl improvements: remove cubes that are not visible to improve the FPS with a lot of cubes
       - cubes behind the player
@@ -38,12 +37,17 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
     - Deletion of cubes (done)
     - Addition of cubes
 
+- Save and load a world [Arthur]
+    - We could use `https://serde.rs/` if we want to start prototyping quickly.
+
+- Create the `chunk API` [Arthur]
+
+- Automatic & Infinite map creation [Johan]
+
 - Multiplayer architecture design & Multiplayer implementation through server / client
     - The server holds the full map and sends the chunk to the players as they move
     - Action model to edit the map
     - Drawing players differently
-
-- Automatic & Infinite map creation
 
 - Entities: display other players
 

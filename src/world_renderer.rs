@@ -109,7 +109,6 @@ impl WorldRenderer {
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
-                        self.fps_manager.step(dt);
                         if self.cam.selected().is_some() && self.is_left_clicking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
@@ -119,6 +118,9 @@ impl WorldRenderer {
                                 self.click_time = 0.;
                             }
                         }
+
+                        // Step
+                        self.fps_manager.step(dt);
                         self.cam.step(dt, &self.world);
                         t = Instant::now();
 
@@ -135,8 +137,8 @@ impl WorldRenderer {
 
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
+                        // OpenGL instancing = instead of setting 1000 times different uniforms, you give once 1000 attributes
                         let positions = self.world.get_cube_attributes(self.cam.selected());
-                        // let positions = self.world.get_cube_attributes(Some(Vector3::new(5.0, CHUNK_FLOOR as f32, 5.0)));
                         let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),

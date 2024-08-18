@@ -7,7 +7,8 @@ use strum::IntoEnumIterator;
 pub enum Block {
     GRASS = 0,
     DIRT,
-    COBBELSTONE
+    COBBELSTONE,
+    OAKLOG,
 }
 
 impl Block {
@@ -16,6 +17,7 @@ impl Block {
             Block::GRASS => "grass_block".to_string(),
             Block::DIRT => "dirt".to_string(),
             Block::COBBELSTONE => "cobblestone".to_string(),
+            Block::OAKLOG => "oak_log".to_string(),
         }
     }
 

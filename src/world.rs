@@ -1,11 +1,12 @@
 use crate::actions::Action;
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
-use crate::cube::Block::COBBELSTONE;
+use crate::cube::Block::{COBBELSTONE, OAKLOG};
 use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
 
 pub struct World {
-    // TODO is there a better data structure to keep all the chunks ?
+    // TODO is there a better data structure to keep all the chunks ?a
+    //      Can we implement a 2d vec dequeu ?
     chunks: Vec<Chunk>,
 }
 
@@ -19,7 +20,7 @@ impl World {
         let s = CHUNK_SIZE as f32;
         self.chunks.push(Chunk::new_for_demo([0., 0.], 0));
         self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 1., 2.), COBBELSTONE);
-        self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 2., 2.), COBBELSTONE);
+        self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 2., 2.), OAKLOG);
 
         self.chunks.push(Chunk::new_for_demo([s, 0.], 2));
         self.chunks.push(Chunk::new_for_demo([0., -s], 2));
@@ -38,7 +39,7 @@ impl World {
         for chunk in &self.chunks {
             // TODO improve this code
             // I know that this is not the best way to do this:
-            // 1. It is not optimal ...
+            // 1. It is not optimal because `.push` is really slow
             // 2. It breaks the responsibility principle
             for layer in chunk.cubes() {
                 for row in layer {

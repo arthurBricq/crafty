@@ -45,7 +45,6 @@ pub struct Camera {
 
 impl Camera {
     /// based on right hand perspective look along the positive z-Axis
-    // pub fn new(collision_callback: impl FnMut([f32;3]) -> bool + 'a) -> Self {
     pub fn new() -> Self {
         Self {
             position: Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
@@ -66,7 +65,10 @@ impl Camera {
         let mut next_pos = self.position.clone();
         let mut next_pos_amplified = self.position.clone();
         let amplitude = SPEED * elapsed.as_secs_f32();
-        let ratio = 10.;
+        // TODO The problem of hardcoding a ratio is that `dt` depends on the OpenGL performance.
+        //      We need to have the physics computation done at a constant `dt`...
+        //      This won't be easy in Rust.
+        let ratio = 20.;
         if self.w_pressed {
             next_pos += f * amplitude;
             next_pos_amplified += f * amplitude * ratio
@@ -100,9 +102,10 @@ impl Camera {
         self.compute_selected_cube(world);
     }
 
-    /// Set the attribute `selected` to the cube currently being selected 
+    /// Set the attribute `selected` to the cube currently being selected
     fn compute_selected_cube(&mut self, world: &World) {
-        const STEP: f32 = 0.5;
+        // TODO dichotomy should be much better in terms of performance
+        const STEP: f32 = 0.1;
         const REACH_DISTANCE: f32 = 5.0;
         let unit_direction = self.direction();
         for i in 1..(REACH_DISTANCE / STEP) as usize {
@@ -131,7 +134,7 @@ impl Camera {
     }
 
     pub fn up(&mut self) {
-        self.position[1] += 1.;
+        self.position[1] += 5.;
     }
 
     pub fn down(&mut self) {
@@ -195,6 +198,7 @@ impl Camera {
     pub fn mousemove(&mut self, horizontal: f32, vertical: f32, sensitivity: f32) {
         self.rotation[0] -= horizontal * sensitivity;
 
+        // TODO there is a bu when looking down...
         // don't let the player turn upside down
         if vertical > 0.0 && self.rotation[1] < PI * 0.5 {
             self.rotation[1] += vertical * sensitivity;

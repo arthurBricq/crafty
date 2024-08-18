@@ -67,11 +67,25 @@ impl RectVertexAttr {
     /// * w is over the u coordinates
     /// * h is over the v coordinates
     /// * 1.0 means the entire lenght of the screen
+    /// * 0.0 means it's nothing
     pub fn new(u: f32, v: f32, w: f32, h: f32, c: Color) -> Self {
         Self {
             transformation: [
                 [  w, 0.0, 0.0, 0.0],
                 [0.0,   h, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [  u,   v, 0.0, 1.0]
+            ],
+            color: c.rgba()
+        }
+    }
+    
+    pub fn new_with_char(u: f32, v: f32, w: f32, c: char, c: Color) -> Self {
+        // TODO arthur
+        Self {
+            transformation: [
+                [  w, 0.0, 0.0, 0.0],
+                [0.0,   w, 0.0, 0.0],
                 [0.0, 0.0, 1.0, 0.0],
                 [  u,   v, 0.0, 1.0]
             ],
