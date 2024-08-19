@@ -18,8 +18,8 @@ fn main() {
     let world = if let Some(world) = World::from_file("map.json") {
        world 
     } else {
-        let mut world = World::new();
-        world.fill_for_demo();
+        let mut world = World::create_new_random_world(10);
+        // world.fill_for_demo();
         world.save_to_file("map.json");
         world
     };
