@@ -121,7 +121,11 @@ impl RectVertexAttr {
             font_coords: [0., 0.]
         }
     }
-    
+    /// wrapper of new with origin at the bottom left corner of the rectangle
+    pub fn new_from_corner(u: f32, v: f32, w: f32, h: f32, c: Color) -> Self {
+        RectVertexAttr::new(u+w/2., v+h/2., w/2., h/2., c)
+    }
+
     /// Creates a new rectangle that draws a given character
     pub fn new_with_char(u: f32, v: f32, w: f32, c: GLChar) -> Self {
         Self {
