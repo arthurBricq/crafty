@@ -85,9 +85,6 @@ impl WorldRenderer {
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
         target.finish().unwrap();
-
-        self.tile_manager.add_cross();
-        self.tile_manager.add_crafty_label();
         
         // Event loop 
         let mut t = Instant::now();
@@ -245,6 +242,7 @@ impl WorldRenderer {
                         }
                         KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F11 => self.toggle_fullscreen(&window),
+                        KeyCode::F12 => self.tile_manager.toggle_help_menu(),
                         KeyCode::Escape => std::process::exit(1),
                         _ => {}
                     }
