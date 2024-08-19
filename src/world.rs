@@ -1,6 +1,6 @@
 use crate::actions::Action;
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
-use crate::cube::Block::{COBBELSTONE, OAKLOG};
+use crate::cube::Block::{GRASS, DIRT, COBBELSTONE, OAKLOG};
 use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
 use serde::{Deserialize, Serialize};
@@ -29,12 +29,29 @@ impl World {
         self.chunks.push(Chunk::new_for_demo([-2.*s, 0.], 0));
     }
     
-    /// Creates a new random world
-    pub fn create_new_random_world() -> Self {
-        // TODO [Johan]
-        //      I think that using the factory pattern here would be good, 
-        //      eg. create a new `WorldFactory` struct in a another file.
-        Self {chunks: Vec::new()}
+    /// Creates a new random world. For now this is a simple, flat
+    /// grassland, extending `nchunks` in each direction.
+    ///
+    /// 'nchunks': number of chunks the flat lands extends in any
+    /// direction; i.e., (2nchunks + 1) x (2nchunks + 1) chunks will
+    /// be created
+    pub fn create_new_random_world(nchunks: i32) -> Self {
+	let s = CHUNK_SIZE as f32;
+	let mut chunks = vec![];
+
+	// Yes this is slow, but it will be fine for now
+	for i in -nchunks..nchunks + 1 {
+	    for j in -nchunks..nchunks + 1 {
+		let mut chunk = Chunk::new([i as f32 * s, j as f32 * s]);
+		for k in 0..CHUNK_FLOOR {
+		    chunk.fill_layer(k, DIRT);
+		}
+		chunk.fill_layer(CHUNK_FLOOR, GRASS);
+		chunks.push(chunk);
+	    }
+	}
+	
+        Self { chunks }
     }
 
     /// Loads a world from a file.
