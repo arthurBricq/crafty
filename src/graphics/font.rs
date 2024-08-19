@@ -2,9 +2,10 @@ const N_ROWS: f32 = 8.;
 const N_COLS: f32 = 16.;
 
 /// A character that can be rendered with our OpenGL pipeline
+#[derive(Clone,Copy)]
 pub enum GLChar {
     A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
-    DOT,DOUBLEPOINT,COMMA
+    DOT,DOUBLEPOINT,COMMA,ZERO,ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT,NINE
 }
 
 impl GLChar {
@@ -39,6 +40,16 @@ impl GLChar {
             '.' => GLChar::DOT,
             ':' => GLChar::DOUBLEPOINT,
             ',' => GLChar::COMMA,
+            '0' => GLChar::ZERO,
+            '1' => GLChar::ONE,
+            '2' => GLChar::TWO,
+            '3' => GLChar::THREE,
+            '4' => GLChar::FOUR,
+            '5' => GLChar::FIVE,
+            '6' => GLChar::SIX,
+            '7' => GLChar::SEVEN,
+            '8' => GLChar::EIGHT,
+            '9' => GLChar::NINE,
             _ => panic!("Character is not supported: {c}")
         }
     }
@@ -54,13 +65,13 @@ impl GLChar {
             GLChar::F => [6. / N_COLS, 3. / N_ROWS],
             GLChar::G => [7. / N_COLS, 3. / N_ROWS],
             GLChar::H => [8. / N_COLS, 3. / N_ROWS],
-            GLChar::I => [10. / N_COLS, 3. / N_ROWS],
-            GLChar::J => [11. / N_COLS, 3. / N_ROWS],
-            GLChar::K => [12. / N_COLS, 3. / N_ROWS],
-            GLChar::L => [13. / N_COLS, 3. / N_ROWS],
-            GLChar::M => [14. / N_COLS, 3. / N_ROWS],
-            GLChar::N => [15. / N_COLS, 3. / N_ROWS],
-            GLChar::O => [16. / N_COLS, 3. / N_ROWS],
+            GLChar::I => [9. / N_COLS, 3. / N_ROWS],
+            GLChar::J => [10. / N_COLS, 3. / N_ROWS],
+            GLChar::K => [11. / N_COLS, 3. / N_ROWS],
+            GLChar::L => [12. / N_COLS, 3. / N_ROWS],
+            GLChar::M => [13. / N_COLS, 3. / N_ROWS],
+            GLChar::N => [14. / N_COLS, 3. / N_ROWS],
+            GLChar::O => [15. / N_COLS, 3. / N_ROWS],
             GLChar::P => [0. / N_COLS, 2. / N_ROWS],
             GLChar::Q => [1. / N_COLS, 2. / N_ROWS],
             GLChar::R => [2. / N_COLS, 2. / N_ROWS],
@@ -75,6 +86,16 @@ impl GLChar {
             GLChar::COMMA => [12. / N_COLS, 5. / N_ROWS],
             GLChar::DOT => [14. / N_COLS, 5. / N_ROWS],
             GLChar::DOUBLEPOINT => [10. / N_COLS, 4. / N_ROWS],
+            GLChar::ZERO => [0. / N_COLS, 4. / N_ROWS],
+            GLChar::ONE => [1. / N_COLS, 4. / N_ROWS],
+            GLChar::TWO => [2. / N_COLS, 4. / N_ROWS],
+            GLChar::THREE => [3. / N_COLS, 4. / N_ROWS],
+            GLChar::FOUR => [4. / N_COLS, 4. / N_ROWS],
+            GLChar::FIVE => [5. / N_COLS, 4. / N_ROWS],
+            GLChar::SIX => [6. / N_COLS, 4. / N_ROWS],
+            GLChar::SEVEN => [7. / N_COLS, 4. / N_ROWS],
+            GLChar::EIGHT => [8. / N_COLS, 4. / N_ROWS],
+            GLChar::NINE => [9. / N_COLS, 4. / N_ROWS],
         }
     }
 
