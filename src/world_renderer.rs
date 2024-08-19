@@ -16,6 +16,7 @@ use crate::camera::{Camera, MotionState};
 use crate::cube::Block;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
+use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::tile::HUDManager;
 use crate::world::World;
@@ -74,6 +75,7 @@ impl WorldRenderer {
 
         // Load other textures that are used
         let selected_texture = Self::load_texture(std::fs::read("./resources/selected.png").unwrap().as_slice(), &display);
+        let font_atlas = Self::load_texture(std::fs::read("./resources/fonts.png").unwrap().as_slice(), &display);
 
         // Build the shader programs
         let cube_program = glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None).unwrap();
@@ -85,6 +87,7 @@ impl WorldRenderer {
         target.finish().unwrap();
 
         self.tile_manager.add_cross();
+        self.tile_manager.add_crafty_label();
         
         // Event loop 
         let mut t = Instant::now();
@@ -148,14 +151,22 @@ impl WorldRenderer {
                             &params).unwrap();
 
                         // II) Drawn the tiles
-                        let rect_uniforms = uniform! {};
+                        let rect_uniforms = uniform! {
+                            font_atlas: &font_atlas,
+                            font_offsets: GLChar::get_offset()
+                        };
+                        // We change the draw parameters here to allow transparency.
+                        let draw_parameters = glium::draw_parameters::DrawParameters {
+                            blend: glium::draw_parameters::Blend::alpha_blending(),
+                            ..glium::draw_parameters::DrawParameters::default()
+                        };
                         let rects_buffer = glium::VertexBuffer::dynamic(&display, self.tile_manager.rects()).unwrap();
                         target.draw(
                             (&rect_vertex_buffer, rects_buffer.per_instance().unwrap()),
                             &indices,
                             &rect_program,
                             &rect_uniforms,
-                            &params).unwrap();
+                            &draw_parameters).unwrap();
 
                         target.finish().unwrap();
                     }

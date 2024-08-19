@@ -4,6 +4,8 @@
 
 Note that the entire **game engine** is written by ourselves, using **only a driver to OpenGL** !
 
+![](demo/first_text.png)
+
 ![](demo/first_chunks.png)
 
 ### Current list of features
@@ -16,6 +18,7 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
 - Gravity, Free-Fall, Jumping
 - Easy way to import textures into the game
 - Easy way to presents `Tiles` on the screen (menus)
+- Possibility to add text to the screen
 
 ### Missing features (short term milestones)
 
