@@ -1,7 +1,7 @@
-use crate::camera::PLAYER_HEIGHT;
 use crate::cube::Block::{DIRT, GRASS};
 use crate::cube::{Block, Cube};
 use crate::vector::Vector3;
+use serde::{Deserialize, Serialize};
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 
@@ -17,6 +17,7 @@ const CHUNK_MARGIN: f32 = 0.2;
 /// * The chunk owns the cube that it contains and is responsible for properly constructing / modifying them.
 ///   As a consequence, it is the position in the `ChunkData` field that encodes the position of each cube.
 ///
+#[derive(Serialize, Deserialize)]
 pub struct Chunk {
     cubes: ChunkData,
     corner: [f32; 2],

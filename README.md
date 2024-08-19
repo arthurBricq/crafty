@@ -19,31 +19,34 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
 - Easy way to import textures into the game
 - Easy way to presents `Tiles` on the screen (menus)
 - Possibility to add text to the screen
+- Persistent world: loading and Saving the world to the disk
 
 ### Missing features (short term milestones)
 
 - Better implementation of the collision detection 
 
 - Tiles library [Arnaud]: 
-    - Display text (no linebreaks)
+    - [x] Display text
     - Display menu
-    - Two 'menus' can be added:
+    - 'menus' can be added:
         - the 'HELP' menu: shows all the commands
         - the 'DEBUG' mode: shows the FPS on the screen, the number of cubes being rendered, the position, the orientation (like in minecraft) !
+        - the 'ITEM' menus: shows all the items of the player
 
 - OpenGl improvements: remove cubes that are not visible to improve the FPS with a lot of cubes
       - cubes behind the player
       - cubes that are not touching the air
 
 - Client must be able to edit the map
-    - Show the currently selected block (done)
-    - Deletion of cubes (done)
+    - [x] Show the currently selected block
+    - [x] Deletion of cubes
     - Addition of cubes
 
-- Save and load a world [Arthur]
-    - We could use `https://serde.rs/` if we want to start prototyping quickly.
+- Player logic
+    - When deleting a cube, the cube goes into the items of the player
 
 - Create the `chunk API` [Arthur]
+    - *chunk API* = when the player moves, he asks *the server* to send the new chunks further away from him.
 
 - Automatic & Infinite map creation [Johan]
 

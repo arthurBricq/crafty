@@ -3,10 +3,11 @@ use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
 use crate::cube::Block::{COBBELSTONE, OAKLOG};
 use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct World {
-    // TODO is there a better data structure to keep all the chunks ?a
-    //      Can we implement a 2d vec dequeu ?
+    /// The list of the chunks currently being displayed
     chunks: Vec<Chunk>,
 }
 
@@ -15,19 +16,49 @@ impl World {
         let chunks = Vec::new();
         Self { chunks }
     }
-    
+
     pub fn fill_for_demo(&mut self) {
         let s = CHUNK_SIZE as f32;
         self.chunks.push(Chunk::new_for_demo([0., 0.], 0));
         self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 1., 2.), COBBELSTONE);
         self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 2., 2.), OAKLOG);
-
         self.chunks.push(Chunk::new_for_demo([s, 0.], 2));
         self.chunks.push(Chunk::new_for_demo([0., -s], 2));
         self.chunks.push(Chunk::new_for_demo([0., s], 2));
-
         self.chunks.push(Chunk::new_for_demo([-s, 0.], 0));
         self.chunks.push(Chunk::new_for_demo([-2.*s, 0.], 0));
+    }
+    
+    /// Creates a new random world
+    pub fn create_new_random_world() -> Self {
+        // TODO [Johan]
+        //      I think that using the factory pattern here would be good, 
+        //      eg. create a new `WorldFactory` struct in a another file.
+        Self {chunks: Vec::new()}
+    }
+
+    /// Loads a world from a file.
+    pub fn from_file(name: &str) -> Option<Self> {
+        match std::fs::read_to_string(name) {
+            Ok(data) => Some(serde_json::from_str(&data).unwrap()),
+            Err(err) => {
+                println!("Could not read: {name} with error: {err}");
+                None
+            }
+        }
+    }
+
+    /// Saves the current map to the given file
+    pub fn save_to_file(&self, name: &str) {
+        // Note: so far I am using `serde_json` but we will be able to change this in the future.
+        //       There seems to be many options suited for us: https://serde.rs/#data-formats
+        let serialized = serde_json::to_string(self).unwrap();
+        match std::fs::write(name, serialized) {
+            Ok(_) => println!("Map was saved at {name}"),
+            Err(err) => {
+                println!("Error while saving {name}: {err}")
+            }
+        }
     }
 
     /// Returns a list of cube attributes to be drawn on the screen.
@@ -78,13 +109,13 @@ impl World {
         }
         true
     }
-    
+
     pub fn apply_action(&mut self, action: Action) {
-        match action { 
+        match action {
             Action::Destroy { at } => self.destroy_cube(at)
         }
     }
-    
+
     fn destroy_cube(&mut self, at: Vector3) {
         for chunk in &mut self.chunks {
             if chunk.is_in(&at) {
@@ -116,7 +147,7 @@ mod tests {
         assert!(world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
         assert!(world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
     }
-    
+
     #[test]
     fn test_chunk_collision_2() {
         let mut world = World::new();

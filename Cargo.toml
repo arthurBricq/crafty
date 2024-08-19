@@ -10,7 +10,13 @@ edition = "2021"
 glium = "0.34"
 winit = "0.29"
 image = "0.24"
+
 # Iterate over the variants of an enum
 strum = { version = "0.26", features = ["derive"] }
+
 # A double-ended queue with an upper bound on its length.
 bounded-vec-deque = "0.1.1"
+
+# For serializing and de-serializing data
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

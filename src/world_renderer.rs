@@ -3,14 +3,6 @@ extern crate winit;
 
 use std::time::Instant;
 
-use glium::{Display, Surface, Texture2d, uniform};
-use glium::glutin::surface::WindowSurface;
-use glium::texture::Texture2dArray;
-use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
-use winit::event::ElementState::{Pressed, Released};
-use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
-use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{Fullscreen, Window};
 use crate::actions::Action::Destroy;
 use crate::camera::{Camera, MotionState};
 use crate::cube::Block;
@@ -20,6 +12,14 @@ use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::tile::HUDManager;
 use crate::world::World;
+use glium::glutin::surface::WindowSurface;
+use glium::texture::Texture2dArray;
+use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
+use glium::{uniform, Display, Surface, Texture2d};
+use winit::event::ElementState::{Pressed, Released};
+use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
+use winit::keyboard::{KeyCode, PhysicalKey};
+use winit::window::{Fullscreen, Window};
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
@@ -243,6 +243,7 @@ impl WorldRenderer {
                             println!("=================");
                             self.cam.debug();
                         }
+                        KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F11 => self.toggle_fullscreen(&window),
                         KeyCode::Escape => std::process::exit(1),
                         _ => {}

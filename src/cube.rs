@@ -1,9 +1,10 @@
+use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use strum::IntoEnumIterator;
 
 /// The kind of cube
 /// Each kind is associated with 3 textures: side, top & bottom.
-#[derive(Clone, Copy, EnumIter, PartialEq, Debug)]
+#[derive(Clone, Copy, EnumIter, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Block {
     GRASS = 0,
     DIRT,
@@ -35,7 +36,7 @@ impl Block {
 }
 
 /// Model of a cube in the 3D world.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Cube {
     position: [f32; 3],
     block: Block,
