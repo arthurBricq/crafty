@@ -3,6 +3,7 @@ mod cube;
 mod camera;
 mod world_renderer;
 mod world;
+mod world_generation;
 mod chunk;
 mod vector;
 mod gravity;
@@ -15,13 +16,8 @@ use crate::world::World;
 use crate::world_renderer::WorldRenderer;
 
 fn main() {
-    // let world = if let Some(world) = World::from_file("map.json") {
-    //    world 
-    // } else {
-    //     let mut world = World::create_new_random_world(10);
-    //     world.save_to_file("map.json");
-    //     world
-    // };
+    // pick your prefered world gen
+    // let mut world = World::create_new_flat_world(10);
     let mut world = World::create_new_random_world(10);
     world.save_to_file("map.json");
     let cam = Camera::new();
