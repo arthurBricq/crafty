@@ -197,12 +197,9 @@ impl Camera {
 
     pub fn mousemove(&mut self, horizontal: f32, vertical: f32, sensitivity: f32) {
         self.rotation[0] -= horizontal * sensitivity;
-
-        // TODO there is a bu when looking down...
-        // don't let the player turn upside down
-        if vertical > 0.0 && self.rotation[1] < PI * 0.5 {
+        if vertical > 0.0 && self.rotation[1] < PI * 0.5 - 0.05 {
             self.rotation[1] += vertical * sensitivity;
-        } else if vertical < 0.0 && self.rotation[1] > -PI * 0.5 {
+        } else if vertical < 0.0 && self.rotation[1] > -PI * 0.5 + 0.05 {
             self.rotation[1] += vertical * sensitivity;
         }
     }
