@@ -9,7 +9,6 @@ pub type CubeIndex = (usize, usize, usize);
 pub const CHUNK_SIZE: usize = 8;
 const CHUNK_HEIGHT: usize = 32;
 pub const CHUNK_FLOOR: usize = 9;
-const CHUNK_MARGIN: f32 = 0.2;
 
 /// A chunk is a (size * size * h) partition of the space that contains cubes
 ///
@@ -83,8 +82,8 @@ impl Chunk {
     pub fn is_in(&self, pos: &Vector3) -> bool {
         // Note that in the received position, the 'y' (from the plane) position is actually the third value
         // of the vector...
-        pos[0] >= self.corner[0] - CHUNK_MARGIN && pos[0] < (self.corner[0] + CHUNK_MARGIN + CHUNK_SIZE as f32) &&
-            pos[2] >= self.corner[1] - CHUNK_MARGIN && pos[2] < (self.corner[1] + CHUNK_MARGIN + CHUNK_SIZE as f32)
+        pos[0] >= self.corner[0] && pos[0] < (self.corner[0] + CHUNK_SIZE as f32) &&
+            pos[2] >= self.corner[1] && pos[2] < (self.corner[1] + CHUNK_SIZE as f32)
     }
 
 
@@ -217,6 +216,13 @@ mod tests {
         assert!(chunk.is_in(&Vector3::new(4., 30., 7.5)));
         assert!(!chunk.is_in(&Vector3::new(4., 30., 8.5)));
         assert!(!chunk.is_in(&Vector3::new(9., 30., 4.5)));
+    }
+    
+    #[test]
+    fn test_is_in() {
+        let chunk = Chunk::new([0., -(CHUNK_SIZE as f32)]);
+        assert!(!chunk.is_in(&Vector3::new(0., 0., 0.)));
+        assert!(!chunk.is_in(&Vector3::new(0., 0., 3.)));
     }
 
     #[test]
