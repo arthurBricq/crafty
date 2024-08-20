@@ -2,7 +2,7 @@ use crate::graphics::color::Color::LightGray;
 use crate::graphics::color::Color::LightCoral;
 use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::RectVertexAttr;
-use crate::graphics::menu::HelpMenu;
+use crate::graphics::menu_help::HelpMenu;
 
 
 /// A tile is a rectangle drawn on the screen, such as a menu.
@@ -10,8 +10,8 @@ pub struct HUDManager {
     /// List of the tiles to be presented on the screen
     rects: Vec<RectVertexAttr>,
     base: Vec<RectVertexAttr>,
-    helpmenu: HelpMenu,
-    showhelp: bool
+    help_menu: HelpMenu,
+    show_help: bool
 }
 
 impl HUDManager {
@@ -19,14 +19,12 @@ impl HUDManager {
         let mut hud= Self { 
             rects: Vec::new(),
             base: Vec::new(),
-            helpmenu: HelpMenu::new(),
-            showhelp: false
+            help_menu: HelpMenu::new(),
+            show_help: false
         };
         hud.add_cross();
         //hud.add_crafty_label();
         hud.update();
-
-
 
         hud
     }
@@ -51,18 +49,18 @@ impl HUDManager {
         self.base.push(RectVertexAttr::new_with_char(x0 + 5. * s * 3., h, s, GLChar::Y));
     }
 
-    ///Switch the bool for showing the help menu
+    /// Add/Remove the help menu
     pub fn toggle_help_menu(&mut self) {
-        if self.showhelp {self.showhelp = false}
-        else {self.showhelp = true}
+        if self.show_help {self.show_help = false}
+        else {self.show_help = true}
         self.update();
     }
 
-    ///Update the vector of RectVertexAttr to be shown
-    pub fn update(&mut self) {
+    /// Update the vector of RectVertexAttr to be shown
+    fn update(&mut self) {
         self.rects=self.base.clone();
-        if self.showhelp {
-            self.rects.append(&mut self.helpmenu.rects().clone());
+        if self.show_help {
+            self.rects.append(&mut self.help_menu.rects().clone());
         }
     }
 

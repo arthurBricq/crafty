@@ -10,7 +10,7 @@ use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
-use crate::graphics::tile::HUDManager;
+use crate::graphics::hud_manager::HUDManager;
 use crate::world::World;
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;

@@ -4,7 +4,8 @@
 pub mod cube;
 
 pub mod rectangle;
-pub mod tile;
+pub mod hud_manager;
 pub mod color;
 pub mod font;
-pub mod menu;
+pub mod menu_help;
+pub mod string_rect;
