@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use strum::IntoEnumIterator;
+use crate::vector::Vector3;
 
 /// The kind of cube
 /// Each kind is associated with 3 textures: side, top & bottom.
@@ -38,14 +39,14 @@ impl Block {
 /// Model of a cube in the 3D world.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Cube {
-    position: [f32; 3],
+    position: Vector3,
     block: Block,
+    is_visible: bool
 }
-
 
 impl Cube {
     pub fn new(position: [f32; 3], block: Block) -> Self {
-        Self { position, block }
+        Self { position: Vector3::newf(position), block, is_visible: true }
     }
 
     pub fn model_matrix(&self) -> [[f32; 4]; 4] {
@@ -64,7 +65,26 @@ impl Cube {
         self.block as u8
     }
 
-    pub fn position(&self) -> [f32; 3] {
+    pub fn position(&self) -> Vector3 {
         self.position
+    }
+    
+    pub fn neighbors_positions(&self) -> [Vector3; 6] {
+        [
+            self.position + Vector3::unit_x(),
+            self.position - Vector3::unit_x(),
+            self.position + Vector3::unit_y(),
+            self.position - Vector3::unit_y(),
+            self.position + Vector3::unit_z(),
+            self.position - Vector3::unit_z(),
+        ]
+    }
+
+    pub fn set_is_visible(&mut self, is_visible: bool) {
+        self.is_visible = is_visible;
+    }
+
+    pub fn is_visible(&self) -> bool {
+        self.is_visible
     }
 }

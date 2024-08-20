@@ -1,10 +1,11 @@
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub, SubAssign};
+use serde::{Deserialize, Serialize};
 
 /// A vector in 3 coordinates
 ///
 /// Mathematically, it can represent equally a 3d vector or a 3d point
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Vector3 {
     x: f32,
     y: f32,
@@ -18,6 +19,22 @@ pub static UNIT_Z: Vector3 = Vector3::newi(0, 0, 1);
 impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
+    }
+    
+    pub fn unit_x() -> Self {
+        Self { x: 1.0, y: 0.0, z: 0.0 }
+    }
+    
+    pub fn unit_y() -> Self {
+        Self { x: 0.0, y: 1.0, z: 0.0 }
+    }
+    
+    pub fn unit_z() -> Self {
+        Self { x: 0.0, y: 0.0, z: 1.0 }
+    }
+    
+    pub fn newf(xyz: [f32; 3]) -> Self {
+        Self { x: xyz[0], y: xyz[1], z: xyz[2] }
     }
 
     /// Create a face from integers
