@@ -65,7 +65,7 @@ impl HelpMenu {
     }
 
     /// Recreate vectors of rectangle from the list of items
-    pub fn update(&mut self) {
+    fn update(&mut self) {
         self.rects=Vec::new();
         self.rects.push(RectVertexAttr::new_from_corner(-0.95, 0.70, 1.8, -0.7, LightCoral));
         for item in self.help_menu_data.items() {

@@ -23,7 +23,7 @@ impl StringRect {
         menu
     }
 
-    pub fn add_rect(&mut self) {
+    fn add_rect(&mut self) {
         let x1=StringRect::write_string(self.u, self.v, self.size, &self.string, &mut self.rects);
     }
 
