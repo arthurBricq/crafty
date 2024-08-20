@@ -89,7 +89,7 @@ impl Vector3 {
         }
     }
 
-    pub fn equals(&self, pos: &[f32;3]) -> bool {
+    pub fn equals(&self, pos: &Vector3) -> bool {
         self.x == pos[0] && self.y == pos[1] && self.z == pos[2]
     }
 }

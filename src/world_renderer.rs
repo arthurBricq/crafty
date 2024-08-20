@@ -7,7 +7,7 @@ use crate::actions::Action::Destroy;
 use crate::camera::{Camera, MotionState};
 use crate::cube::Block;
 use crate::fps::FpsManager;
-use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
+use crate::graphics::cube::{CubeContainer, CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::tile::HUDManager;
@@ -137,12 +137,11 @@ impl WorldRenderer {
                             selected_texture: &selected_texture,
                             selected_intensity: if self.is_left_clicking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
                         };
-
+                        
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
                         // OpenGL instancing = instead of setting 1000 times different uniforms, you give once 1000 attributes
-                        let positions = self.world.get_cube_attributes(self.cam.selected());
-                        let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
+                        let position_buffer = glium::VertexBuffer::dynamic(&display, &self.world.get_cubes_to_draw(self.cam.selected())).unwrap();
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,

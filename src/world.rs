@@ -1,9 +1,11 @@
+use std::time::Instant;
 use crate::actions::Action;
 use crate::chunk::{Chunk, CubeIndex, CHUNK_FLOOR, CHUNK_SIZE};
 use crate::cube::Block::{GRASS, DIRT, COBBELSTONE, OAKLOG};
-use crate::graphics::cube::CubeAttr;
+use crate::graphics::cube::{CubeAttr, CubeContainer};
 use crate::vector::Vector3;
 use serde::{Deserialize, Serialize};
+use crate::camera::Camera;
 use crate::cube::Cube;
 
 #[derive(Serialize, Deserialize)]
@@ -85,19 +87,18 @@ impl World {
     /// Each item on this list will result in a cube drawn in the screen.
     ///
     /// 'selected_cube': the currently selected cube, that will be rendered differently.
-    pub fn get_cube_attributes(&self, selected_cube: Option<Vector3>) -> Vec<CubeAttr> {
+    pub fn get_cubes_to_draw(&self, selected_cube: Option<Vector3>) -> Vec<CubeAttr> {
+        // I know that this function looks bad, but... Trust the optimizer
+        // I have tried to optimize this shit using a custom class that does not re-allocate everything
+        // but it does not improve anything ... So let's keep the simple solution of always calling `push`
         let mut positions: Vec<CubeAttr> = Vec::new();
         for chunk in &self.chunks {
-            // TODO improve this code
-            // I know that this is not the best way to do this:
-            // 1. It is not optimal because `.push` is really slow
-            // 2. It breaks the responsibility principle
             for layer in chunk.cubes() {
                 for row in layer {
                     for cube in row {
                         if let Some(c) = cube {
                             if c.is_visible() {
-                                let is_selected = selected_cube.is_some() && selected_cube.unwrap() == c.position();
+                                let is_selected = selected_cube.is_some() && selected_cube.unwrap().equals(c.position());
                                 positions.push(CubeAttr::new(c.model_matrix(), c.block_id(), is_selected));
                             }
                         }
@@ -105,7 +106,6 @@ impl World {
                 }
             }
         }
-        // println!("count = {}", positions.len());
         positions
     }
 

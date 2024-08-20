@@ -65,8 +65,8 @@ impl Cube {
         self.block as u8
     }
 
-    pub fn position(&self) -> Vector3 {
-        self.position
+    pub fn position(&self) -> &Vector3 {
+        &self.position
     }
     
     pub fn neighbors_positions(&self) -> [Vector3; 6] {
