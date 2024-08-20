@@ -4,6 +4,7 @@ use crate::vector::Vector3;
 use serde::{Deserialize, Serialize};
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
+pub type CubeIndex = (usize, usize, usize);
 
 pub const CHUNK_SIZE: usize = 8;
 const CHUNK_HEIGHT: usize = 32;
@@ -86,12 +87,6 @@ impl Chunk {
             pos[2] >= self.corner[1] - CHUNK_MARGIN && pos[2] < (self.corner[1] + CHUNK_MARGIN + CHUNK_SIZE as f32)
     }
 
-    fn get_indices(&self, pos: &Vector3) -> (usize, usize, usize) {
-        let i_x = (pos[0] - self.corner[0]) as usize;
-        let i_z = pos[1] as usize;
-        let i_y = (pos[2] - self.corner[1]) as usize;
-        (i_z, i_x, i_y)
-    }
 
     /// Returns true if the position in the chunk is not part of a cube.
     /// The function does not check that the cube is chunk, and will crash if it is not.
@@ -105,6 +100,93 @@ impl Chunk {
     pub fn is_position_free_falling(&self, pos: &Vector3) -> bool {
         // We simply check if the cube below the player is occupied.
         self.is_position_free(&Vector3::new(pos[0], pos[1] - 1., pos[2]))
+    }
+
+    /// Goes through all the cubes that are strictly inside the chunk and compute whether they have
+    /// a free neighbors.
+    pub fn compute_visible_cubes(&mut self) {
+        for k in 1..CHUNK_HEIGHT-1 {
+            for i in 1..CHUNK_SIZE-1 {
+                for j in 1..CHUNK_SIZE-1 {
+                    if self.cubes[k][i][j].is_some() {
+                        // Each cube has 6 neighbors.
+                        // We set the cube as not visible if all the 6 neighbors are not full
+                        // If either one is none, the cube must be visible.
+                        let is_visible = self.cubes[k-1][i][j].is_none()
+                            || self.cubes[k+1][i][j].is_none()
+                            || self.cubes[k][i-1][j].is_none()
+                            || self.cubes[k][i+1][j].is_none()
+                            || self.cubes[k][i][j-1].is_none()
+                            || self.cubes[k][i][j-1].is_none();
+                        self.cubes[k][i][j].as_mut().unwrap().set_is_visible(is_visible);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Returns the list of the index of all the cubes located at the border of the chunk.
+    pub fn border(&self) -> Vec<CubeIndex> {
+        let mut to_return = Vec::new();
+        for k in 0..CHUNK_HEIGHT {
+            for i in 0..CHUNK_SIZE {
+                if self.cubes[k][i][0].is_some() {
+                    to_return.push((k, i, 0));
+                }
+                if self.cubes[k][i][CHUNK_SIZE-1].is_some() {
+                    to_return.push((k, i, CHUNK_SIZE-1));
+                }
+            }
+            for j in 0..CHUNK_SIZE {
+                if self.cubes[k][0][j].is_some() {
+                    to_return.push((k, 0, j));
+                }
+                if self.cubes[k][CHUNK_SIZE-1][j].is_some() {
+                    to_return.push((k, CHUNK_SIZE-1, j));
+                }
+            }
+        }
+        to_return
+    }
+
+    fn get_indices(&self, pos: &Vector3) -> CubeIndex {
+        let i_x = (pos[0] - self.corner[0]) as usize;
+        let i_z = pos[1] as usize;
+        let i_y = (pos[2] - self.corner[1]) as usize;
+        (i_z, i_x, i_y)
+    }
+    pub fn cube_at_index(&self, index: CubeIndex) -> Option<&Cube> {
+        let (k,i,j) = index;
+        self.cubes[k][i][j].as_ref()
+    }
+
+    pub fn cube_at_index_mut(&mut self, index: CubeIndex) -> Option<&mut Cube> {
+        let (k,i,j) = index;
+        self.cubes[k][i][j].as_mut()
+    }
+    
+    pub fn cube_at(&self, pos: &Vector3) -> Option<&Cube> {
+        self.cube_at_index(self.get_indices(pos))
+    }
+    
+    pub fn cube_at_mut(&mut self, pos: &Vector3) -> Option<&mut Cube> {
+        self.cube_at_index_mut(self.get_indices(pos))
+    }
+
+    pub fn visible_cube_count(&self) -> usize {
+        let mut count = 0;
+        for k in 0..CHUNK_HEIGHT {
+            for i in 0..CHUNK_SIZE {
+                for j in 0..CHUNK_SIZE {
+                    if let Some(c) = &self.cubes[k][i][j] {
+                        if c.is_visible() {
+                            count += 1;
+                        }
+                    }
+                }
+            }
+        }
+        count
     }
 
     pub fn print_all_cubes(&self) {
@@ -195,5 +277,25 @@ mod tests {
         assert!(!chunk.is_position_free_falling(&Vector3::new(x, 0., y)));
         assert!(chunk.is_position_free_falling(&Vector3::new(x, 2., y)));
         assert!(chunk.is_position_free_falling(&Vector3::new(x, 3., y)));
+    }
+
+
+
+    #[test]
+    fn test_visible_cube_in_one_chunnk() {
+        let mut chunk = Chunk::new([0., 0.]);
+        chunk.fill_layer(0, GRASS);
+        chunk.fill_layer(1, GRASS);
+        chunk.fill_layer(2, GRASS);
+
+        // Before computing visible cube, we make sure that all cubes are visible
+        assert_eq!(chunk.visible_cube_count(), 3 * CHUNK_SIZE * CHUNK_SIZE);
+
+        // After the computation, there must be many less
+        chunk.compute_visible_cubes();
+        assert!(chunk.visible_cube_count() < 3 * CHUNK_SIZE * CHUNK_SIZE);
+
+        // In this case, we know the actual number of cubes not visible.
+        assert_eq!(chunk.visible_cube_count(), 3 * CHUNK_SIZE * CHUNK_SIZE - (CHUNK_SIZE - 2) * (CHUNK_SIZE - 2));
     }
 }
