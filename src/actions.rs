@@ -1,4 +1,4 @@
-use crate::cube::Block;
+use crate::block_kind::Block;
 use crate::vector::Vector3;
 
 /// An action is something that will alter the world

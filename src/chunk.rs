@@ -1,7 +1,7 @@
-use crate::cube::Block::{DIRT, GRASS};
-use crate::cube::{Block, Cube};
+use crate::block_kind::Block;
+use crate::block_kind::Block::{DIRT, GRASS};
+use crate::cube::Cube;
 use crate::vector::Vector3;
-use serde::{Deserialize, Serialize};
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 pub type CubeIndex = (usize, usize, usize);
@@ -17,7 +17,7 @@ pub const CHUNK_FLOOR: usize = 9;
 /// * The chunk owns the cube that it contains and is responsible for properly constructing / modifying them.
 ///   As a consequence, it is the position in the `ChunkData` field that encodes the position of each cube.
 ///
-#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Chunk {
     cubes: ChunkData,
     corner: [f32; 2],
@@ -39,14 +39,22 @@ impl Chunk {
         self.corner
     }
 
+
+    /// Returns an iterator over all the positions of the chunk
+    pub fn flattened_iter(&self) -> impl Iterator<Item = &Option<Cube>> {
+        self.cubes.iter()
+            .flat_map(|matrix_2d| matrix_2d.iter())
+            .flat_map(|row| row.iter())
+    }
+
     /// Fills the chunk with a bluit-in world
     pub fn new_for_demo(corner: [f32; 2], z_offset: i32) -> Self {
         let mut cubes = [[[None; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
-                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 2., corner[1] + j as f32], DIRT));
-                cubes[(CHUNK_FLOOR as i32 - 1 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 1., corner[1] + j as f32], DIRT));
-                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32, corner[1] + j as f32], GRASS));
+                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 2., corner[1] + j as f32], DIRT, true));
+                cubes[(CHUNK_FLOOR as i32 - 1 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 1., corner[1] + j as f32], DIRT, true));
+                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32, corner[1] + j as f32], GRASS, true));
             }
         }
         Self { cubes, corner }
@@ -57,16 +65,8 @@ impl Chunk {
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
                 self.cubes[h][i][j] = Some(
-                    Cube::new([self.corner[0] + i as f32, h as f32, self.corner[1] + j as f32], kind));
+                    Cube::new([self.corner[0] + i as f32, h as f32, self.corner[1] + j as f32], kind, true));
             }
-        }
-    }
-
-    pub fn set_cube(&mut self, at: Vector3, kind: Block) {
-        let (i_z, i_x, i_y) = self.get_indices(&at);
-        let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
-        if in_bound {
-            self.cubes[i_z][i_x][i_y] = Some(Cube::new(at.as_array(), kind))
         }
     }
 
@@ -77,12 +77,12 @@ impl Chunk {
             self.cubes[i_z][i_x][i_y] = None
         }
     }
-    
-    pub fn add_cube(&mut self, at: Vector3, block: Block) {
+
+    pub fn add_cube(&mut self, at: Vector3, block: Block, visible: bool) {
         let (i_z, i_x, i_y) = self.get_indices(&at);
         let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
         if in_bound {
-            self.cubes[i_z][i_x][i_y] = Some(Cube::new(at.as_array(), block))
+            self.cubes[i_z][i_x][i_y] = Some(Cube::new(at.as_array(), block, visible))
         }
     }
 

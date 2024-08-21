@@ -1,12 +1,14 @@
 use crate::actions::Action;
 use crate::chunk::{Chunk, CubeIndex, CHUNK_FLOOR, CHUNK_SIZE};
-use crate::cube::Block::{COBBELSTONE, DIRT, GRASS, OAKLOG};
-use crate::cube::{Block, Cube};
 use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use strum::IntoEnumIterator;
+use crate::block_kind::Block;
+use crate::block_kind::Block::{DIRT, GRASS};
+use crate::cube::Cube;
 
-#[derive(Serialize, Deserialize)]
 pub struct World {
     /// The list of the chunks currently being displayed
     chunks: Vec<Chunk>,
@@ -21,8 +23,6 @@ impl World {
     pub fn fill_for_demo(&mut self) {
         let s = CHUNK_SIZE as f32;
         self.chunks.push(Chunk::new_for_demo([0., 0.], 0));
-        self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 1., 2.), COBBELSTONE);
-        self.chunks[0].set_cube(Vector3::new(2.0, CHUNK_FLOOR as f32 + 2., 2.), OAKLOG);
         self.chunks.push(Chunk::new_for_demo([s, 0.], 2));
         self.chunks.push(Chunk::new_for_demo([0., -s], 2));
         self.chunks.push(Chunk::new_for_demo([0., s], 2));
@@ -60,7 +60,7 @@ impl World {
     /// Loads a world from a file.
     pub fn from_file(name: &str) -> Option<Self> {
         match std::fs::read_to_string(name) {
-            Ok(data) => Some(serde_json::from_str(&data).unwrap()),
+            Ok(data) => Some(Self::from_json(data)),
             Err(err) => {
                 println!("Could not read: {name} with error: {err}");
                 None
@@ -72,7 +72,7 @@ impl World {
     pub fn save_to_file(&self, name: &str) {
         // Note: so far I am using `serde_json` but we will be able to change this in the future.
         //       There seems to be many options suited for us: https://serde.rs/#data-formats
-        let serialized = serde_json::to_string(self).unwrap();
+        let serialized = self.to_json();
         match std::fs::write(name, serialized) {
             Ok(_) => println!("Map was saved at {name}"),
             Err(err) => {
@@ -136,7 +136,7 @@ impl World {
     pub fn apply_action(&mut self, action: Action) {
         match action {
             Action::Destroy { at } => self.destroy_cube(at),
-            Action::Add { at, block } => self.add_cube(at, block)
+            Action::Add { at, block } => self.add_cube(at, block, true)
         }
     }
     
@@ -149,12 +149,13 @@ impl World {
         None
     }
 
-    fn add_cube(&mut self, at: Vector3, block: Block) {
+    fn add_cube(&mut self, at: Vector3, block: Block, visible: bool) {
         for chunk in &mut self.chunks {
             if chunk.is_in(&at) {
-                chunk.add_cube(at, block)
+                chunk.add_cube(at, block, visible)
             }
         }
+        // TODO recompute the visiblity of the cube below ?
     }
 
     fn destroy_cube(&mut self, at: Vector3) {
@@ -243,8 +244,8 @@ impl World {
 
 #[cfg(test)]
 mod tests {
+    use crate::block_kind::Block::GRASS;
     use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
-    use crate::cube::Block::GRASS;
     use crate::vector::Vector3;
     use crate::world::World;
 
@@ -322,5 +323,78 @@ mod tests {
 
         // In this case, there is no border between the two cubes.
         assert_eq!(count2, 2 * 3 * CHUNK_SIZE * CHUNK_SIZE - 2 * (CHUNK_SIZE - 2) * (CHUNK_SIZE - 2));
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct SerializedWorld {
+    chunk_corners: Vec<[f32;2]>,
+    cubes_by_kind: HashMap<Block, Vec<[i32;4]>>
+}
+
+impl World {
+
+    fn to_json(&self) -> String {
+        
+        // Provide all the chunks corner
+        let chunk_corners: Vec<[f32;2]> = self.chunks.iter().map(|chunk| chunk.corner()).collect();
+        
+        // Provide all the cubes, sorted by kind
+        let mut all_cubes = HashMap::new();
+        for block_kind in Block::iter() {
+            all_cubes.insert(block_kind, Vec::<([i32; 4])>::new());
+        }
+
+        for chunk in &self.chunks {
+            for cube in chunk.flattened_iter() {
+                if let Some(cube) = cube {
+                    // we can trust that the block has a container.
+                    let container = all_cubes.get_mut(cube.block()).unwrap();
+                    container.push([
+                        cube.position().x() as i32,
+                        cube.position().y() as i32,
+                        cube.position().z() as i32,
+                        cube.is_visible() as i32
+                    ]);
+                }
+            }
+        }
+
+        let world = SerializedWorld {
+            chunk_corners,
+            cubes_by_kind: all_cubes
+        };
+        serde_json::to_string(&world).unwrap()
+
+    }
+
+    fn from_json(data: String) -> Self {
+        // If we end up with stack-overflows, we could not read the entire file but instead provide the reader.
+        let serialized_world: SerializedWorld = serde_json::from_str(data.as_str()).unwrap();
+
+        // First, build all the chunks
+        let mut chunks = Vec::new();
+        for corner in serialized_world.chunk_corners {
+            chunks.push(Chunk::new(corner));
+        }
+
+        // Build the world
+        let mut world = Self {
+            chunks
+        };
+
+        // Fill all the chunks by building all the cubes
+        for block_kind in Block::iter() {
+            let cubes = serialized_world.cubes_by_kind.get(&block_kind).unwrap();
+            for cube_data in cubes {
+                let x = cube_data[0] as f32;
+                let y = cube_data[1] as f32;
+                let z = cube_data[2] as f32;
+                let visible = cube_data[3] != 0;
+                world.add_cube(Vector3::new(x,y,z), block_kind, visible);
+            }
+        }
+
+        world
     }
 }

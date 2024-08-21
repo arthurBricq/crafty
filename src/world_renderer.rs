@@ -6,7 +6,6 @@ use std::time::Instant;
 use crate::actions::Action;
 use crate::actions::Action::Destroy;
 use crate::camera::{Camera, MotionState};
-use crate::cube::Block;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
@@ -21,6 +20,7 @@ use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Fullscreen, Window};
+use crate::block_kind::Block;
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
