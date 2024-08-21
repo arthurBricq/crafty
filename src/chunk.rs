@@ -4,6 +4,7 @@ use crate::cube::Cube;
 use crate::primitives::vector::Vector3;
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use strum::IntoEnumIterator;
+use crate::aabb::AABB;
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 pub type CubeIndex = (usize, usize, usize);
@@ -42,7 +43,7 @@ impl Chunk {
     }
 
     /// Returns an iterator over all the positions of the chunk
-    pub fn flattened_iter(&self) -> impl Iterator<Item = &Option<Cube>> {
+    pub fn flattened_iter(&self) -> impl Iterator<Item=&Option<Cube>> {
         self.cubes.iter()
             .flat_map(|matrix_2d| matrix_2d.iter())
             .flat_map(|row| row.iter())
@@ -116,20 +117,20 @@ impl Chunk {
     /// Goes through all the cubes that are strictly inside the chunk and compute whether they have
     /// a free neighbors.
     pub fn compute_visible_cubes(&mut self) {
-        for k in 1..CHUNK_HEIGHT-1 {
-            for i in 1..CHUNK_SIZE-1 {
-                for j in 1..CHUNK_SIZE-1 {
+        for k in 1..CHUNK_HEIGHT - 1 {
+            for i in 1..CHUNK_SIZE - 1 {
+                for j in 1..CHUNK_SIZE - 1 {
                     if self.cubes[k][i][j].is_some() {
                         // Each cube has 6 potential neighbors.
                         // We set the cube as not visible if all the 6 neighbors are not full
                         // If either one is none, the cube must be visible.
                         let mut count = 0;
-                        if self.cubes[k-1][i][j].is_some() { count += 1 }
-                        if self.cubes[k+1][i][j].is_some() { count += 1 }
-                        if self.cubes[k][i-1][j].is_some() { count += 1 }
-                        if self.cubes[k][i+1][j].is_some() { count += 1 }
-                        if self.cubes[k][i][j-1].is_some() { count += 1 }
-                        if self.cubes[k][i][j+1].is_some() { count += 1 }
+                        if self.cubes[k - 1][i][j].is_some() { count += 1 }
+                        if self.cubes[k + 1][i][j].is_some() { count += 1 }
+                        if self.cubes[k][i - 1][j].is_some() { count += 1 }
+                        if self.cubes[k][i + 1][j].is_some() { count += 1 }
+                        if self.cubes[k][i][j - 1].is_some() { count += 1 }
+                        if self.cubes[k][i][j + 1].is_some() { count += 1 }
                         self.cubes[k][i][j].as_mut().unwrap().set_n_neighbors(count);
                     }
                 }
@@ -145,27 +146,27 @@ impl Chunk {
                 if self.cubes[k][i][0].is_some() {
                     to_return.push((k, i, 0));
                 }
-                if self.cubes[k][i][CHUNK_SIZE-1].is_some() {
-                    to_return.push((k, i, CHUNK_SIZE-1));
+                if self.cubes[k][i][CHUNK_SIZE - 1].is_some() {
+                    to_return.push((k, i, CHUNK_SIZE - 1));
                 }
             }
             for j in 0..CHUNK_SIZE {
                 if self.cubes[k][0][j].is_some() {
                     to_return.push((k, 0, j));
                 }
-                if self.cubes[k][CHUNK_SIZE-1][j].is_some() {
-                    to_return.push((k, CHUNK_SIZE-1, j));
+                if self.cubes[k][CHUNK_SIZE - 1][j].is_some() {
+                    to_return.push((k, CHUNK_SIZE - 1, j));
                 }
             }
         }
-        
+
         // You also have to provide all the cubes in the bottom-most layer
-        for i in 1..CHUNK_SIZE-1 {
-            for j in 1..CHUNK_SIZE-1 {
+        for i in 1..CHUNK_SIZE - 1 {
+            for j in 1..CHUNK_SIZE - 1 {
                 to_return.push((0, i, j));
             }
         }
-        
+
         to_return
     }
 
@@ -175,21 +176,21 @@ impl Chunk {
         let i_y = (pos[2] - self.corner[1]) as usize;
         (i_z, i_x, i_y)
     }
-    
+
     pub fn cube_at_index(&self, index: CubeIndex) -> Option<&Cube> {
-        let (k,i,j) = index;
+        let (k, i, j) = index;
         self.cubes[k][i][j].as_ref()
     }
 
     pub fn cube_at_index_mut(&mut self, index: CubeIndex) -> Option<&mut Cube> {
-        let (k,i,j) = index;
+        let (k, i, j) = index;
         self.cubes[k][i][j].as_mut()
     }
-    
+
     pub fn cube_at(&self, pos: &Vector3) -> Option<&Cube> {
         self.cube_at_index(self.get_indices(pos))
     }
-    
+
     pub fn cube_at_mut(&mut self, pos: &Vector3) -> Option<&mut Cube> {
         self.cube_at_index_mut(self.get_indices(pos))
     }
@@ -227,7 +228,7 @@ impl Chunk {
         serialize_one_chunk(&mut all_cubes, self);
         let world = SerializedWorld {
             chunk_corners: vec![self.corner],
-            cubes_by_kind: all_cubes
+            cubes_by_kind: all_cubes,
         };
         serde_json::to_string(&world).unwrap()
     }
@@ -242,12 +243,53 @@ impl Chunk {
                 let y = cube_data[1] as f32;
                 let z = cube_data[2] as f32;
                 let neighbors = cube_data[3] as u8;
-                chunk.add_cube(Vector3::new(x,y,z), block_kind, neighbors);
+                chunk.add_cube(Vector3::new(x, y, z), block_kind, neighbors);
             }
         }
         Ok(chunk)
     }
 
+
+    pub fn collides(&self, aabb: &AABB) -> bool {
+        for k in 0..CHUNK_HEIGHT {
+            for i in 0..CHUNK_SIZE {
+                for j in 0..CHUNK_SIZE {
+                    if let Some(cube) = self.cubes[k][i][j] {
+                        if cube.collides(aabb) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
+    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+                          -> (f32, Vector3) {
+        // TODO do it the dumb way for now, i.e. loop on all the cubes
+        let mut collision_time = f32::MAX;
+        let mut normal = Vector3::empty();
+
+        for k in 0..CHUNK_HEIGHT {
+            for i in 0..CHUNK_SIZE {
+                for j in 0..CHUNK_SIZE {
+                    if let Some(cube) = self.cubes[k][i][j] {
+                        let (cube_collision_time, cube_normal) =
+                            cube.collision_time(aabb, target, velocity);
+
+                        if cube_collision_time < collision_time {
+                            collision_time = cube_collision_time;
+                            normal = cube_normal;
+                        }
+                    }
+                }
+            }
+        }
+
+        (collision_time, normal)
+    }
 }
 
 #[cfg(test)]
@@ -266,7 +308,7 @@ mod tests {
         assert!(!chunk.is_in(&Vector3::new(4., 30., 8.5)));
         assert!(!chunk.is_in(&Vector3::new(9., 30., 4.5)));
     }
-    
+
     #[test]
     fn test_is_in() {
         let chunk = Chunk::new([0., -(CHUNK_SIZE as f32)]);
@@ -333,7 +375,6 @@ mod tests {
         assert!(chunk.is_position_free_falling(&Vector3::new(x, 2., y)));
         assert!(chunk.is_position_free_falling(&Vector3::new(x, 3., y)));
     }
-
 
 
     #[test]

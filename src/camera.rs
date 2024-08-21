@@ -1,17 +1,22 @@
-use std::f32::consts::PI;
-use std::time::Duration;
-
+use crate::aabb::AABB;
 use crate::chunk::CHUNK_FLOOR;
-use crate::cube::Cube;
-use crate::gravity::GravityHandler;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
+use std::f32::consts::PI;
+use std::time::Duration;
+use crate::cube::Cube;
 
 /// Travel speed [m/s] or [cube/s]
-const SPEED: f32 = 2.0;
+const SPEED: f32 = 6.;
+// TODO for some obscure reason, actual speed is lower than that. Perhaps the dt
+// is wrong, or yet again the collision ?
 
-pub const PLAYER_HEIGHT: f32 = 2.;
+/// Velocity [cube/s] added when jumping
+const JUMP_VELOCITY: f32 = 7.;
+
+// TODO same problem
+const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
 
 pub enum MotionState {
     W,
@@ -27,83 +32,144 @@ pub struct Camera {
     /// Position of the camera
     position: Position,
 
-    // state: MotionState
+    /// Speed of the player
+    velocity: Vector3,
+
+    /// Orientation of the camera Yaw, Pitch
+    rotation: [f32; 2],
+
     // TODO Maybe we can build a better encapsulation of this logic
     w_pressed: bool,
     s_pressed: bool,
     a_pressed: bool,
     d_pressed: bool,
 
-    /// For handling free-fall
-    gravity_handler: GravityHandler,
-
     /// Tuple with (Cube, touched_position)
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
     touched_cube: Option<(Cube, Vector3)>,
+
+    in_air: bool,
 }
+
 
 impl Camera {
     /// based on right hand perspective look along the positive z-Axis
     pub fn new() -> Self {
         Self {
-            position: Position::new(Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT + 5., 3.0), PI, 0.),
+            position: Position::new(Vector3::new(4.0, CHUNK_FLOOR as f32 + 24., 3.0), PI, 0.),
+            velocity: Vector3::new(0., 0., 0.),
+            rotation: [PI, 0.0],
             w_pressed: false,
             s_pressed: false,
             a_pressed: false,
             d_pressed: false,
-            gravity_handler: GravityHandler::new(),
             touched_cube: None,
+            in_air: true, // will be updated every frame anyway
         }
     }
 
-    pub fn step(&mut self, elapsed: Duration, world: &World) {
-        // TODO The problem of hardcoding a ratio is that `dt` depends on the OpenGL performance.
-        //      We need to have the physics computation done at a constant `dt`...
-        //      This won't be easy in Rust.
-
-        // Compute the next position
+    /// Returns the velocity vector due to the controls purely (ignoring
+    /// collisions or gravity)
+    fn controls_velocity(&self) -> Vector3 {
         let f = self.ground_direction_forward();
         let l = self.ground_direction_right();
 
-        let mut next_pos = self.position.pos().clone();
-        let mut next_pos_amplified = self.position.pos().clone();
-
-        let amplitude = SPEED * elapsed.as_secs_f32();
-        let ratio = 20.;
+        let mut displacement = Vector3::empty();
         if self.w_pressed {
-            next_pos += f * amplitude;
-            next_pos_amplified += f * amplitude * ratio
+            displacement += f * SPEED;
         }
         if self.s_pressed {
-            next_pos -= f * amplitude;
-            next_pos_amplified -= f * amplitude * ratio
+            displacement -= f * SPEED;
         }
         if self.d_pressed {
-            next_pos += l * amplitude;
-            next_pos_amplified += l * amplitude * ratio
+            displacement += l * SPEED;
         }
         if self.a_pressed {
-            next_pos -= l * amplitude;
-            next_pos_amplified -= l * amplitude * ratio
+            displacement -= l * SPEED;
         }
 
-        // Collision detection (xz-plane)
-        let is_free = world.is_position_free(&next_pos_amplified);
+        displacement
+    }
 
-        // Free-fall handling
-        let is_falling = world.is_position_free_falling(&next_pos_amplified);
-        let dz_fall = self.gravity_handler.step(is_falling, elapsed);
-        next_pos[1] -= dz_fall;
+    pub fn step(&mut self, elapsed: Duration, world: &World) {
+        // Compute the next position
+        let f = self.ground_direction_forward();
+        let l = self.ground_direction_right();
+        let mut next_pos = self.position.clone();
+        let mut dt = elapsed.as_secs_f32();
 
-        // Position update
-        if is_free {
-            self.position.set_position(next_pos);
-        } else { 
-            
+        // add gravity
+        if self.in_air {
+            self.velocity += GRAVITY_ACCELERATION_VECTOR * dt;
         }
+
+        // TODO will have to do something cleaner when other sources of
+        //      horizontal velocity will be implemented
+        {
+            let controls_vel = self.controls_velocity();
+            self.velocity[0] = controls_vel[0];
+            self.velocity[2] = controls_vel[2];
+        }
+
+        let mut dt = elapsed.as_secs_f32();
+        dt = dt - self.move_with_collision(dt, world);
+        if dt > 0. {
+            dt = dt - self.move_with_collision(dt, world);
+        }
+        // TODO we may want to do it a third time, to handle x-y-z diagonal
+        //      movements. However, there are no slopes in the cubes for now, so it
+        //      is not necessary
+
+        // update in_air
+        let displacement = Vector3::new(0., -1e-5, 0.);
+        self.in_air = !world.collides(&Self::make_aabb(&(&self.position + displacement)));
 
         self.compute_selected_cube(world);
+    }
+
+    /// Integrate the velocity to move the camera, with collision. Returns the
+    /// dt (in seconds), which can be smaller than `dt` if there is a collision.
+    fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
+        let target = Self::make_aabb(&(&self.position + self.velocity * dt));
+
+        let (collision_time, normal) =
+            world.collision_time(&Self::make_aabb(&self.position), &target, &self.velocity);
+
+        if collision_time >= dt {
+            // can move straight away
+            self.position += self.velocity * dt;
+
+            dt
+        } else {
+            // we want to put a margin, to avoid collision even with floats rounding
+
+            // TODO if we are here, we can assume the velocity is nonzero I
+            // think, but I am not sure
+            let dtmargin = 1e-5 / self.velocity.norm();
+            self.position += self.velocity * (collision_time - dtmargin);
+
+            // remove component of velocity along the normal
+            let vnormal = normal * normal.dot(&self.velocity);
+            self.velocity = self.velocity - vnormal;
+
+            collision_time
+        }
+    }
+
+    fn make_aabb(position: &Position) -> AABB {
+        let diameter = 0.5;
+        let height = 1.8;
+        let forehead = 0.1;
+
+        AABB {
+            north: position.z() + diameter / 2.,
+            south: position.z() - diameter / 2.,
+            top: position.y() + forehead,
+            bottom: position.y() + forehead - height,
+            east: position.x() + diameter / 2.,
+            west: position.x() - diameter / 2.,
+        }
     }
 
     /// Set the attribute `selected` to the cube currently being selected
@@ -113,6 +179,8 @@ impl Camera {
         const REACH_DISTANCE: f32 = 5.0;
         let unit_direction = self.direction();
         for i in 1..(REACH_DISTANCE / STEP) as usize {
+            // If the query position is not free, it means that we have found
+            // the selected cube
             let query = self.position.pos() + unit_direction * i as f32 * STEP;
             // If the query position is not free, it means that we have found the selected cube
             if let Some(cube) = world.cube_at(query) {
@@ -134,7 +202,9 @@ impl Camera {
     }
 
     pub fn jump(&mut self) {
-        self.gravity_handler.jump();
+        if !self.in_air {
+            self.velocity[1] = JUMP_VELOCITY;
+        }
     }
 
     pub fn up(&mut self) {
