@@ -4,6 +4,7 @@ use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::RectVertexAttr;
 use crate::graphics::menu_help::HelpMenu;
 
+use super::menu_help;
 use super::menu_help::HelpMenuData;
 use super::menu_help::HelpMenuItem;
 
@@ -21,15 +22,7 @@ pub struct HUDManager {
 impl HUDManager {
     pub fn new() -> Self {
 
-        // To be read from a file
-        let mut items= Vec::new();
-        let mut help_menu_data= HelpMenuData::new(items);
-        help_menu_data.add_item(String::from("move forward"),String::from("z"));
-        help_menu_data.add_item(String::from("move backward"),String::from("s"));
-        help_menu_data.add_item(String::from("move left"),String::from("q"));
-        help_menu_data.add_item(String::from("move right"),String::from("d"));
-        help_menu_data.add_item(String::from("jump"),String::from("space"));
-        help_menu_data.add_item(String::from("help menu"),String::from("f12"));
+        let mut help_menu_data= HelpMenuData::new(menu_help::HELP_MENU_DATA.to_vec());
 
         let mut hud= Self { 
             rects: Vec::new(),

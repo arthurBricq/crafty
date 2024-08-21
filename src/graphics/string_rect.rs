@@ -20,7 +20,7 @@ impl StringRect {
     }
 
     /// Add RectVertexAttr from a string to a vector of RectVertexAttr and return the u position of the last character 
-    fn write_string(u: f32, v: f32, w: f32, st: &String, rects: &mut Vec<RectVertexAttr>) -> f32 {
+    pub fn write_string(u: f32, v: f32, w: f32, st: &String, rects: &mut Vec<RectVertexAttr>) -> f32 {
         // This function could probably be moved somewhere else
         for (i,c) in st.chars().enumerate() {
             if c== ' ' {continue}

@@ -4,24 +4,35 @@ use crate::graphics::color::Color::LightGray;
 use crate::graphics::color::Color::LightCoral;
 use crate::graphics::string_rect::StringRect;
 
+/// Data in the help menu
+pub const HELP_MENU_DATA: [HelpMenuItem;6] = [
+    //HelpMenuItem{command: &str "move forward",key: String::from("z")},
+    HelpMenuItem::new("move forward","z"),
+    HelpMenuItem::new("move backward","s"),
+    HelpMenuItem::new("move left","q"),
+    HelpMenuItem::new("move right","d"),
+    HelpMenuItem::new("jump","space"),
+    HelpMenuItem::new("help menu","f12"),
+];
 
+#[derive(Clone,Copy)]
 pub struct HelpMenuItem {
-    command: String,
-    key: String
+    command: &'static str,
+    key: &'static str
 }
 
 impl HelpMenuItem {
 
-    pub fn new(command: String, key: String) -> Self {
+    pub const fn new(command: &'static str, key: &'static str   ) -> Self {
         Self {
             command,
             key
         }
     }
-    pub fn command(&self) -> &String {
+    pub fn command(&self) -> & str {
         &self.command        
     }
-    pub fn key(&self) -> &String {
+    pub fn key(&self) -> & str {
         &self.key
     }
 }
@@ -35,10 +46,6 @@ impl HelpMenuData {
         Self {
             items
         }
-    }
-    
-    pub fn add_item(&mut self, command: String, key: String) {
-        self.items.push(HelpMenuItem::new(command, key))
     }
 
     pub fn items(&self) -> &Vec<HelpMenuItem> {
@@ -59,12 +66,8 @@ impl HelpMenu {
         let u= -0.9;
         let size = 0.025;
         for item in help_menu_data.items() {
-            for rect in StringRect::new(item.command(), u, y, size).rects() {
-            rects.push(*rect);
-            }
-            for rect in StringRect::new(item.key(), u+0.9, y, size).rects() {
-                rects.push(*rect);
-            }
+            StringRect::write_string(u, y, size, &item.command().to_string(), &mut rects);
+            StringRect::write_string(u+0.98, y, size, &item.key().to_string(), &mut rects);
             y-=4. * size;
         }
         Self {
