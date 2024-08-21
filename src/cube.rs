@@ -1,5 +1,6 @@
 use crate::block_kind::Block;
 use crate::vector::Vector3;
+use crate::aabb::{AABB, DisplacementStatus};
 
 /// Model of a cube in the 3D world.
 #[derive(Clone, Copy, Debug)]
@@ -55,5 +56,29 @@ impl Cube {
 
     pub fn is_visible(&self) -> bool {
         self.is_visible
+    }
+
+    pub fn collision(&self, aabb: &AABB, displacement_status: &[DisplacementStatus; 3]) -> Vector3 {
+	let mut signature = Vector3::empty();
+
+	signature[0] = match displacement_status[0] {
+	    DisplacementStatus::Forward => self.position[0] - aabb.east,
+	    DisplacementStatus::Backward => aabb.west - self.position[0] - 1.,
+	    DisplacementStatus::Still => f32::MAX
+	};
+
+	signature[1] = match displacement_status[1] {
+	    DisplacementStatus::Forward => self.position[1] - aabb.top,
+	    DisplacementStatus::Backward => aabb.bottom - self.position[1] - 1.,
+	    DisplacementStatus::Still => f32::MAX
+	};
+
+	signature[2] = match displacement_status[2] {
+	    DisplacementStatus::Forward => self.position[2] - aabb.north,
+	    DisplacementStatus::Backward => aabb.south - self.position[2] - 1.,
+	    DisplacementStatus::Still => f32::MAX
+	};
+	
+	signature
     }
 }

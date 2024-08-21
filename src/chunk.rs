@@ -2,6 +2,7 @@ use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::cube::Cube;
 use crate::vector::Vector3;
+use crate::aabb::{AABB, DisplacementStatus};
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 pub type CubeIndex = (usize, usize, usize);
@@ -206,6 +207,26 @@ impl Chunk {
                 }
             }
         }
+    }
+
+    pub fn collision(&self, aabb: &AABB, displacement_status: &[DisplacementStatus; 3]) -> Vector3 {
+	// TODO do it the dumb way for now, i.e. loop on all the cubes
+	let mut signature = Vector3::empty();
+	
+	for k in 0..CHUNK_HEIGHT {
+            for i in 0..CHUNK_SIZE {
+                for j in 0..CHUNK_SIZE {
+                    if let Some(cube) = self.cubes[k][i][j] {
+			let cube_signature = cube.collision(aabb, displacement_status);
+			signature[0] = signature[0].min(cube_signature[0]);
+			signature[1] = signature[1].min(cube_signature[1]);
+			signature[2] = signature[2].min(cube_signature[2]);
+                    }
+                }
+            }
+        }
+	
+	signature
     }
 }
 

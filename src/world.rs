@@ -9,6 +9,7 @@ use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::cube::Cube;
 use crate::world_generation::perlin::PerlinNoise;
+use crate::aabb::{AABB, DisplacementStatus};
 
 pub struct World {
     /// The list of the chunks currently being displayed
@@ -157,6 +158,28 @@ impl World {
         positions
     }
 
+    pub fn collision(&self, aabb: &AABB, displacement_status: &[DisplacementStatus; 3]) -> Vector3 {
+	let mut signature = Vector3::empty();
+	
+	// find with which chunks it is colliding
+	for chunk in &self.chunks {
+	    if chunk.corner()[0] < aabb.east &&
+		chunk.corner()[0] + CHUNK_SIZE as f32 > aabb.west &&
+		chunk.corner()[1] < aabb.north &&
+		chunk.corner()[1] + CHUNK_SIZE as f32 > aabb.south
+	    {
+		// dbg!("chunk is colliding", chunk.corner());
+
+		let chunk_signature = chunk.collision(aabb, displacement_status);
+		signature[0] = signature[0].min(chunk_signature[0]);
+		signature[1] = signature[1].min(chunk_signature[1]);
+		signature[2] = signature[2].min(chunk_signature[2]);
+	    }
+        }
+
+	signature
+    }
+    
     /// Returns true if there is a cube at this position
     pub fn is_position_free(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
