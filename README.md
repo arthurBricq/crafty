@@ -43,6 +43,7 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
     - Addition of cubes
 
 - Player logic
+    - A player has a list of items
     - When deleting a cube, the cube goes into the items of the player
 
 - Create the `chunk API` [Arthur]

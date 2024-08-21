@@ -77,6 +77,14 @@ impl Chunk {
             self.cubes[i_z][i_x][i_y] = None
         }
     }
+    
+    pub fn add_cube(&mut self, at: Vector3, block: Block) {
+        let (i_z, i_x, i_y) = self.get_indices(&at);
+        let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
+        if in_bound {
+            self.cubes[i_z][i_x][i_y] = Some(Cube::new(at.as_array(), block))
+        }
+    }
 
     /// Returns true if the position is in the chunk
     pub fn is_in(&self, pos: &Vector3) -> bool {

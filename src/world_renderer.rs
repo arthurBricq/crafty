@@ -3,11 +3,12 @@ extern crate winit;
 
 use std::time::Instant;
 
+use crate::actions::Action;
 use crate::actions::Action::Destroy;
 use crate::camera::{Camera, MotionState};
 use crate::cube::Block;
 use crate::fps::FpsManager;
-use crate::graphics::cube::{CubeContainer, CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
+use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::tile::HUDManager;
@@ -112,11 +113,11 @@ impl WorldRenderer {
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
-                        if self.cam.selected().is_some() && self.is_left_clicking {
+                        if self.cam.touched_cube().is_some() && self.is_left_clicking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
-                                self.world.apply_action(Destroy {at: self.cam.selected().unwrap()});
+                                self.world.apply_action(Destroy {at: self.cam.touched_cube().unwrap().to_cube_coordinates()});
                                 self.is_left_clicking = false;
                                 self.click_time = 0.;
                             }
@@ -141,7 +142,7 @@ impl WorldRenderer {
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
                         // OpenGL instancing = instead of setting 1000 times different uniforms, you give once 1000 attributes
-                        let position_buffer = glium::VertexBuffer::dynamic(&display, &self.world.get_cubes_to_draw(self.cam.selected())).unwrap();
+                        let position_buffer = glium::VertexBuffer::dynamic(&display, &self.world.get_cubes_to_draw(self.cam.touched_cube())).unwrap();
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,
@@ -262,9 +263,12 @@ impl WorldRenderer {
                 self.is_left_clicking = false;
                 self.click_time = 0.;
             }
-        } else if button == 3 {
-            // Right click
-            // TODO place a cube
+        } else if button == 3 && state == Pressed {
+            // Right click = add a new cube
+            // We know where is the player and we know 
+            if let Some(touched) = self.cam.touched_cube() {
+                self.world.apply_action(Action::Add {at: Action::position_to_generate_cube(&touched), block: Block::COBBELSTONE})
+            }
         }
     }
 

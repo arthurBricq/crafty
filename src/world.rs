@@ -1,12 +1,10 @@
-use std::time::Instant;
 use crate::actions::Action;
 use crate::chunk::{Chunk, CubeIndex, CHUNK_FLOOR, CHUNK_SIZE};
-use crate::cube::Block::{GRASS, DIRT, COBBELSTONE, OAKLOG};
-use crate::graphics::cube::{CubeAttr, CubeContainer};
+use crate::cube::Block::{COBBELSTONE, DIRT, GRASS, OAKLOG};
+use crate::cube::{Block, Cube};
+use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
 use serde::{Deserialize, Serialize};
-use crate::camera::Camera;
-use crate::cube::Cube;
 
 #[derive(Serialize, Deserialize)]
 pub struct World {
@@ -97,8 +95,10 @@ impl World {
                 for row in layer {
                     for cube in row {
                         if let Some(c) = cube {
+                            // TODO is there no other fucking way to check whether this cube is the selected one ? 
+                            //      let's think in term of performance...
                             if c.is_visible() {
-                                let is_selected = selected_cube.is_some() && selected_cube.unwrap().equals(c.position());
+                                let is_selected = selected_cube.is_some() && selected_cube.unwrap().to_cube_coordinates().equals(c.position());
                                 positions.push(CubeAttr::new(c.model_matrix(), c.block_id(), is_selected));
                             }
                         }
@@ -135,7 +135,8 @@ impl World {
 
     pub fn apply_action(&mut self, action: Action) {
         match action {
-            Action::Destroy { at } => self.destroy_cube(at)
+            Action::Destroy { at } => self.destroy_cube(at),
+            Action::Add { at, block } => self.add_cube(at, block)
         }
     }
     
@@ -146,6 +147,14 @@ impl World {
             }
         }
         None
+    }
+
+    fn add_cube(&mut self, at: Vector3, block: Block) {
+        for chunk in &mut self.chunks {
+            if chunk.is_in(&at) {
+                chunk.add_cube(at, block)
+            }
+        }
     }
 
     fn destroy_cube(&mut self, at: Vector3) {
@@ -210,7 +219,6 @@ impl World {
             let border = chunk.border();
             for index in border {
                 if let Some(cube) = chunk.cube_at_index(index) {
-                    let position = cube.position();
                     let to_check = cube.neighbors_positions();
                     // If any of the neighbors is free, then the border is visible.
                     let is_visible = to_check.iter().any(|pos| self.is_position_free(&pos));

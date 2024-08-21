@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub, SubAssign};
-use serde::{Deserialize, Serialize};
 
 /// A vector in 3 coordinates
 ///
@@ -91,6 +91,10 @@ impl Vector3 {
 
     pub fn equals(&self, pos: &Vector3) -> bool {
         self.x == pos[0] && self.y == pos[1] && self.z == pos[2]
+    }
+    
+    pub fn to_cube_coordinates(&self) -> Vector3 {
+        Vector3::new(self.x.floor(), self.y.floor(), self.z.floor())
     }
 }
 
