@@ -212,7 +212,7 @@ impl Chunk {
 #[cfg(test)]
 mod tests {
     use crate::chunk::{Chunk, CHUNK_HEIGHT, CHUNK_SIZE};
-    use crate::cube::Block::GRASS;
+    use crate::block_kind::Block::GRASS;
     use crate::vector::Vector3;
 
     #[test]

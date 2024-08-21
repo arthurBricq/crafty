@@ -83,15 +83,15 @@ impl World {
 			let cube_height = height.floor() as i32;
 
 			for y in 0..cube_height - 1 {
-			    chunk.set_cube(Vector3::new(i as f32 * s + x as f32,
+			    chunk.add_cube(Vector3::new(i as f32 * s + x as f32,
 							y as f32,
 							j as f32 * s + z as f32),
-					   DIRT);
+					   DIRT, true);
 			}
-			chunk.set_cube(Vector3::new(i as f32 * s + x as f32,
+			chunk.add_cube(Vector3::new(i as f32 * s + x as f32,
 						    cube_height as f32,
 						    j as f32 * s + z as f32),
-				       GRASS);
+				       GRASS, true);
 		    }
 		}
 		
