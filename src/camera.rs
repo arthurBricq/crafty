@@ -8,7 +8,7 @@ use crate::world::World;
 use crate::aabb::{AABB, DisplacementStatus};
 
 /// Travel speed [m/s] or [cube/s]
-const SPEED: f32 = 1.;
+const SPEED: f32 = 2.;
 
 pub const PLAYER_HEIGHT: f32 = 2.;
 
@@ -43,6 +43,11 @@ pub struct Camera {
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
     touched_cube: Option<Vector3>,
+
+    // TODO tmp
+    // in seconds
+    // if > 0, need to apply the jump acceleration
+    jump_time: f32,
 }
 
 impl Camera {
@@ -58,6 +63,7 @@ impl Camera {
             d_pressed: false,
             gravity_handler: GravityHandler::new(),
             touched_cube: None,
+	    jump_time: -1., // to make sure we are not jumping
         }
     }
 
@@ -105,6 +111,12 @@ impl Camera {
 	dbg!(self.position);
 	let mut acceleration = Vector3::empty();
 	acceleration += Vector3::new(0., -9., 0.); // gravity
+
+	if self.jump_time > 0. {
+	    self.jump_time -= elapsed.as_secs_f32();
+	    acceleration += Vector3::new(0., 2. * 9., 0.);
+	}
+	
 	dbg!("velocity before");
 	dbg!(self.velocity);
 
@@ -279,7 +291,9 @@ impl Camera {
     }
 
     pub fn jump(&mut self) {
-        self.gravity_handler.jump();
+	// TODO prevent doing it mid-air
+	self.jump_time = 1.;
+        // self.gravity_handler.jump();
     }
 
     pub fn up(&mut self) {
