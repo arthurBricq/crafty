@@ -24,9 +24,9 @@ impl StringRect {
         // This function could probably be moved somewhere else
         for (i,c) in st.chars().enumerate() {
             if c== ' ' {continue}
-            rects.push(RectVertexAttr::new_with_char(u + i as f32 * w * 3., v, w, GLChar::from_char(c)));
+            rects.push(RectVertexAttr::new_with_char(u + i as f32 * w * 2., v, w, GLChar::from_char(c)));
         }
-        u + st.len() as f32 * w * 3.
+        u + st.len() as f32 * w * 2.
     }
 
 }

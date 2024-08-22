@@ -11,6 +11,8 @@ mod graphics;
 mod actions;
 mod fps;
 mod block_kind;
+mod items_bar;
+mod player_items;
 
 use crate::camera::Camera;
 use crate::world::World;

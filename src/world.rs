@@ -157,6 +157,19 @@ impl World {
         positions
     }
 
+    /// Returns the block at the given position
+    pub fn block_at(&self, pos: &Vector3) -> Option<Block> {
+        for chunk in &self.chunks {
+            if chunk.is_in(pos) {
+                if let Some(cube) = chunk.cube_at(pos) {
+                    return Some(cube.block().clone())
+                }
+            }
+        }
+
+        None
+    }
+
     /// Returns true if there is a cube at this position
     pub fn is_position_free(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
