@@ -61,23 +61,66 @@ impl Cube {
     pub fn collision(&self, aabb: &AABB, displacement_status: &[DisplacementStatus; 3]) -> Vector3 {
 	let mut signature = Vector3::empty();
 
+	// first, need to make sure we collide along any axis
+	if  aabb.east < self.position[0] ||
+	    aabb.west > self.position[0] + 1. ||
+
+	    // TODO I've put >=, but idk if it's good or not
+	    aabb.top < self.position[1] ||
+	    aabb.bottom >= self.position[1] + 1. ||
+	    
+	    aabb.north < self.position[2] ||
+	    aabb.south > self.position[2] + 1. {
+		signature[0] = f32::MAX;
+		signature[1] = f32::MAX;
+		signature[2] = f32::MAX;
+
+		return signature
+	    }
+	    
+	
+
+	// if not, don't bother computing any signature
+	
+
 	signature[0] = match displacement_status[0] {
-	    DisplacementStatus::Forward => self.position[0] - aabb.east,
-	    DisplacementStatus::Backward => aabb.west - self.position[0] - 1.,
+	    DisplacementStatus::Forward => if aabb.west > self.position[0] + 1. { f32::MAX }
+	    else { self.position[0] - aabb.east },
+	    // DisplacementStatus::Forward => self.position[0] - aabb.east,
+	    DisplacementStatus::Backward => if aabb.east < self.position[0] { f32::MAX }
+	    else { aabb.west - self.position[0] - 1. },
 	    DisplacementStatus::Still => f32::MAX
 	};
 
 	signature[1] = match displacement_status[1] {
-	    DisplacementStatus::Forward => self.position[1] - aabb.top,
-	    DisplacementStatus::Backward => aabb.bottom - self.position[1] - 1.,
+	    DisplacementStatus::Forward => if aabb.bottom > self.position[1] + 1. { f32::MAX }
+	    else { self.position[1] - aabb.top },
+	    // DisplacementStatus::Forward => self.position[1] - aabb.top,
+	    DisplacementStatus::Backward => if aabb.top < self.position[1] { f32::MAX }
+	    else { aabb.bottom - self.position[1] - 1. },
+	    // DisplacementStatus::Backward => aabb.bottom - self.position[1] - 1.,
 	    DisplacementStatus::Still => f32::MAX
 	};
 
 	signature[2] = match displacement_status[2] {
-	    DisplacementStatus::Forward => self.position[2] - aabb.north,
-	    DisplacementStatus::Backward => aabb.south - self.position[2] - 1.,
+	    DisplacementStatus::Forward => if aabb.south > self.position[2] + 1. { f32::MAX }
+	    else { self.position[2] - aabb.north },
+	    // DisplacementStatus::Forward => self.position[2] - aabb.north,
+	    DisplacementStatus::Backward => if aabb.north < self.position[2] { f32::MAX }
+	    else { aabb.south - self.position[2] - 1. },
+	    // DisplacementStatus::Backward => aabb.south - self.position[2] - 1.,
 	    DisplacementStatus::Still => f32::MAX
 	};
+
+	if signature[0] < 0. || signature[2] < 0. {
+	    dbg!("cube colliding in plane !");
+	    dbg!(signature);
+	    dbg!(displacement_status);
+	    dbg!(self);
+	    dbg!(&aabb);
+	    dbg!([(aabb.north + aabb.south) /  2.,
+		  (aabb.east + aabb.west) /  2.]);
+	}
 	
 	signature
     }

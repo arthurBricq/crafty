@@ -1,5 +1,6 @@
 use crate::vector::Vector3;
 
+#[derive(Debug)]
 pub struct AABB {
     pub north: f32,
     pub south: f32,

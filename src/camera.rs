@@ -8,7 +8,7 @@ use crate::world::World;
 use crate::aabb::{AABB, DisplacementStatus};
 
 /// Travel speed [m/s] or [cube/s]
-const SPEED: f32 = 0.20;
+const SPEED: f32 = 1.;
 
 pub const PLAYER_HEIGHT: f32 = 2.;
 
@@ -49,7 +49,7 @@ impl Camera {
     /// based on right hand perspective look along the positive z-Axis
     pub fn new() -> Self {
         Self {
-            position: Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
+            position: Vector3::new(4.0, 1. + CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
 	    velocity: Vector3::new(0., 0., 0.),
             rotation: [PI, 0.0],
             w_pressed: false,
@@ -102,6 +102,7 @@ impl Camera {
 	//   - reset speed normal to collision
 
 	dbg!("start of round");
+	dbg!(self.position);
 	let mut acceleration = Vector3::empty();
 	acceleration += Vector3::new(0., -9., 0.); // gravity
 	dbg!("velocity before");
@@ -144,38 +145,73 @@ impl Camera {
 	// each axis: forward, backward, and still
 
 	// for each axis, just take the min among all the collisions
-	let diameter = 0.5;
-	let height = 1.8;
-	let forehead = 0.1;
-
 	let displacement_status = DisplacementStatus::from_vector(displacement);
-	
-	let signature = world.collision(&AABB {
-	    north: self.position.z() + diameter / 2.,
-	    south: self.position.z() - diameter / 2.,
-	    top: self.position.y() + forehead,
-	    bottom: self.position.y() + forehead - height,
-	    east: self.position.x() + diameter / 2.,
-	    west: self.position.x() - diameter / 2.,
-	}, &displacement_status);
 
-	dbg!(self.position);
-	dbg!(signature);
-	dbg!(&displacement);
-	dbg!(&displacement_status);
-
-	// deal with collision
-	for n in 0..2 {
-	    if signature[n] <= 0. {
-		displacement[n] += displacement_status[n].to_scalar() * signature[n];
-		// reset velocity along this axis
-		self.velocity[n] = 0.;
+	// safe check: we must not be colliding already
+	{
+	    dbg!("in the safe check");
+	    dbg!(self.position);
+	    dbg!(&displacement_status);
+	    let aabb = Self::make_aabb(&self.position);
+	    let signature_before = world.collision(&aabb, &displacement_status);
+	    if signature_before.as_array().iter().any(|x| *x < 0.) {
+		dbg!(signature_before);
+		panic!("already colliding before moving !!");
 	    }
 	}
 
-	dbg!(&displacement);
+	dbg!("displacement before loops");
+	dbg!(displacement);
+	loop {
+	    let aabb = Self::make_aabb(&(self.position + displacement));
+	    let signature = world.collision(&aabb, &displacement_status);
 
+	    dbg!(self.position);
+	    dbg!(signature);
+	    dbg!(&displacement);
+	    dbg!(&displacement_status);
+
+	    // deal with collision
+
+	    // pb: collision may fail just because along one axis, it is slightly
+	    // "scratching". One solution is to do it iteratively !
+
+	    if signature.as_array().iter().all(|x| *x >= 0.) {
+		// can escape the loop, collision is fine
+		dbg!("escaped the loop fine, with predicted next position");
+		dbg!(self.position + signature);
+		dbg!(signature);
+		dbg!(displacement);
+		break
+	    }
+
+	    let easiest = signature.as_array().iter().enumerate()
+		.filter(|(_, x)| **x < 0.).max_by(|(_, a), (_, b)| a.total_cmp(b))
+		.map(|(index, _)| index).unwrap();
+	    dbg!("easiest is:");
+	    dbg!(signature);
+	    dbg!(easiest);
+
+	    dbg!(displacement[easiest]);
+	    dbg!(displacement_status[easiest].to_scalar());
+	    dbg!(signature[easiest]);
+	    
+	    displacement[easiest] += displacement_status[easiest].to_scalar()
+		* (signature[easiest] - 1e-6);
+	    
+	    // reset velocity along this axis
+	    self.velocity[easiest] = 0.;
+
+	    
+	    dbg!("displacement at end of a loop");
+	    dbg!(displacement);
+	}
+
+	dbg!("displacement after the loops");
+	dbg!(displacement);
 	self.position += displacement;
+
+	// panic!();
 	
 	// next_pos += self.movement_vector(elapsed);
 	// gravity
@@ -200,6 +236,21 @@ impl Camera {
         self.compute_selected_cube(world);
     }
 
+    fn make_aabb(position: &Vector3) -> AABB {
+	let diameter = 0.5;
+	let height = 1.8;
+	let forehead = 0.1;
+	
+	AABB {
+	    north: position.z() + diameter / 2.,
+	    south: position.z() - diameter / 2.,
+	    top: position.y() + forehead,
+	    bottom: position.y() + forehead - height,
+	    east: position.x() + diameter / 2.,
+	    west: position.x() - diameter / 2.,
+	}
+    }
+    
     /// Set the attribute `selected` to the cube currently being selected
     fn compute_selected_cube(&mut self, world: &World) {
         // TODO dichotomy should be much better in terms of performance
