@@ -23,6 +23,7 @@ use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Fullscreen, Window};
+use crate::block_kind::Block::COBBELSTONE;
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
@@ -68,6 +69,11 @@ impl WorldRenderer {
             .build(&event_loop);
 
         window.set_cursor_visible(false);
+        
+        // Add some damn items
+        for _ in 0..50 {
+            self.items.collect(COBBELSTONE);
+        }
 
         // Construct the buffer of vertices (for single objects, we use OpenGL's instancing to multiply them)
         let cube_vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();

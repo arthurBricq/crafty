@@ -1,25 +1,26 @@
 # Crafty
 
-(The beginning of) A MineCraft clone coded with OpenGL, fully in Rust !
+A MineCraft clone coded with OpenGL, fully in Rust !
 
-Note that the entire **game engine** is written by ourselves, using **only a driver to OpenGL** !
+Note that the entire **game engine** (3D rendering and physics) is written by ourselves, using **only a driver to OpenGL**.
+
+![](demo/ms1.png)
 
 ![](demo/first_text.png)
 
-![](demo/first_chunks.png)
 
 ### Current list of features
 
 - Rendering textured cubes of different kinds with OpenGL
   - OpenGL instancing allows to render thousands of cubes very fast.
-- World is divided in chunks of equal sizes
 - First Player Camera
 - Detection of collision
 - Gravity, Free-Fall, Jumping
+- Edition of the world like in minecraft
 - Easy way to import textures into the game
-- Easy way to presents `Tiles` on the screen (menus)
-- Possibility to add text to the screen
+- Easy way to presents `Tiles` on the screen (menus, texts)
 - Persistent world: loading and Saving the world to the disk
+- Randomized map creation
 
 ### Missing features (short term milestones)
 
