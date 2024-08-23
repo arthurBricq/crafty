@@ -158,26 +158,20 @@ impl World {
         positions
     }
 
-    pub fn collision(&self, aabb: &AABB, displacement_status: &[DisplacementStatus; 3]) -> Vector3 {
-	let mut signature = Vector3::empty();
-	
+    // now returns collision time; f32::MAX if no collision
+    pub fn collision(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
 	// find with which chunks it is colliding
+	let mut collision_time = f32::MAX; 
+	// TODO be smarter
 	for chunk in &self.chunks {
-	    if chunk.corner()[0] < aabb.east &&
-		chunk.corner()[0] + CHUNK_SIZE as f32 > aabb.west &&
-		chunk.corner()[1] < aabb.north &&
-		chunk.corner()[1] + CHUNK_SIZE as f32 > aabb.south
-	    {
-		// dbg!("chunk is colliding", chunk.corner());
+	    let chunk_collision_time = chunk.collision(aabb, target, velocity);
 
-		let chunk_signature = chunk.collision(aabb, displacement_status);
-		signature[0] = signature[0].min(chunk_signature[0]);
-		signature[1] = signature[1].min(chunk_signature[1]);
-		signature[2] = signature[2].min(chunk_signature[2]);
+	    if chunk_collision_time < collision_time {
+		collision_time = chunk_collision_time;
 	    }
         }
 
-	signature
+	collision_time
     }
     
     /// Returns true if there is a cube at this position

@@ -58,70 +58,50 @@ impl Cube {
         self.is_visible
     }
 
-    pub fn collision(&self, aabb: &AABB, displacement_status: &[DisplacementStatus; 3]) -> Vector3 {
-	let mut signature = Vector3::empty();
+    fn aabb(&self) -> AABB {
+	AABB {
+	    north: self.position[2] + 1.,
+	    south: self.position[2],
+	    top: self.position[1] + 1.,
+	    bottom: self.position[1],
+	    east: self.position[0] + 1.,
+	    west: self.position[0],
+	}
+    }
 
-	// first, need to make sure we collide along any axis
-	if  aabb.east < self.position[0] ||
-	    aabb.west > self.position[0] + 1. ||
-
-	    // TODO I've put >=, but idk if it's good or not
-	    aabb.top < self.position[1] ||
-	    aabb.bottom >= self.position[1] + 1. ||
-	    
-	    aabb.north < self.position[2] ||
-	    aabb.south > self.position[2] + 1. {
-		signature[0] = f32::MAX;
-		signature[1] = f32::MAX;
-		signature[2] = f32::MAX;
-
-		return signature
-	    }
-	    
+    pub fn collision(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
+	let cube_aabb = self.aabb();
 	
+	if aabb.collides(&cube_aabb) {
+	    panic!("should not collide before !");
+	}
 
-	// if not, don't bother computing any signature
-	
+	// if no collision, no need to bother
+	if !target.collides(&cube_aabb) {
+	    return f32::MAX
+	}
 
-	signature[0] = match displacement_status[0] {
-	    DisplacementStatus::Forward => if aabb.west > self.position[0] + 1. { f32::MAX }
-	    else { self.position[0] - aabb.east },
-	    // DisplacementStatus::Forward => self.position[0] - aabb.east,
-	    DisplacementStatus::Backward => if aabb.east < self.position[0] { f32::MAX }
-	    else { aabb.west - self.position[0] - 1. },
-	    DisplacementStatus::Still => f32::MAX
-	};
+	// compute collision time in each direction
+	let mut tx = if velocity[0] > 0. { (aabb.west - cube_aabb.east) / velocity[0]}
+	else { (cube_aabb.east - aabb.west) / velocity[0] };
+	let mut ty = if velocity[1] > 0. { (aabb.bottom - cube_aabb.top) / velocity[1]}
+	else { (cube_aabb.top - aabb.bottom) / velocity[1] };
+	let mut tz = if velocity[2] > 0. { (aabb.south - cube_aabb.north) / velocity[2]}
+	else { (cube_aabb.north - aabb.south) / velocity[2] };
 
-	signature[1] = match displacement_status[1] {
-	    DisplacementStatus::Forward => if aabb.bottom > self.position[1] + 1. { f32::MAX }
-	    else { self.position[1] - aabb.top },
-	    // DisplacementStatus::Forward => self.position[1] - aabb.top,
-	    DisplacementStatus::Backward => if aabb.top < self.position[1] { f32::MAX }
-	    else { aabb.bottom - self.position[1] - 1. },
-	    // DisplacementStatus::Backward => aabb.bottom - self.position[1] - 1.,
-	    DisplacementStatus::Still => f32::MAX
-	};
+	// if negative, means the collision will not happen: put ∞
+	if tx <= 0. { tx = f32::MAX }
+	if ty <= 0. { ty = f32::MAX }
+	if tz <= 0. { tz = f32::MAX }
 
-	signature[2] = match displacement_status[2] {
-	    DisplacementStatus::Forward => if aabb.south > self.position[2] + 1. { f32::MAX }
-	    else { self.position[2] - aabb.north },
-	    // DisplacementStatus::Forward => self.position[2] - aabb.north,
-	    DisplacementStatus::Backward => if aabb.north < self.position[2] { f32::MAX }
-	    else { aabb.south - self.position[2] - 1. },
-	    // DisplacementStatus::Backward => aabb.south - self.position[2] - 1.,
-	    DisplacementStatus::Still => f32::MAX
-	};
-
-	if signature[0] < 0. || signature[2] < 0. {
-	    dbg!("cube colliding in plane !");
-	    dbg!(signature);
-	    dbg!(displacement_status);
+	if tx < 1e3 {
 	    dbg!(self);
-	    dbg!(&aabb);
-	    dbg!([(aabb.north + aabb.south) /  2.,
-		  (aabb.east + aabb.west) /  2.]);
+	    dbg!(self.position);
+	    dbg!(velocity);
+	    dbg!([tx, ty, tz]);
 	}
 	
-	signature
+	// *[tx, ty, tz].iter().min().unwrap()
+	tx.min(ty.min(tz))
     }
 }

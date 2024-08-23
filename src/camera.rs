@@ -97,156 +97,19 @@ impl Camera {
         let l = self.ground_direction_right();
         let mut next_pos = self.position.clone();
 
-	// idea:
-	// - compute all applied acceleration
-	// - integrate to get speed
-	// - floor the speed with the movement vector if needed
-	// - also take into account drag by capping y speed
-	// - integrate to get position
-	// - if collision:
-	//   - find the the best position without collision
-	//   - reset speed normal to collision
+	self.velocity = self.controls_velocity();
 
-	dbg!("start of round");
-	dbg!(self.position);
-	let mut acceleration = Vector3::empty();
-	acceleration += Vector3::new(0., -9., 0.); // gravity
-
-	if self.jump_time > 0. {
-	    self.jump_time -= elapsed.as_secs_f32();
-	    acceleration += Vector3::new(0., 2. * 9., 0.);
+	let target = Self::make_aabb(&(self.velocity * elapsed.as_secs_f32()));
+	let collision_time = world.collision(&Self::make_aabb(&self.position), &target, &self.velocity);
+	dbg!(collision_time);
+	if collision_time >= elapsed.as_secs_f32() {
+	    // can move straight away
+	    self.position += self.velocity * elapsed.as_secs_f32(); 
+	}
+	else {
+	    self.position += self.velocity * (collision_time - 1e-6);
 	}
 	
-	dbg!("velocity before");
-	dbg!(self.velocity);
-
-	// integrate to get velocity
-	self.velocity += acceleration * elapsed.as_secs_f32();
-
-	dbg!("velocity after accel");
-	dbg!(self.velocity);
-	
-	let control_vel = self.controls_velocity();
-	// clamp the velocity to the control one
-	for n in [0, 2] { // do this in plane only
-	    let speed = control_vel[n];
-	    if speed > 0. {
-		self.velocity[n] = self.velocity[n].max(speed)
-	    } else if speed < 0. {
-		self.velocity[n] = self.velocity[n].min(speed)
-	    } else if speed == 0. {
-		self.velocity[n] = 0.
-	    }
-	}
-
-	dbg!("velocity after clamping");
-	dbg!(self.velocity);
-	
-	// integrate to get position
-	let mut displacement = self.velocity * elapsed.as_secs_f32();
-
-
-	// idea:
-
-	// use signed distances (negative for collision) / vectors
-	
-	// knowing the displacement, the collision method will now from which
-	// direction we are coming, and hence what is positive or negative
-
-	// they don't even need to know the displacement, just a 3 state for
-	// each axis: forward, backward, and still
-
-	// for each axis, just take the min among all the collisions
-	let displacement_status = DisplacementStatus::from_vector(displacement);
-
-	// safe check: we must not be colliding already
-	{
-	    dbg!("in the safe check");
-	    dbg!(self.position);
-	    dbg!(&displacement_status);
-	    let aabb = Self::make_aabb(&self.position);
-	    let signature_before = world.collision(&aabb, &displacement_status);
-	    if signature_before.as_array().iter().any(|x| *x < 0.) {
-		dbg!(signature_before);
-		panic!("already colliding before moving !!");
-	    }
-	}
-
-	dbg!("displacement before loops");
-	dbg!(displacement);
-	loop {
-	    let aabb = Self::make_aabb(&(self.position + displacement));
-	    let signature = world.collision(&aabb, &displacement_status);
-
-	    dbg!(self.position);
-	    dbg!(signature);
-	    dbg!(&displacement);
-	    dbg!(&displacement_status);
-
-	    // deal with collision
-
-	    // pb: collision may fail just because along one axis, it is slightly
-	    // "scratching". One solution is to do it iteratively !
-
-	    if signature.as_array().iter().all(|x| *x >= 0.) {
-		// can escape the loop, collision is fine
-		dbg!("escaped the loop fine, with predicted next position");
-		dbg!(self.position + signature);
-		dbg!(signature);
-		dbg!(displacement);
-		break
-	    }
-
-	    let easiest = signature.as_array().iter().enumerate()
-		.filter(|(_, x)| **x < 0.).max_by(|(_, a), (_, b)| a.total_cmp(b))
-		.map(|(index, _)| index).unwrap();
-	    dbg!("easiest is:");
-	    dbg!(signature);
-	    dbg!(easiest);
-
-	    dbg!(displacement[easiest]);
-	    dbg!(displacement_status[easiest].to_scalar());
-	    dbg!(signature[easiest]);
-	    
-	    displacement[easiest] += displacement_status[easiest].to_scalar()
-		* (signature[easiest] - 1e-6);
-	    
-	    // reset velocity along this axis
-	    self.velocity[easiest] = 0.;
-
-	    
-	    dbg!("displacement at end of a loop");
-	    dbg!(displacement);
-	}
-
-	dbg!("displacement after the loops");
-	dbg!(displacement);
-	dbg!(self.position);
-	self.position += displacement;
-	dbg!(self.position);
-
-	// panic!();
-	
-	// next_pos += self.movement_vector(elapsed);
-	// gravity
-	// next_pos += 
-	
-
-        // // Collision detection (xz-plane)
-        // let is_free = world.is_position_free(&next_pos_amplified);
-
-        // // Free-fall handling
-        // let is_falling = world.is_position_free_falling(&next_pos_amplified);
-        // let dz_fall = self.gravity_handler.step(is_falling, elapsed);
-        // next_pos[1] -= dz_fall;;
-
-        // // Position update
-        // if is_free {
-        //     self.position = next_pos;
-        // } else { 
-            
-        // }
-
         self.compute_selected_cube(world);
     }
 

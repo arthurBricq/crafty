@@ -10,6 +10,19 @@ pub struct AABB {
     pub west: f32,
 }
 
+impl AABB {
+    pub fn collides(&self, aabb: &AABB) -> bool {
+	self.east <= aabb.west &&
+	    self.west >= aabb.east &&
+	    
+	    self.top <= aabb.bottom &&
+	    self.bottom >= aabb.top &&
+	    
+	    self.north <= aabb.south &&
+	    self.south >= aabb.north
+    }
+}
+
 #[derive(Debug)]
 pub enum DisplacementStatus {
     Still, Forward, Backward
