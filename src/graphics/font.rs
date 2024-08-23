@@ -5,7 +5,8 @@ const N_COLS: f32 = 16.;
 #[derive(Clone,Copy)]
 pub enum GLChar {
     A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
-    DOT,DOUBLEPOINT,COMMA,ZERO,ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT,NINE
+    DOT,DOUBLEPOINT,COMMA,MINUS,
+    ZERO,ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT,NINE
 }
 
 impl GLChar {
@@ -40,6 +41,7 @@ impl GLChar {
             '.' => GLChar::DOT,
             ':' => GLChar::DOUBLEPOINT,
             ',' => GLChar::COMMA,
+            '-' => GLChar::MINUS,
             '0' => GLChar::ZERO,
             '1' => GLChar::ONE,
             '2' => GLChar::TWO,
@@ -86,6 +88,7 @@ impl GLChar {
             GLChar::COMMA => [12. / N_COLS, 5. / N_ROWS],
             GLChar::DOT => [14. / N_COLS, 5. / N_ROWS],
             GLChar::DOUBLEPOINT => [10. / N_COLS, 4. / N_ROWS],
+            GLChar::MINUS => [13. / N_COLS, 5. / N_ROWS],
             GLChar::ZERO => [0. / N_COLS, 4. / N_ROWS],
             GLChar::ONE => [1. / N_COLS, 4. / N_ROWS],
             GLChar::TWO => [2. / N_COLS, 4. / N_ROWS],
