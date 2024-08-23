@@ -47,7 +47,7 @@ impl Camera {
     /// based on right hand perspective look along the positive z-Axis
     pub fn new() -> Self {
         Self {
-            position: Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
+            position: Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT + 5., 3.0),
             rotation: [PI, 0.0],
             w_pressed: false,
             s_pressed: false,

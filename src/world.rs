@@ -86,12 +86,12 @@ impl World {
 			    chunk.add_cube(Vector3::new(i as f32 * s + x as f32,
 							y as f32,
 							j as f32 * s + z as f32),
-					   DIRT, true);
+					   DIRT, 0);
 			}
 			chunk.add_cube(Vector3::new(i as f32 * s + x as f32,
 						    cube_height as f32,
 						    j as f32 * s + z as f32),
-				       GRASS, true);
+				       GRASS, 0);
 		    }
 		}
 		
@@ -197,7 +197,7 @@ impl World {
     pub fn apply_action(&mut self, action: Action) {
         match action {
             Action::Destroy { at } => self.destroy_cube(at),
-            Action::Add { at, block } => self.add_cube(at, block, true)
+            Action::Add { at, block } => self.add_cube(at, block)
         }
     }
     
@@ -210,13 +210,29 @@ impl World {
         None
     }
 
-    fn add_cube(&mut self, at: Vector3, block: Block, visible: bool) {
-        for chunk in &mut self.chunks {
-            if chunk.is_in(&at) {
-                chunk.add_cube(at, block, visible)
+    /// Adds a cube and then recomputes the visibility of the affected cubes (neighbors)
+    fn add_cube(&mut self, at: Vector3, block: Block) {
+        // For all the neighbors positions, increase their internal counter
+        let mut count = 0;
+        for pos in Cube::neighbors_positions(at) {
+            // Toggle this position
+            if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
+                // This cube now has a new neighbor
+                cube_to_toggle.add_neighhor();
+                count += 1;
             }
         }
-        // TODO recompute the visiblity of the cube below ?
+        
+        self.add_cube_unsafe(at, block, count);
+    }
+    
+    /// Adds a cube without recomputing the visibility
+    fn add_cube_unsafe(&mut self, at: Vector3, block: Block, neighbors: u8) {
+        for chunk in &mut self.chunks {
+            if chunk.is_in(&at) {
+                chunk.add_cube(at, block, neighbors);
+            }
+        }
     }
 
     fn destroy_cube(&mut self, at: Vector3) {
@@ -231,10 +247,10 @@ impl World {
         
         // Mark all the neighbors cube as visible
         if let Some(cube) = self.chunks[chunk_index].cube_at(&at) {
-            for pos in cube.neighbors_positions() {
-                // Toggle this position
+            for pos in Cube::neighbors_positions(at) {
                 if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
-                    cube_to_toggle.set_is_visible(true);
+                    // cube_to_toggle.set_is_visible(true);
+                    cube_to_toggle.remove_neighbor();
                 }
             }
         }
@@ -248,63 +264,111 @@ impl World {
 
     /// Goes through all the cubes in the world, and sets whether the cube is touching air.
     fn compute_visible_cubes(&mut self) {
-        // Note to the reader:
-        // This function works in two-step. First, the inside of each chunk is passed through.
-        // It is easy because each chunk does not need information about the external world.
-        // The second part is much harder: we look at the borders of each chunk. It is harder
-        // because in rust, it is not possible to do something like this
-        //
-        // for chunk in &mut self.chunks {
-        //     for pos in chunk.border() {
-        //         if self.is_position_free(pos) {...}
-        //     }
-        // }
-        //
-        // It is not possible because `self` is borrowed as mutable, so it is impossible to
-        // call any function with `self.ANY_FUNCTION(...)`
-        // As a consequence of this limitation, I had to split the process in two extra steps:
-        // (1) collect the indices of the cubes of the border to be marked as not visible and
-        // (2) mark them as not visible.
-
-
         // 1. First pass inside each chunk
-
         for chunk in &mut self.chunks {
             chunk.compute_visible_cubes();
         }
 
         // 2. Handle the borders of each chunk
-
-        // a. First, determine which cubes needs to be set as not visible.
-        let mut indices_to_set_as_not_visible: Vec<Vec<CubeIndex>> = vec![Vec::new(); self.chunks.len()];
-        for (i, chunk) in self.chunks.iter().enumerate() {
-            let border = chunk.border();
+        for i in 0..self.chunks.len() {
+            let border = self.chunks[i].border();
             for index in border {
-                if let Some(cube) = chunk.cube_at_index(index) {
-                    let to_check = cube.neighbors_positions();
-                    // If any of the neighbors is free, then the border is visible.
-                    let is_visible = to_check.iter().any(|pos| self.is_position_free(&pos));
-                    if !is_visible {
-                        indices_to_set_as_not_visible[i].push(index);
-                    }
+                // Count the number of neighbors of this cube
+                let count = if let Some(cube_at_border) = self.chunks[i].cube_at_index(index) {
+                    let neighbors = Cube::neighbors_positions(cube_at_border.position().clone());
+                    let count = neighbors.iter().filter(|pos| !self.is_position_free(&pos)).count();
+                    count as u8
+                } else {
+                    0
+                };
+
+                // Set it
+                // You need to do this separatly than the previous block.
+                if let Some(cube_at_border) = self.chunks[i].cube_at_index_mut(index) {
+                    cube_at_border.set_n_neighbors(count);
+                }
+            }
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct SerializedWorld {
+    chunk_corners: Vec<[f32;2]>,
+    cubes_by_kind: HashMap<Block, Vec<[i32;4]>>
+}
+
+impl World {
+
+    fn to_json(&self) -> String {
+
+        // Provide all the chunks corner
+        let chunk_corners: Vec<[f32;2]> = self.chunks.iter().map(|chunk| chunk.corner()).collect();
+
+        // Provide all the cubes, sorted by kind
+        let mut all_cubes = HashMap::new();
+        for block_kind in Block::iter() {
+            all_cubes.insert(block_kind, Vec::<([i32; 4])>::new());
+        }
+
+        for chunk in &self.chunks {
+            for cube in chunk.flattened_iter() {
+                if let Some(cube) = cube {
+                    // we can trust that the block has a container.
+                    let container = all_cubes.get_mut(cube.block()).unwrap();
+                    container.push([
+                        cube.position().x() as i32,
+                        cube.position().y() as i32,
+                        cube.position().z() as i32,
+                        cube.n_neighbors() as i32
+                    ]);
                 }
             }
         }
 
-        // b. Go through these indices, but now apply the modification that needs to be applied
-        for (i, chunk) in self.chunks.iter_mut().enumerate() {
-            for index in &indices_to_set_as_not_visible[i] {
-                if let Some(cube) = chunk.cube_at_index_mut(*index) {
-                    cube.set_is_visible(false);
-                }
+        let world = SerializedWorld {
+            chunk_corners,
+            cubes_by_kind: all_cubes
+        };
+        serde_json::to_string(&world).unwrap()
+
+    }
+
+    fn from_json(data: String) -> Self {
+        // If we end up with stack-overflows, we could not read the entire file but instead provide the reader.
+        let serialized_world: SerializedWorld = serde_json::from_str(data.as_str()).unwrap();
+
+        // First, build all the chunks
+        let mut chunks = Vec::new();
+        for corner in serialized_world.chunk_corners {
+            chunks.push(Chunk::new(corner));
+        }
+
+        // Build the world
+        let mut world = Self {
+            chunks
+        };
+
+        // Fill all the chunks by building all the cubes
+        for block_kind in Block::iter() {
+            let cubes = serialized_world.cubes_by_kind.get(&block_kind).unwrap();
+            for cube_data in cubes {
+                let x = cube_data[0] as f32;
+                let y = cube_data[1] as f32;
+                let z = cube_data[2] as f32;
+                let neighbors = cube_data[3] as u8;
+                world.add_cube_unsafe(Vector3::new(x,y,z), block_kind, neighbors);
             }
         }
 
+        world
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::actions::Action;
+    use crate::block_kind::Block;
     use crate::block_kind::Block::GRASS;
     use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
     use crate::vector::Vector3;
@@ -385,77 +449,66 @@ mod tests {
         // In this case, there is no border between the two cubes.
         assert_eq!(count2, 2 * 3 * CHUNK_SIZE * CHUNK_SIZE - 2 * (CHUNK_SIZE - 2) * (CHUNK_SIZE - 2));
     }
-}
 
-#[derive(Serialize, Deserialize)]
-struct SerializedWorld {
-    chunk_corners: Vec<[f32;2]>,
-    cubes_by_kind: HashMap<Block, Vec<[i32;4]>>
-}
+    #[test]
+    fn test_visibility_after_deleting_cubes() {
+        let mut world = World::new();
+        let mut chunk = Chunk::new([0., 0.]);
+        chunk.fill_layer(0, GRASS);
+        chunk.fill_layer(1, GRASS);
+        chunk.fill_layer(2, GRASS);
+        world.chunks.push(chunk);
+        world.compute_visible_cubes();
 
-impl World {
+        let top = Vector3::new(4., 2., 4.);
+        let middle = Vector3::new(4., 1., 4.);
+        let bottom = Vector3::new(4., 0., 4.);
 
-    fn to_json(&self) -> String {
-        
-        // Provide all the chunks corner
-        let chunk_corners: Vec<[f32;2]> = self.chunks.iter().map(|chunk| chunk.corner()).collect();
-        
-        // Provide all the cubes, sorted by kind
-        let mut all_cubes = HashMap::new();
-        for block_kind in Block::iter() {
-            all_cubes.insert(block_kind, Vec::<([i32; 4])>::new());
-        }
+        // Initially, the cube in the middle is not supposed to be visisble
+        assert_eq!(world.chunks[0].cube_at(&top).unwrap().is_visible(), true);
+        assert_eq!(world.chunks[0].cube_at(&middle).unwrap().is_visible(), false);
+        // TODO it's actually interesting to wonder if the bottom cubes are supposed to be rendered...
+        //      maybe we can also cut these ones too !
+        assert_eq!(world.chunks[0].cube_at(&bottom).unwrap().is_visible(), true);
 
-        for chunk in &self.chunks {
-            for cube in chunk.flattened_iter() {
-                if let Some(cube) = cube {
-                    // we can trust that the block has a container.
-                    let container = all_cubes.get_mut(cube.block()).unwrap();
-                    container.push([
-                        cube.position().x() as i32,
-                        cube.position().y() as i32,
-                        cube.position().z() as i32,
-                        cube.is_visible() as i32
-                    ]);
-                }
-            }
-        }
+        // Now we delete the top cube
+        world.apply_action(Action::Destroy {at: top});
 
-        let world = SerializedWorld {
-            chunk_corners,
-            cubes_by_kind: all_cubes
-        };
-        serde_json::to_string(&world).unwrap()
+        // Assert the cube in the middle is now visible
+        assert_eq!(world.chunks[0].cube_at(&middle).unwrap().is_visible(), true);
 
+        // But so far, the sides of `bottom` should not be visible yet
+        let one_side = middle + Vector3::unit_x();
+        let another_side = middle + Vector3::unit_z();
+        assert_eq!(world.chunks[0].cube_at(&one_side).unwrap().is_visible(), false);
+        assert_eq!(world.chunks[0].cube_at(&another_side).unwrap().is_visible(), false);
+
+        // But we if delete the middle block, the sides get in contact with air, so they are supposed to be visible.
+        world.apply_action(Action::Destroy {at: middle});
+        assert_eq!(world.chunks[0].cube_at(&one_side).unwrap().is_visible(), true);
+        assert_eq!(world.chunks[0].cube_at(&another_side).unwrap().is_visible(), true);
     }
 
-    fn from_json(data: String) -> Self {
-        // If we end up with stack-overflows, we could not read the entire file but instead provide the reader.
-        let serialized_world: SerializedWorld = serde_json::from_str(data.as_str()).unwrap();
+    #[test]
+    fn test_visibility_after_creating_and_deleting_cubes() {
+        let mut world = World::new();
+        let mut chunk = Chunk::new([0., 0.]);
+        chunk.fill_layer(0, GRASS);
+        chunk.fill_layer(1, GRASS);
+        chunk.fill_layer(2, GRASS);
+        world.chunks.push(chunk);
+        world.compute_visible_cubes();
 
-        // First, build all the chunks
-        let mut chunks = Vec::new();
-        for corner in serialized_world.chunk_corners {
-            chunks.push(Chunk::new(corner));
-        }
+        let above = Vector3::new(4., 3., 4.);
+        let top = Vector3::new(4., 2., 4.);
+        let middle = Vector3::new(4., 1., 4.);
+        let bottom = Vector3::new(4., 0., 4.);
 
-        // Build the world
-        let mut world = Self {
-            chunks
-        };
+        // First, we add a cube on top of the world
+        world.apply_action(Action::Add {at: above, block: Block::COBBELSTONE});
 
-        // Fill all the chunks by building all the cubes
-        for block_kind in Block::iter() {
-            let cubes = serialized_world.cubes_by_kind.get(&block_kind).unwrap();
-            for cube_data in cubes {
-                let x = cube_data[0] as f32;
-                let y = cube_data[1] as f32;
-                let z = cube_data[2] as f32;
-                let visible = cube_data[3] != 0;
-                world.add_cube(Vector3::new(x,y,z), block_kind, visible);
-            }
-        }
-
-        world
+        // Assert the visibility: the block 'top' should not be rendered anymore
+        assert_eq!(world.chunks[0].cube_at(&above).unwrap().is_visible(), true);
+        assert_eq!(world.chunks[0].cube_at(&top).unwrap().is_visible(), false);
     }
 }

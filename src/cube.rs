@@ -6,12 +6,16 @@ use crate::vector::Vector3;
 pub struct Cube {
     position: Vector3,
     block: Block,
-    is_visible: bool
+    n_neighbors: u8
 }
 
 impl Cube {
-    pub fn new(position: [f32; 3], block: Block, visible: bool) -> Self {
-        Self { position: Vector3::newf(position), block, is_visible: visible }
+    pub fn new(position: [f32; 3], block: Block, neighbors: u8) -> Self {
+        Self {
+            position: Vector3::newf(position),
+            block,
+            n_neighbors: neighbors
+        }
     }
 
     pub fn model_matrix(&self) -> [[f32; 4]; 4] {
@@ -38,22 +42,38 @@ impl Cube {
         &self.position
     }
     
-    pub fn neighbors_positions(&self) -> [Vector3; 6] {
+    pub fn neighbors_positions(position: Vector3) -> [Vector3; 6] {
         [
-            self.position + Vector3::unit_x(),
-            self.position - Vector3::unit_x(),
-            self.position + Vector3::unit_y(),
-            self.position - Vector3::unit_y(),
-            self.position + Vector3::unit_z(),
-            self.position - Vector3::unit_z(),
+            position + Vector3::unit_x(),
+            position - Vector3::unit_x(),
+            position + Vector3::unit_y(),
+            position - Vector3::unit_y(),
+            position + Vector3::unit_z(),
+            position - Vector3::unit_z(),
         ]
     }
 
-    pub fn set_is_visible(&mut self, is_visible: bool) {
-        self.is_visible = is_visible;
+    pub fn is_visible(&self) -> bool {
+        self.n_neighbors < 6
     }
 
-    pub fn is_visible(&self) -> bool {
-        self.is_visible
+    pub fn add_neighhor(&mut self) {
+        if self.n_neighbors < 6 {
+            self.n_neighbors += 1;
+        }
+    }
+
+    pub fn remove_neighbor(&mut self) {
+        if self.n_neighbors > 0 {
+            self.n_neighbors -= 1;
+        }
+    }
+
+    pub fn set_n_neighbors(&mut self, n_neighbors: u8) {
+        self.n_neighbors = n_neighbors;
+    }
+
+    pub fn n_neighbors(&self) -> u8 {
+        self.n_neighbors
     }
 }

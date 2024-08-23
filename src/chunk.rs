@@ -52,9 +52,9 @@ impl Chunk {
         let mut cubes = [[[None; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
-                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 2., corner[1] + j as f32], DIRT, true));
-                cubes[(CHUNK_FLOOR as i32 - 1 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 1., corner[1] + j as f32], DIRT, true));
-                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32, corner[1] + j as f32], GRASS, true));
+                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 2., corner[1] + j as f32], DIRT, 0));
+                cubes[(CHUNK_FLOOR as i32 - 1 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 1., corner[1] + j as f32], DIRT, 0));
+                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32, corner[1] + j as f32], GRASS, 0));
             }
         }
         Self { cubes, corner }
@@ -65,7 +65,7 @@ impl Chunk {
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
                 self.cubes[h][i][j] = Some(
-                    Cube::new([self.corner[0] + i as f32, h as f32, self.corner[1] + j as f32], kind, true));
+                    Cube::new([self.corner[0] + i as f32, h as f32, self.corner[1] + j as f32], kind, 0));
             }
         }
     }
@@ -78,11 +78,14 @@ impl Chunk {
         }
     }
 
-    pub fn add_cube(&mut self, at: Vector3, block: Block, visible: bool) {
+    pub fn add_cube(&mut self, at: Vector3, block: Block, neighbors: u8) -> Option<&mut Cube> {
         let (i_z, i_x, i_y) = self.get_indices(&at);
         let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
         if in_bound {
-            self.cubes[i_z][i_x][i_y] = Some(Cube::new(at.as_array(), block, visible))
+            self.cubes[i_z][i_x][i_y] = Some(Cube::new(at.as_array(), block, neighbors));
+            self.cubes[i_z][i_x][i_y].as_mut()
+        } else {
+            None
         }
     }
 
@@ -116,16 +119,17 @@ impl Chunk {
             for i in 1..CHUNK_SIZE-1 {
                 for j in 1..CHUNK_SIZE-1 {
                     if self.cubes[k][i][j].is_some() {
-                        // Each cube has 6 neighbors.
+                        // Each cube has 6 potential neighbors.
                         // We set the cube as not visible if all the 6 neighbors are not full
                         // If either one is none, the cube must be visible.
-                        let is_visible = self.cubes[k-1][i][j].is_none()
-                            || self.cubes[k+1][i][j].is_none()
-                            || self.cubes[k][i-1][j].is_none()
-                            || self.cubes[k][i+1][j].is_none()
-                            || self.cubes[k][i][j-1].is_none()
-                            || self.cubes[k][i][j-1].is_none();
-                        self.cubes[k][i][j].as_mut().unwrap().set_is_visible(is_visible);
+                        let mut count = 0;
+                        if self.cubes[k-1][i][j].is_some() { count += 1 }
+                        if self.cubes[k+1][i][j].is_some() { count += 1 }
+                        if self.cubes[k][i-1][j].is_some() { count += 1 }
+                        if self.cubes[k][i+1][j].is_some() { count += 1 }
+                        if self.cubes[k][i][j-1].is_some() { count += 1 }
+                        if self.cubes[k][i][j+1].is_some() { count += 1 }
+                        self.cubes[k][i][j].as_mut().unwrap().set_n_neighbors(count);
                     }
                 }
             }
