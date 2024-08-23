@@ -8,4 +8,5 @@ pub mod hud_manager;
 pub mod color;
 pub mod font;
 pub mod menu_help;
+pub mod menu_debug;
 pub mod string_rect;

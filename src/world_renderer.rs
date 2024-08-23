@@ -9,8 +9,10 @@ use crate::cube::Block;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
+use crate::graphics::menu_debug::DebugData;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::hud_manager::HUDManager;
+
 use crate::world::World;
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
@@ -157,6 +159,11 @@ impl WorldRenderer {
                             blend: glium::draw_parameters::Blend::alpha_blending(),
                             ..glium::draw_parameters::DrawParameters::default()
                         };
+                        if self.tile_manager.show_debug() {
+                            let debug_data = DebugData::new(self.fps_manager.fps(), self.cam.position(), self.cam.rotation());
+                            self.tile_manager.set_debug(debug_data);
+                        }
+
                         let rects_buffer = glium::VertexBuffer::dynamic(&display, self.tile_manager.rects()).unwrap();
                         target.draw(
                             (&rect_vertex_buffer, rects_buffer.per_instance().unwrap()),
@@ -242,6 +249,7 @@ impl WorldRenderer {
                         }
                         KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F11 => self.toggle_fullscreen(&window),
+                        KeyCode::F3  => self.tile_manager.toggle_debug_menu(),
                         KeyCode::F12 => self.tile_manager.toggle_help_menu(),
                         KeyCode::Escape => std::process::exit(1),
                         _ => {}

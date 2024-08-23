@@ -212,4 +212,12 @@ impl Camera {
         self.selected
     }
 
+    pub fn position(&self) -> Vector3 {
+        self.position    
+    }
+    
+    pub fn rotation(&self) -> [f32; 2] {
+        self.rotation
+    }
+
 }
