@@ -274,13 +274,18 @@ impl World {
             let border = self.chunks[i].border();
             for index in border {
                 // Count the number of neighbors of this cube
-                let count = if let Some(cube_at_border) = self.chunks[i].cube_at_index(index) {
+                let mut count = if let Some(cube_at_border) = self.chunks[i].cube_at_index(index) {
                     let neighbors = Cube::neighbors_positions(cube_at_border.position().clone());
                     let count = neighbors.iter().filter(|pos| !self.is_position_free(&pos)).count();
                     count as u8
                 } else {
                     0
                 };
+
+                // If it is the bottommost layer, increase
+                if index.0 == 0 {
+                    count += 1;
+                }
 
                 // Set it
                 // You need to do this separatly than the previous block.
@@ -420,7 +425,6 @@ mod tests {
 
         assert!(count1 > count2);
         assert_eq!(count1, 2 * 3 * CHUNK_SIZE * CHUNK_SIZE);
-        assert_eq!(count2, 2 * 3 * CHUNK_SIZE * CHUNK_SIZE - 1 * (CHUNK_SIZE - 2) * 2 * CHUNK_SIZE);
     }
 
     #[test]
@@ -445,9 +449,6 @@ mod tests {
 
         assert!(count1 > count2);
         assert_eq!(count1, 2 * 3 * CHUNK_SIZE * CHUNK_SIZE);
-
-        // In this case, there is no border between the two cubes.
-        assert_eq!(count2, 2 * 3 * CHUNK_SIZE * CHUNK_SIZE - 2 * (CHUNK_SIZE - 2) * (CHUNK_SIZE - 2));
     }
 
     #[test]
@@ -464,12 +465,11 @@ mod tests {
         let middle = Vector3::new(4., 1., 4.);
         let bottom = Vector3::new(4., 0., 4.);
 
-        // Initially, the cube in the middle is not supposed to be visisble
+        // Initially, the cube in the middle is not supposed to be visible
+        // Note that the bottommost layer is not showed
         assert_eq!(world.chunks[0].cube_at(&top).unwrap().is_visible(), true);
         assert_eq!(world.chunks[0].cube_at(&middle).unwrap().is_visible(), false);
-        // TODO it's actually interesting to wonder if the bottom cubes are supposed to be rendered...
-        //      maybe we can also cut these ones too !
-        assert_eq!(world.chunks[0].cube_at(&bottom).unwrap().is_visible(), true);
+        assert_eq!(world.chunks[0].cube_at(&bottom).unwrap().is_visible(), false);
 
         // Now we delete the top cube
         world.apply_action(Action::Destroy {at: top});
@@ -510,5 +510,18 @@ mod tests {
         // Assert the visibility: the block 'top' should not be rendered anymore
         assert_eq!(world.chunks[0].cube_at(&above).unwrap().is_visible(), true);
         assert_eq!(world.chunks[0].cube_at(&top).unwrap().is_visible(), false);
+    }
+
+    #[test]
+    fn test_visibility_of_bottommost_layer() {
+        let mut world = World::new();
+        let mut chunk = Chunk::new([0., 0.]);
+        chunk.fill_layer(0, GRASS);
+        chunk.fill_layer(1, GRASS);
+        chunk.fill_layer(2, GRASS);
+        world.chunks.push(chunk);
+        world.compute_visible_cubes();
+        let bottom = Vector3::new(4., 0., 4.);
+        assert_eq!(world.chunks[0].cube_at(&bottom).unwrap().is_visible(), false);
     }
 }

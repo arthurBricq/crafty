@@ -157,6 +157,14 @@ impl Chunk {
                 }
             }
         }
+        
+        // You also have to provide all the cubes in the bottom-most layer
+        for i in 1..CHUNK_SIZE-1 {
+            for j in 1..CHUNK_SIZE-1 {
+                to_return.push((0, i, j));
+            }
+        }
+        
         to_return
     }
 
@@ -166,6 +174,7 @@ impl Chunk {
         let i_y = (pos[2] - self.corner[1]) as usize;
         (i_z, i_x, i_y)
     }
+    
     pub fn cube_at_index(&self, index: CubeIndex) -> Option<&Cube> {
         let (k,i,j) = index;
         self.cubes[k][i][j].as_ref()
@@ -201,7 +210,7 @@ impl Chunk {
     }
 
     pub fn print_all_cubes(&self) {
-        for k in 0..CHUNK_HEIGHT {
+        for k in 0..1 {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if let Some(cube) = self.cubes[k][i][j] {
