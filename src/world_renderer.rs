@@ -3,16 +3,17 @@ extern crate winit;
 
 use std::time::Instant;
 
-use crate::actions::Action::Destroy;
+use crate::actions::Action;
+use crate::actions::Action::{Add, Destroy};
+use crate::block_kind::Block;
 use crate::camera::{Camera, MotionState};
-use crate::cube::Block;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
 use crate::graphics::menu_debug::DebugData;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::hud_manager::HUDManager;
-
+use crate::player_items::PlayerItems;
 use crate::world::World;
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
@@ -31,6 +32,7 @@ pub struct WorldRenderer {
     cam:   Camera,
     tile_manager: HUDManager,
     fps_manager: FpsManager,
+    items: PlayerItems,
     
     // Logic for when the user is clicking
     // TODO encapsulate that in another struct
@@ -49,6 +51,7 @@ impl WorldRenderer {
             cam,
             tile_manager: HUDManager::new(),
             fps_manager: FpsManager::new(),
+            items: PlayerItems::new(),
             is_left_clicking: false,
             click_time: 0.0,
             fullscreen: false
@@ -73,7 +76,7 @@ impl WorldRenderer {
 
         // Build the texture library, and change the sampler to use the proper filters
         let textures = self.build_textures_array(&display);
-        let samplers = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
+        let cubes_texture_sampler = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
         // Load other textures that are used
         let selected_texture = Self::load_texture(std::fs::read("./resources/selected.png").unwrap().as_slice(), &display);
@@ -87,14 +90,20 @@ impl WorldRenderer {
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
         target.finish().unwrap();
-        
-        // Event loop 
+
+        // Last details before running
+        self.tile_manager.set_player_items(self.items.get_current_items());
+
+        // Event loop
         let mut t = Instant::now();
         event_loop.run(move |event, window_target| {
             match event {
                 winit::event::Event::WindowEvent { event, .. } => match event {
                     // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.
                     winit::event::WindowEvent::CloseRequested => window_target.exit(),
+                    winit::event::WindowEvent::Resized(_) => {
+                        self.tile_manager.set_dimension(display.get_framebuffer_dimensions());
+                    },
                     winit::event::WindowEvent::RedrawRequested => {
                         let mut target = display.draw();
                         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
@@ -111,11 +120,11 @@ impl WorldRenderer {
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
-                        if self.cam.selected().is_some() && self.is_left_clicking {
+                        if self.cam.touched_cube().is_some() && self.is_left_clicking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
-                                self.world.apply_action(Destroy {at: self.cam.selected().unwrap()});
+                                self.apply_action(Destroy {at: self.cam.touched_cube().unwrap().to_cube_coordinates()});
                                 self.is_left_clicking = false;
                                 self.click_time = 0.;
                             }
@@ -132,16 +141,15 @@ impl WorldRenderer {
                         let uniforms = uniform! {
                             view: self.cam.view_matrix(),
                             perspective: self.cam.perspective_matrix(target.get_dimensions()),
-                            textures: samplers,
+                            textures: cubes_texture_sampler,
                             selected_texture: &selected_texture,
                             selected_intensity: if self.is_left_clicking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
                         };
-
+                        
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
                         // OpenGL instancing = instead of setting 1000 times different uniforms, you give once 1000 attributes
-                        let positions = self.world.get_cube_attributes(self.cam.selected());
-                        let position_buffer = glium::VertexBuffer::dynamic(&display, &positions).unwrap();
+                        let position_buffer = glium::VertexBuffer::dynamic(&display, &self.world.get_cubes_to_draw(self.cam.touched_cube())).unwrap();
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,
@@ -152,7 +160,8 @@ impl WorldRenderer {
                         // II) Drawn the tiles
                         let rect_uniforms = uniform! {
                             font_atlas: &font_atlas,
-                            font_offsets: GLChar::get_offset()
+                            font_offsets: GLChar::get_offset(),
+                            textures: cubes_texture_sampler
                         };
                         // We change the draw parameters here to allow transparency.
                         let draw_parameters = glium::draw_parameters::DrawParameters {
@@ -160,7 +169,7 @@ impl WorldRenderer {
                             ..glium::draw_parameters::DrawParameters::default()
                         };
                         if self.tile_manager.show_debug() {
-                            let debug_data = DebugData::new(self.fps_manager.fps(), self.cam.position(), self.cam.rotation());
+                            let debug_data = DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation());
                             self.tile_manager.set_debug(debug_data);
                         }
 
@@ -259,6 +268,19 @@ impl WorldRenderer {
             }
         }
     }
+    
+    fn apply_action(&mut self, action: Action) {
+        match action {
+            Destroy { at } => {
+                if let Some(block) = self.world.block_at(&at) {
+                    self.items.collect(block);
+                }
+            },
+            Add { at, block } => self.items.consume(block)
+        }
+        self.tile_manager.set_player_items(self.items.get_current_items());
+        self.world.apply_action(action);
+    }
 
     fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
         if button == 1 {
@@ -269,9 +291,17 @@ impl WorldRenderer {
                 self.is_left_clicking = false;
                 self.click_time = 0.;
             }
-        } else if button == 3 {
-            // Right click
-            // TODO place a cube
+        } else if button == 3 && state == Pressed {
+            // Right click = add a new cube
+            // We know where is the player and we know 
+            if let Some(touched) = self.cam.touched_cube() {
+                if let Some(block) = self.items.get_current_block() {
+                    self.apply_action(Action::Add {
+                        at: Action::position_to_generate_cube(&touched),
+                        block
+                    });
+                }
+            }
         }
     }
 

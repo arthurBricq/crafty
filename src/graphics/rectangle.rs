@@ -7,6 +7,7 @@ pub const RECT_VERTEX_SHADER: &str = r"
     // Attributes of each vertex
     in vec3 position;
     in vec2 tex_coords;
+    in int block_id;
 
     // Atributes of each tile
     in mat4 transformation;
@@ -19,6 +20,7 @@ pub const RECT_VERTEX_SHADER: &str = r"
     out vec2 tex_coords_s;
     out vec2 font_coords_s;
     flat out int is_font_s;
+    flat out int block_id_s;
 
     void main()
     {
@@ -27,6 +29,7 @@ pub const RECT_VERTEX_SHADER: &str = r"
        tex_coords_s = tex_coords;
        font_coords_s = font_coords;
        is_font_s = is_font;
+       block_id_s = block_id;
     }
     ";
 
@@ -38,9 +41,14 @@ pub const RECT_FRAGMENT_SHADER: &str = r"
     in vec2 tex_coords_s;
     in vec2 font_coords_s;
     flat in int is_font_s;
+    flat in int block_id_s;
 
+    // Contains all the unicode characters
     uniform sampler2D font_atlas;
     uniform vec2 font_offsets;
+
+    // Contains all our minecraft textures
+    uniform sampler2DArray textures;
 
     out vec4 FragColor;
 
@@ -54,6 +62,9 @@ pub const RECT_FRAGMENT_SHADER: &str = r"
             // * `tex_coords_s` : coordinates within the char rect
             // * `font_offsets` : dimensions of each character 
             FragColor = texture(font_atlas, vec2(font_coords_s[0] + font_offsets[0] * tex_coords_s[0], font_coords_s[1] + font_offsets[1] * tex_coords_s[1]));
+        } else if (block_id_s >= 0) {
+            int idx = block_id_s * 3;
+            FragColor = texture(textures, vec3(tex_coords_s, float(idx)));
         } else {
             // If the tile is not a font, then we just use the background color.
             FragColor = color_s;
@@ -90,9 +101,12 @@ pub struct RectVertexAttr {
     is_font: u8,
     /// Coordinates of the font in the texture atlas
     font_coords: [f32; 2],
+    /// The id of the block whose' side texture will be drawn
+    /// If the tile should not have a cube texture, then just put -1
+    block_id: i8
 }
 
-implement_vertex!(RectVertexAttr, transformation, color, is_font, font_coords);
+implement_vertex!(RectVertexAttr, transformation, color, is_font, font_coords, block_id);
 
 impl RectVertexAttr {
     /// Create a new rectangle
@@ -118,9 +132,11 @@ impl RectVertexAttr {
             ],
             color: c.rgba(),
             is_font: false as u8,
-            font_coords: [0., 0.]
+            font_coords: [0., 0.],
+            block_id: -1
         }
     }
+    
     /// wrapper of new with origin at the bottom left corner of the rectangle
     pub fn new_from_corner(u: f32, v: f32, w: f32, h: f32, c: Color) -> Self {
         RectVertexAttr::new(u+w/2., v+h/2., w/2., h/2., c)
@@ -137,7 +153,13 @@ impl RectVertexAttr {
             ],
             color: [0.,0.,0.,0.],
             is_font: true as u8,
-            font_coords: c.get_index()
+            font_coords: c.get_index(),
+            block_id: -1
         }
     }
+
+    pub fn set_block_id(&mut self, block_id: i8) {
+        self.block_id = block_id;
+    }
+    
 }

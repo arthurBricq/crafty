@@ -1,4 +1,3 @@
-use crate::cube::Block;
 use crate::graphics::hud_manager::RectProvider;
 use crate::graphics::rectangle::RectVertexAttr;
 use crate::graphics::string_rect::StringRect;

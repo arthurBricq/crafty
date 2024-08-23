@@ -143,4 +143,62 @@ impl CubeAttr {
     pub fn new(world_matrix: [[f32; 4]; 4], block_id: u8, is_selected: bool) -> Self {
         Self { world_matrix, block_id, is_selected: is_selected as u8 }
     }
+
+    pub fn empty() -> Self {
+        Self {
+            world_matrix: [[0.; 4]; 4],
+            block_id: 0,
+            is_selected: 0,
+        }
+    }
+}
+
+const CONTAINER_SIZE: usize = 100000;
+
+/// A class responsible for holding many cubes.
+/// The purpose of this class is to not have to re-allocate all the time
+pub struct CubeContainer {
+    // data: [CubeAttr; CONTAINER_SIZE],
+    data: Vec<CubeAttr>,
+    current_size: usize
+}
+
+impl CubeContainer {
+    pub fn new() -> Self {
+        Self { 
+            data: vec![CubeAttr::empty(); CONTAINER_SIZE], 
+            current_size: 0 
+        }
+    }
+    
+    pub fn as_slice(&self) -> &[CubeAttr] {
+        &self.data[..self.current_size]
+    }
+    
+    pub fn reset(&mut self) {
+        self.current_size = 0;
+    }
+    
+    pub fn push(&mut self, cube: CubeAttr) {
+        self.data[self.current_size] = cube;
+        self.current_size += 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::graphics::cube::{CubeAttr, CubeContainer};
+
+    #[test]
+    fn test_cube_container() {
+        let mut container = CubeContainer::new();
+        assert_eq!(container.as_slice().len(), 0);
+        
+        container.push(CubeAttr::empty());
+        container.push(CubeAttr::empty());
+        assert_eq!(container.as_slice().len(), 2);
+        
+        container.reset();
+        assert_eq!(container.as_slice().len(), 0);
+    }
 }

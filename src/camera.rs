@@ -40,7 +40,7 @@ pub struct Camera {
 
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
-    selected: Option<Vector3>,
+    touched_cube: Option<Vector3>,
 }
 
 impl Camera {
@@ -54,7 +54,7 @@ impl Camera {
             a_pressed: false,
             d_pressed: false,
             gravity_handler: GravityHandler::new(),
-            selected: None,
+            touched_cube: None,
         }
     }
 
@@ -97,6 +97,8 @@ impl Camera {
         // Position update
         if is_free {
             self.position = next_pos;
+        } else { 
+            
         }
 
         self.compute_selected_cube(world);
@@ -112,11 +114,11 @@ impl Camera {
             let query = self.position + unit_direction * i as f32 * STEP;
             // If the query position is not free, it means that we have found the selected cube
             if !world.is_position_free(&query) {
-                self.selected = Some(Vector3::new(query.x().floor(), query.y().floor(), query.z().floor()));
+                self.touched_cube = Some(query);
                 return
             }
         }
-        self.selected = None
+        self.touched_cube = None
     }
 
     pub fn toggle_state(&mut self, state: MotionState) {
@@ -197,27 +199,23 @@ impl Camera {
 
     pub fn mousemove(&mut self, horizontal: f32, vertical: f32, sensitivity: f32) {
         self.rotation[0] -= horizontal * sensitivity;
-
-        // TODO there is a bu when looking down...
-        // don't let the player turn upside down
-        if vertical > 0.0 && self.rotation[1] < PI * 0.5 {
+        if vertical > 0.0 && self.rotation[1] < PI * 0.5 - 0.05 {
             self.rotation[1] += vertical * sensitivity;
-        } else if vertical < 0.0 && self.rotation[1] > -PI * 0.5 {
+        } else if vertical < 0.0 && self.rotation[1] > -PI * 0.5 + 0.05 {
             self.rotation[1] += vertical * sensitivity;
         }
     }
 
     /// Returns the optional position of the cube that the player is looking at.
-    pub fn selected(&self) -> Option<Vector3> {
-        self.selected
+    pub fn touched_cube(&self) -> Option<Vector3> {
+        self.touched_cube
     }
 
-    pub fn position(&self) -> Vector3 {
-        self.position    
-    }
-    
     pub fn rotation(&self) -> [f32; 2] {
         self.rotation
     }
 
+    pub fn position(&self) -> &Vector3 {
+        &self.position
+    }
 }

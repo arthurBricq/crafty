@@ -6,11 +6,15 @@ use crate::graphics::rectangle::RectVertexAttr;
 use super::menu_help;
 use super::menu_help::HelpMenu;
 use super::menu_help::HelpMenuData;
+use super::menu_help::HelpMenuItem;
 
 use super::menu_debug;
 use super::menu_debug::DebugData;
 use super::menu_debug::DebugMenu;
 use super::menu_debug::DebugMenuData;
+
+use crate::items_bar::ItemBar;
+use crate::player_items::Items;
 
 pub trait RectProvider {
     fn rects(&self) -> &Vec<RectVertexAttr>;
@@ -19,9 +23,13 @@ pub trait RectProvider {
 
 /// A tile is a rectangle drawn on the screen, such as a menu.
 pub struct HUDManager {
+    /// Ratio of the W over the H
+    aspect_ratio: f32,
     /// List of the tiles to be presented on the screen
     rects: Vec<RectVertexAttr>,
+    /// The rects that are always present on the screen
     base: Vec<RectVertexAttr>,
+
     help_menu_data: HelpMenuData,
     help_menu: HelpMenu,
     show_help: bool,
@@ -30,6 +38,7 @@ pub struct HUDManager {
     debug_menu: DebugMenu,
     show_debug: bool,
 
+    items_bar: ItemBar
 }
 
 impl HUDManager {
@@ -40,6 +49,7 @@ impl HUDManager {
         let mut debug_menu_data= DebugMenuData::new(menu_debug::DEBUG_MENU_DATA.to_vec());
 
         let mut hud= Self { 
+            aspect_ratio: 1.0,
             rects: Vec::new(),
             base: Vec::new(),
             help_menu: HelpMenu::new(&help_menu_data),
@@ -48,10 +58,10 @@ impl HUDManager {
             debug_menu_data,
             show_help: false,
             show_debug: false,
+            items_bar: ItemBar::new(),
         };
 
         hud.add_cross();
-        //hud.add_crafty_label();
         hud.update();
 
         hud
@@ -95,6 +105,7 @@ impl HUDManager {
         // and then do it again here, maybe we can only do it here ?
         // rects() would return a Vec of ref to append
         self.rects=self.base.clone();
+        self.rects.append(&mut self.items_bar.rects());
         if self.show_help {
             self.rects.append(&mut self.help_menu.rects().clone());
         }
@@ -114,5 +125,17 @@ impl HUDManager {
     
     pub fn show_debug(&self) -> bool {
         self.show_debug
+    }
+
+    pub fn set_dimension(&mut self, dim: (u32, u32)) {
+        println!("dimension={dim:?}");
+        self.aspect_ratio = dim.0 as f32 / dim.1 as f32;
+        self.items_bar.set_aspect_ratio(self.aspect_ratio);
+        self.update();
+    }
+
+    pub fn set_player_items(&mut self, items: Items) {
+        self.items_bar.set_items(items);
+        self.update();
     }
 }

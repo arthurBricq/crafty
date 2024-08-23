@@ -34,8 +34,8 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
         - the 'ITEM' menus: shows all the items of the player
 
 - OpenGl improvements: remove cubes that are not visible to improve the FPS with a lot of cubes
-      - cubes behind the player
-      - cubes that are not touching the air
+    - cubes behind the player
+    - cubes that are not touching the air
 
 - Client must be able to edit the map
     - [x] Show the currently selected block
@@ -43,6 +43,7 @@ Note that the entire **game engine** is written by ourselves, using **only a dri
     - Addition of cubes
 
 - Player logic
+    - A player has a list of items
     - When deleting a cube, the cube goes into the items of the player
 
 - Create the `chunk API` [Arthur]
