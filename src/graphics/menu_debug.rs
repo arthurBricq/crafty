@@ -1,4 +1,3 @@
-use crate::graphics::hud_manager::RectProvider;
 use crate::graphics::rectangle::RectVertexAttr;
 use crate::graphics::string_rect::StringRect;
 use crate::vector::Vector3;
@@ -123,12 +122,5 @@ impl DebugMenu {
         let rot_string = &format!("{:7.3}:{:7.3}",debug_data.rotation()[0] % (2.*PI),debug_data.rotation()[1]);
         StringRect::write_string(self.coord_to_update[2][0], self.coord_to_update[2][1], 0.015, rot_string, &mut self.rects);
     }
-    
 }
 
-impl RectProvider for DebugMenu {
-    fn rects(&self) -> &Vec<RectVertexAttr> {
-        &self.rects
-    }
-
-}

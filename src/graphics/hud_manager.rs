@@ -15,10 +15,6 @@ use super::menu_debug::DebugMenuData;
 use crate::items_bar::ItemBar;
 use crate::player_items::Items;
 
-pub trait RectProvider {
-    fn rects(&self) -> &Vec<RectVertexAttr>;
-}
-
 
 /// A tile is a rectangle drawn on the screen, such as a menu.
 pub struct HUDManager {
@@ -29,11 +25,10 @@ pub struct HUDManager {
     /// The rects that are always present on the screen
     base: Vec<RectVertexAttr>,
 
-    help_menu_data: HelpMenuData,
     help_menu: HelpMenu,
     show_help: bool,
 
-    debug_menu_data: DebugMenuData,
+
     debug_menu: DebugMenu,
     show_debug: bool,
 
@@ -52,9 +47,7 @@ impl HUDManager {
             rects: Vec::new(),
             base: Vec::new(),
             help_menu: HelpMenu::new(&help_menu_data),
-            help_menu_data: help_menu_data,
             debug_menu: DebugMenu::new(&debug_menu_data),
-            debug_menu_data,
             show_help: false,
             show_debug: false,
             items_bar: ItemBar::new(),

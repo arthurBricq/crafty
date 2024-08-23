@@ -3,7 +3,6 @@ use crate::graphics::font::GLChar;
 use crate::graphics::color::Color::LightGray;
 use crate::graphics::color::Color::LightCoral;
 use crate::graphics::string_rect::StringRect;
-use super::hud_manager::RectProvider;
 
 /// Data in the help menu
 pub const HELP_MENU_DATA: [HelpMenuItem;9] = [
@@ -79,11 +78,8 @@ impl HelpMenu {
             rects
         }
     }
-
-}
-
-impl RectProvider for HelpMenu {
-    fn rects(&self) -> &Vec<RectVertexAttr> {
+    pub fn rects(&self) -> &Vec<RectVertexAttr> {
         &self.rects
     }
 }
+

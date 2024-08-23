@@ -31,7 +31,7 @@ impl FpsManager {
         }
     }
 
-    fn print_statistics(&mut self) {
+    fn print_statistics(&self) {
         println!("fps = {}",self.fps);
     }
 
