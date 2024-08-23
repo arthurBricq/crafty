@@ -18,7 +18,6 @@ impl ItemBar {
             aspect_ratio: 2.0,
             rects: Vec::new()
         };
-        menu.set_items([(GRASS, 10), (COBBELSTONE, 4), (COBBELSTONE, 2)].to_vec());
         menu
     }
 
