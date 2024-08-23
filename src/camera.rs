@@ -211,6 +211,10 @@ impl Camera {
         self.touched_cube
     }
 
+    pub fn rotation(&self) -> [f32; 2] {
+        self.rotation
+    }
+
     pub fn position(&self) -> &Vector3 {
         &self.position
     }

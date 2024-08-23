@@ -5,15 +5,19 @@ use crate::graphics::color::Color::LightCoral;
 use crate::graphics::string_rect::StringRect;
 
 /// Data in the help menu
-pub const HELP_MENU_DATA: [HelpMenuItem;6] = [
+pub const HELP_MENU_DATA: [HelpMenuItem;9] = [
     //HelpMenuItem{command: &str "move forward",key: String::from("z")},
     HelpMenuItem::new("move forward","z"),
     HelpMenuItem::new("move backward","s"),
     HelpMenuItem::new("move left","q"),
     HelpMenuItem::new("move right","d"),
     HelpMenuItem::new("jump","space"),
+    HelpMenuItem::new("debug menu","f3"),
     HelpMenuItem::new("help menu","f12"),
+    HelpMenuItem::new("save map","f10"),
+    HelpMenuItem::new("fullscreen","f11"),
 ];
+
 
 #[derive(Clone,Copy)]
 pub struct HelpMenuItem {
@@ -74,9 +78,8 @@ impl HelpMenu {
             rects
         }
     }
-
-
     pub fn rects(&self) -> &Vec<RectVertexAttr> {
         &self.rects
     }
 }
+

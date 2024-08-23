@@ -136,7 +136,7 @@ impl RectVertexAttr {
             block_id: -1
         }
     }
-
+    
     /// wrapper of new with origin at the bottom left corner of the rectangle
     pub fn new_from_corner(u: f32, v: f32, w: f32, h: f32, c: Color) -> Self {
         RectVertexAttr::new(u+w/2., v+h/2., w/2., h/2., c)
