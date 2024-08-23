@@ -221,7 +221,9 @@ impl Camera {
 
 	dbg!("displacement after the loops");
 	dbg!(displacement);
+	dbg!(self.position);
 	self.position += displacement;
+	dbg!(self.position);
 
 	// panic!();
 	
