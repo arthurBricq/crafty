@@ -6,7 +6,6 @@ use crate::graphics::rectangle::RectVertexAttr;
 use super::menu_help;
 use super::menu_help::HelpMenu;
 use super::menu_help::HelpMenuData;
-use super::menu_help::HelpMenuItem;
 
 use super::menu_debug;
 use super::menu_debug::DebugData;
@@ -44,9 +43,9 @@ pub struct HUDManager {
 impl HUDManager {
     pub fn new() -> Self {
 
-        let mut help_menu_data= HelpMenuData::new(menu_help::HELP_MENU_DATA.to_vec());
+        let help_menu_data= HelpMenuData::new(menu_help::HELP_MENU_DATA.to_vec());
         
-        let mut debug_menu_data= DebugMenuData::new(menu_debug::DEBUG_MENU_DATA.to_vec());
+        let debug_menu_data= DebugMenuData::new(menu_debug::DEBUG_MENU_DATA.to_vec());
 
         let mut hud= Self { 
             aspect_ratio: 1.0,

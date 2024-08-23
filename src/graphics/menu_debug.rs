@@ -73,7 +73,7 @@ impl DebugMenuData {
 
 }
 
-/// Implement the help menu
+/// Implement the debug menu
 pub struct DebugMenu {
     static_part:Vec<RectVertexAttr>,
     dynamic_part:Vec<Vec<RectVertexAttr>>,
@@ -93,9 +93,6 @@ impl DebugMenu {
 
         for item in debug_menu_data.items() {
             StringRect::write_string(u, y, size, &item.element().to_string(), &mut static_part);
-            // for rect in StringRect::new(&item.element(), u, y, size).rects() {
-            //     static_part.push(*rect);
-            // }
             dynamic_part.push(Vec::new());
             coord_to_update.push([u+0.4,y]);
             y-=4. * size;
@@ -112,6 +109,7 @@ impl DebugMenu {
         &self.rects
     }
 
+    /// Create the new text rectangle from the DebugData
     pub fn set_items(&mut self, debug_data: DebugData)
     {
         self.rects = self.static_part.clone();
