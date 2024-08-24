@@ -16,8 +16,8 @@ use crate::items_bar::ItemBar;
 use crate::player_items::Items;
 
 
-/// A tile is a rectangle drawn on the screen, such as a menu.
-pub struct HUDManager {
+/// Has the responsability to provide all the HUD to be drawn by OpenGL.
+pub struct HUDRenderer {
     /// Ratio of the W over the H
     aspect_ratio: f32,
     /// List of the tiles to be presented on the screen
@@ -35,7 +35,7 @@ pub struct HUDManager {
     items_bar: ItemBar
 }
 
-impl HUDManager {
+impl HUDRenderer {
     pub fn new() -> Self {
 
         let help_menu_data= HelpMenuData::new(menu_help::HELP_MENU_DATA.to_vec());

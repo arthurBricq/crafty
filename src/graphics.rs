@@ -4,7 +4,7 @@
 pub mod cube;
 
 pub mod rectangle;
-pub mod hud_manager;
+pub mod hud_renderer;
 pub mod color;
 pub mod font;
 pub mod menu_help;

@@ -26,36 +26,12 @@ Note that the entire **game engine** (3D rendering and physics) is written by ou
 
 - Better implementation of the collision detection 
 
-- Tiles library [Arnaud]: 
-    - [x] Display text
-    - Display menu
-    - 'menus' can be added:
-        - the 'HELP' menu: shows all the commands
-        - the 'DEBUG' mode: shows the FPS on the screen, the number of cubes being rendered, the position, the orientation (like in minecraft) !
-        - the 'ITEM' menus: shows all the items of the player
-
-- OpenGl improvements: remove cubes that are not visible to improve the FPS with a lot of cubes
-    - cubes behind the player
-    - cubes that are not touching the air
-
-- Client must be able to edit the map
-    - [x] Show the currently selected block
-    - [x] Deletion of cubes
-    - Addition of cubes
-
-- Player logic
-    - A player has a list of items
-    - When deleting a cube, the cube goes into the items of the player
-
-- Create the `chunk API` [Arthur]
+- Create the 'alpha' proxy (that owns the server) and implements the Chunk API [Arthur]
     - *chunk API* = when the player moves, he asks *the server* to send the new chunks further away from him.
 
 - Automatic & Infinite map creation [Johan]
 
-- Multiplayer architecture design & Multiplayer implementation through server / client
-    - The server holds the full map and sends the chunk to the players as they move
-    - Action model to edit the map
-    - Drawing players differently
+- Multiplayer architecture design (done) & Multiplayer implementation through server / client over the network
 
 - Entities: display other players
 

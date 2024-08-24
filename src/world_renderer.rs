@@ -12,7 +12,7 @@ use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
 use crate::graphics::menu_debug::DebugData;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
-use crate::graphics::hud_manager::HUDManager;
+use crate::graphics::hud_renderer::HUDRenderer;
 use crate::player_items::PlayerItems;
 use crate::world::World;
 use glium::glutin::surface::WindowSurface;
@@ -31,7 +31,7 @@ const CLICK_TIME_TO_BREAK: f32 = 2.0;
 pub struct WorldRenderer {
     world: World,
     cam:   Camera,
-    tile_manager: HUDManager,
+    hud_renderer: HUDRenderer,
     fps_manager: FpsManager,
     items: PlayerItems,
     
@@ -50,7 +50,7 @@ impl WorldRenderer {
         Self {
             world,
             cam,
-            tile_manager: HUDManager::new(),
+            hud_renderer: HUDRenderer::new(),
             fps_manager: FpsManager::new(),
             items: PlayerItems::new(),
             is_left_clicking: false,
@@ -98,7 +98,7 @@ impl WorldRenderer {
         target.finish().unwrap();
 
         // Last details before running
-        self.tile_manager.set_player_items(self.items.get_current_items());
+        self.hud_renderer.set_player_items(self.items.get_current_items());
 
         // Event loop
         let mut t = Instant::now();
@@ -108,7 +108,7 @@ impl WorldRenderer {
                     // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.
                     winit::event::WindowEvent::CloseRequested => window_target.exit(),
                     winit::event::WindowEvent::Resized(_) => {
-                        self.tile_manager.set_dimension(display.get_framebuffer_dimensions());
+                        self.hud_renderer.set_dimension(display.get_framebuffer_dimensions());
                     },
                     winit::event::WindowEvent::RedrawRequested => {
                         let mut target = display.draw();
@@ -174,12 +174,12 @@ impl WorldRenderer {
                             blend: glium::draw_parameters::Blend::alpha_blending(),
                             ..glium::draw_parameters::DrawParameters::default()
                         };
-                        if self.tile_manager.show_debug() {
+                        if self.hud_renderer.show_debug() {
                             let debug_data = DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation());
-                            self.tile_manager.set_debug(debug_data);
+                            self.hud_renderer.set_debug(debug_data);
                         }
 
-                        let rects_buffer = glium::VertexBuffer::dynamic(&display, self.tile_manager.rects()).unwrap();
+                        let rects_buffer = glium::VertexBuffer::dynamic(&display, self.hud_renderer.rects()).unwrap();
                         target.draw(
                             (&rect_vertex_buffer, rects_buffer.per_instance().unwrap()),
                             &indices,
@@ -264,8 +264,8 @@ impl WorldRenderer {
                         }
                         KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F11 => self.toggle_fullscreen(&window),
-                        KeyCode::F3  => self.tile_manager.toggle_debug_menu(),
-                        KeyCode::F12 => self.tile_manager.toggle_help_menu(),
+                        KeyCode::F3  => self.hud_renderer.toggle_debug_menu(),
+                        KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
                         KeyCode::Escape => std::process::exit(1),
                         _ => {}
                     }
@@ -284,7 +284,7 @@ impl WorldRenderer {
             },
             Add { at, block } => self.items.consume(block)
         }
-        self.tile_manager.set_player_items(self.items.get_current_items());
+        self.hud_renderer.set_player_items(self.items.get_current_items());
         self.world.apply_action(action);
     }
 
