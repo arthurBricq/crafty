@@ -88,6 +88,13 @@ impl WorldRenderer {
             self.items.collect(COBBELSTONE);
         }
 
+        // Try to lock the mouse to the window, this doen't work for all OS
+        let lock_mouse = window.set_cursor_grab(CursorGrabMode::Confined)
+            .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
+        if lock_mouse.is_err() { println!("Can't lock")
+        }
+
+
         // Construct the buffer of vertices (for single objects, we use OpenGL's instancing to multiply them)
         let cube_vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
         let rect_vertex_buffer = glium::VertexBuffer::new(&display, &RECT_VERTICES).unwrap();
