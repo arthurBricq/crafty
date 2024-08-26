@@ -24,17 +24,25 @@ use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Fullscreen, Window};
 use crate::block_kind::Block::COBBELSTONE;
+use crate::proxy::SinglePlayerProxy;
+use crate::server::ServerUpdate;
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer {
+    proxy: SinglePlayerProxy,
+
+    /// Currently displayed world
     world: World,
+    /// Position and orientation of the player
     cam:   Camera,
+    /// Items of the player
+    items: PlayerItems,
+
     hud_renderer: HUDRenderer,
     fps_manager: FpsManager,
-    items: PlayerItems,
-    
+
     // Logic for when the user is clicking
     // TODO encapsulate that in another struct
     is_left_clicking: bool,
@@ -46,8 +54,9 @@ pub struct WorldRenderer {
 
 impl WorldRenderer {
 
-    pub fn new(world: World, cam: Camera) -> Self {
+    pub fn new(proxy: SinglePlayerProxy, world: World, cam: Camera) -> Self {
         Self {
+            proxy,
             world,
             cam,
             hud_renderer: HUDRenderer::new(),
@@ -57,6 +66,10 @@ impl WorldRenderer {
             click_time: 0.0,
             fullscreen: false
         }
+    }
+
+    pub fn login(&mut self) {
+        self.proxy.login();
     }
 
     pub fn run(&mut self) {
@@ -99,6 +112,10 @@ impl WorldRenderer {
 
         // Last details before running
         self.hud_renderer.set_player_items(self.items.get_current_items());
+        
+        // Initially, ask for server updates
+        let updates = self.proxy.send_position_update(self.cam.position().clone());
+        self.handle_server_updates(updates);
 
         // Event loop
         let mut t = Instant::now();
@@ -140,6 +157,10 @@ impl WorldRenderer {
                         self.fps_manager.step(dt);
                         self.cam.step(dt, &self.world);
                         t = Instant::now();
+
+                        // Server updates
+                        let updates = self.proxy.send_position_update(self.cam.position().clone());
+                        self.handle_server_updates(updates);
 
                         // I) Draw the cubes
 
@@ -330,4 +351,14 @@ impl WorldRenderer {
         }
     }
 
+    fn handle_server_updates(&mut self, updates: Vec<ServerUpdate>) {
+        for update in updates {
+            match update {
+                ServerUpdate::LoadChunk(chunk) => {
+                    self.world.add_chunk(chunk)
+                }
+                ServerUpdate::None => {}
+            }
+        }
+    }
 }

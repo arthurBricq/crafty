@@ -1,14 +1,14 @@
 use crate::actions::Action;
-use crate::chunk::{Chunk, CubeIndex, CHUNK_FLOOR, CHUNK_SIZE};
+use crate::block_kind::Block;
+use crate::block_kind::Block::{DIRT, GRASS};
+use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
+use crate::cube::Cube;
 use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
+use crate::world_generation::perlin::PerlinNoise;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use strum::IntoEnumIterator;
-use crate::block_kind::Block;
-use crate::block_kind::Block::{DIRT, GRASS};
-use crate::cube::Cube;
-use crate::world_generation::perlin::PerlinNoise;
 
 pub struct World {
     /// The list of the chunks currently being displayed
@@ -16,7 +16,7 @@ pub struct World {
 }
 
 impl World {
-    pub fn new() -> Self {
+    pub fn empty() -> Self {
         let chunks = Vec::new();
         Self { chunks }
     }
@@ -29,6 +29,20 @@ impl World {
         self.chunks.push(Chunk::new_for_demo([0., s], 2));
         self.chunks.push(Chunk::new_for_demo([-s, 0.], 0));
         self.chunks.push(Chunk::new_for_demo([-2. * s, 0.], 0));
+    }
+    
+    pub fn add_chunk(&mut self, chunk: Chunk) {
+        self.chunks.push(chunk)
+    }
+    
+    pub fn get_chunk(&self, corner: (i32, i32)) -> Option<Chunk> {
+        for chunk in &self.chunks {
+            let tmp = chunk.corner();
+            if tmp[0] == corner.0 as f32 && tmp[1] == corner.1 as f32 {
+                return Some(chunk.clone())
+            }
+        }
+        None
     }
 
     /// Creates a basic, flat world. For now this is a simple, flat
@@ -381,7 +395,7 @@ mod tests {
 
     #[test]
     fn test_chunk_collision_1() {
-        let mut world = World::new();
+        let mut world = World::empty();
         // Adding one chunk
         let s = CHUNK_SIZE as f32;
         world.chunks.push(Chunk::new_for_demo([-s, 0.], 0));
@@ -397,7 +411,7 @@ mod tests {
 
     #[test]
     fn test_chunk_collision_2() {
-        let mut world = World::new();
+        let mut world = World::empty();
         // Adding one chunk
         world.chunks.push(Chunk::new_for_demo([0., 0.], 0));
         assert!(world.is_position_free(&Vector3::new(4.0, 10.2, 3.0)));
@@ -405,7 +419,7 @@ mod tests {
 
     #[test]
     fn test_visible_cube_with_two_chunks_that_touch() {
-        let mut world = World::new();
+        let mut world = World::empty();
         let mut chunk1 = Chunk::new([0., 0.]);
         chunk1.fill_layer(0, GRASS);
         chunk1.fill_layer(1, GRASS);
@@ -429,7 +443,7 @@ mod tests {
 
     #[test]
     fn test_visible_cube_with_two_chunks_that_doesnt_touch() {
-        let mut world = World::new();
+        let mut world = World::empty();
         let mut chunk1 = Chunk::new([0., 0.]);
         chunk1.fill_layer(0, GRASS);
         chunk1.fill_layer(1, GRASS);
@@ -453,7 +467,7 @@ mod tests {
 
     #[test]
     fn test_visibility_after_deleting_cubes() {
-        let mut world = World::new();
+        let mut world = World::empty();
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(0, GRASS);
         chunk.fill_layer(1, GRASS);
@@ -491,7 +505,7 @@ mod tests {
 
     #[test]
     fn test_visibility_after_creating_and_deleting_cubes() {
-        let mut world = World::new();
+        let mut world = World::empty();
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(0, GRASS);
         chunk.fill_layer(1, GRASS);
@@ -514,7 +528,7 @@ mod tests {
 
     #[test]
     fn test_visibility_of_bottommost_layer() {
-        let mut world = World::new();
+        let mut world = World::empty();
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(0, GRASS);
         chunk.fill_layer(1, GRASS);

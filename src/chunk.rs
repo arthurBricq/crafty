@@ -17,7 +17,7 @@ pub const CHUNK_FLOOR: usize = 9;
 /// * The chunk owns the cube that it contains and is responsible for properly constructing / modifying them.
 ///   As a consequence, it is the position in the `ChunkData` field that encodes the position of each cube.
 ///
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Chunk {
     cubes: ChunkData,
     corner: [f32; 2],

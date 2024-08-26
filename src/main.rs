@@ -13,19 +13,43 @@ mod fps;
 mod block_kind;
 mod items_bar;
 mod player_items;
+mod proxy;
+mod server;
+mod world_dispatcher;
 
 use crate::camera::Camera;
+use crate::proxy::SinglePlayerProxy;
+use crate::server::Server;
 use crate::world::World;
 use crate::world_renderer::WorldRenderer;
 
+enum WorldInitializer {
+    RANDOM, FLAT, DISK
+}
+
 fn main() {
-    // pick your prefered world gen
-    // let mut world = World::create_new_flat_world(10);
-    let mut world = World::create_new_random_world(10);
-    world.save_to_file("map.json");
-    let cam = Camera::new();
-    let mut renderer = WorldRenderer::new(world, cam);
+    // Create the initial world 
+    let init = WorldInitializer::RANDOM;
+    let world = match init  {
+        WorldInitializer::RANDOM => World::create_new_random_world(10),
+        WorldInitializer::FLAT => World::create_new_flat_world(10),
+        WorldInitializer::DISK => World::from_file("map.json").unwrap()
+    };
+    
+    // The server holds the 'full' world
+    let server = Server::new(world);
+    
+    // The proxy currently holds the server, 
+    let proxy = SinglePlayerProxy::new(server);
+    
+    // The client is initialized with an empty world, as it will be the responsibility of the server
+    // to provide it with the chunks.
+    // Currently, the client 'owns' the proxy, this is really the part that sucks for now.
+    let mut renderer = WorldRenderer::new(proxy, World::empty(), Camera::new());
+    renderer.login();
     renderer.run();
+    /*
+     */
 }
 
 
