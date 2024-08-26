@@ -57,6 +57,10 @@ impl Cube {
         self.n_neighbors < 6
     }
 
+    pub fn almost_visible(&self) -> bool {
+        self.n_neighbors == 5
+    }
+
     pub fn add_neighhor(&mut self) {
         if self.n_neighbors < 6 {
             self.n_neighbors += 1;

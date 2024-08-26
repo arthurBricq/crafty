@@ -151,6 +151,14 @@ impl CubeAttr {
             is_selected: 0,
         }
     }
+    
+    pub fn pos(&self) -> [f32;3] {
+        [self.world_matrix[3][0]-0.5,self.world_matrix[3][1]-0.5,self.world_matrix[3][2]-0.5]
+    }
+    
+    pub fn set_is_selected(&mut self, is_selected: u8) {
+        self.is_selected = is_selected;
+    }
 }
 
 const CONTAINER_SIZE: usize = 100000;

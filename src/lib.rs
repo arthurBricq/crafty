@@ -15,3 +15,4 @@ pub mod player_items;
 pub mod proxy;
 pub mod game_server;
 pub mod world_dispatcher;
+mod cubes_to_draw;
