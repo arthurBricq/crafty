@@ -10,6 +10,7 @@ pub fn main() {
             let msg = b"Hello!";
 
             stream.write(msg).unwrap();
+            
             println!("Sent Hello, awaiting reply...");
 
             let mut data = [0 as u8; 6]; // using 6 byte buffer
@@ -26,6 +27,11 @@ pub fn main() {
                     println!("Failed to receive data: {}", e);
                 }
             }
+            
+            
+            
+            
+            
         },
         Err(e) => {
             println!("Failed to connect: {}", e);

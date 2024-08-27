@@ -37,3 +37,15 @@ Why is it difficult ?
 - Because I am not sure of how I will implement the 'network scanner' that will wait for messages of the server. So maybe I would do a lot of extra work for nothing ?
 
 
+### Server TODO list
+
+- [x] Create a stream between two objects
+- [ ] Give the 'WORLD' to the server
+
+The server must be able to
+- [ ] Receive actions --> mutate the world
+- [ ] Receive positions --> mutate internal state 
+- [ ] bi-sided channel is required !
+- [ ] Send 'server updates'
+  - [ ] actions
+  - [ ] chunks

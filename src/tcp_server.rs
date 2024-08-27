@@ -3,11 +3,15 @@ use std::net::{Shutdown, TcpListener, TcpStream};
 use std::thread;
 
 fn handle_client(mut stream: TcpStream) {
-    let mut data = [0 as u8; 50]; // using 50 byte buffer
+    let mut data = [0 as u8; 50]; 
+    
+    // A while loop that continues to work for as long as the server lives.
     while match stream.read(&mut data) {
         Ok(size) => {
             // echo everything!
-            stream.write(&data[0..size]).unwrap();
+            // stream.write(&data[0..size]).unwrap();
+            
+            println!("Received: {:?}", &data[0..size]);
             true
         }
         Err(_) => {
@@ -20,17 +24,17 @@ fn handle_client(mut stream: TcpStream) {
 
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:3333").unwrap();
+    println!("Server listening on port 3333");
     
     // accept connections and process them, spawning a new thread for each one
-    println!("Server listening on port 3333");
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
                 println!("New connection: {}", stream.peer_addr().unwrap());
-                thread::spawn(move || {
-                    // connection succeeded
-                    handle_client(stream)
-                });
+                
+                // Create a new thread that will handle the connection with this client
+                // Note that each client must be able to send messages back to the world
+                thread::spawn(move || handle_client(stream) );
             }
             Err(e) => {
                 println!("Error: {}", e);
