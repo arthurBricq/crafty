@@ -39,6 +39,8 @@ Why is it difficult ?
 
 ### Server TODO list
 
+Example provided by https://riptutorial.com/rust/example/4404/a-simple-tcp-client-and-server-application--echo
+
 - [x] Create a stream between two objects
 - [ ] Give the 'WORLD' to the server
 
