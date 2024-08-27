@@ -25,14 +25,18 @@ impl CubesToDraw {
         Self { cube_to_draw: Vec::new(), selected_cube_index: None }
     }
     
+    /// Set the vector of CubeAttr from parameter
     pub fn set_cube_to_draw(&mut self, cubes_to_draw: Vec<CubeAttr>) {
         self.cube_to_draw = cubes_to_draw;
     }
 
+    /// Add a CubeAttr to the Vector from the parameter of a Cube
     pub fn add_cube(&mut self, c: &Cube) {
         self.cube_to_draw.push(CubeAttr::new(c.model_matrix(), c.block_id(), false));
     }
 
+    /// Try to remove a cube at at position, 
+    /// Will not panic if a cubeAttr is not present in the Vec
     pub fn destroy_cube(&mut self, position: &Vector3) {
         
         self.cube_to_draw.iter()
@@ -70,6 +74,7 @@ impl CubesToDraw {
         glium::VertexBuffer::immutable(display, &self.cube_to_draw).unwrap()
     }
 
+    /// Add the corresponding CubeAttr from he cube in a chunk
     pub fn add_chunk(&mut self, chunk: &Chunk) {
         for layer in chunk.cubes() {
             for row in layer {

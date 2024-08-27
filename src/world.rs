@@ -242,6 +242,18 @@ impl World {
             }
         }
     }
+
+    pub fn apply_action_no_render(&mut self, action: &Action) {
+        match action {
+            Action::Destroy { at } => {
+                self.destroy_cube(at.clone());
+
+            },
+            Action::Add { at, block } => {
+                self.add_cube(at.clone(), block.clone());
+            }
+        }
+    }
     
     fn cube_at_mut(&mut self, pos: Vector3) -> Option<&mut Cube> {
         for chunk in &mut self.chunks {
@@ -262,14 +274,16 @@ impl World {
         for pos in Cube::neighbors_positions(at) {
             // Toggle this position
             if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
-                // This cube now has a new neighbor
-                cube_to_toggle.add_neighhor();
-                // Extra work is done, as it returns ALL non visible cubes
-                // and we only need to remove the newly non visible cube
-                // But it works like that
-                if !cube_to_toggle.is_visible() {
+
+                // When adding a cube, its neighbors might become non visible
+                // A cube become non visible if it have 5 neighbors before adding a cube
+                // If we test for non visible cube after adding the cube we have extra cube
+                // that were already non visible before
+                if cube_to_toggle.five_neighbors() {
                     to_destroy.push(cube_to_toggle.position().clone())
                 }
+                // This cube now has a new neighbor
+                cube_to_toggle.add_neighhor();
                 count += 1;
             }
         }
