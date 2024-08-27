@@ -21,3 +21,4 @@ pub mod texture;
 pub mod collidable;
 pub mod args;
 pub mod camera;
+pub mod input;
