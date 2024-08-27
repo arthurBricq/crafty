@@ -26,12 +26,9 @@ Note that the entire **game engine** (3D rendering and physics) is written by ou
 
 - Better implementation of the collision detection 
 
-- Create the 'alpha' proxy (that owns the server) and implements the Chunk API [Arthur]
-    - *chunk API* = when the player moves, he asks *the server* to send the new chunks further away from him.
-
 - Automatic & Infinite map creation [Johan]
 
-- Multiplayer architecture design (done) & Multiplayer implementation through server / client over the network
+- Multiplayer architecture design & Multiplayer implementation through server / client over the network
 
 - Entities: display other players
 

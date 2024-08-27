@@ -1,3 +1,4 @@
+use crate::actions::Action;
 use crate::server::{Server, ServerUpdate};
 use crate::vector::Vector3;
 
@@ -20,6 +21,10 @@ impl SinglePlayerProxy {
     
     pub fn send_position_update(&mut self, position: Vector3) {
         self.server.on_new_position_update(self.client_id, position);
+    }
+
+    pub fn on_new_action(&mut self, action: Action) {
+        self.server.on_new_action(self.client_id, action);
     }
     
     pub fn consume_server_updates(&mut self) -> Vec<ServerUpdate> {

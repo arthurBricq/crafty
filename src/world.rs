@@ -208,10 +208,10 @@ impl World {
         true
     }
 
-    pub fn apply_action(&mut self, action: Action) {
+    pub fn apply_action(&mut self, action: &Action) {
         match action {
-            Action::Destroy { at } => self.destroy_cube(at),
-            Action::Add { at, block } => self.add_cube(at, block)
+            Action::Destroy { at } => self.destroy_cube(at.clone()),
+            Action::Add { at, block } => self.add_cube(at.clone(), block.clone())
         }
     }
     

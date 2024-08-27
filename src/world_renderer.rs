@@ -300,6 +300,7 @@ impl WorldRenderer {
     }
     
     fn apply_action(&mut self, action: Action) {
+        // Handle items
         match action {
             Destroy { at } => {
                 if let Some(block) = self.world.block_at(&at) {
@@ -309,7 +310,12 @@ impl WorldRenderer {
             Add { at, block } => self.items.consume(block)
         }
         self.hud_renderer.set_player_items(self.items.get_current_items());
-        self.world.apply_action(action);
+        
+        // Handle cubes
+        self.world.apply_action(&action);
+        
+        // Forward to server
+        self.proxy.on_new_action(action);
     }
 
     fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
