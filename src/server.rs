@@ -48,7 +48,7 @@ impl Server {
         id
     }
 
-    // Implementation of the callbacks
+    // Implementation of the 'callbacks': entry points of the server
 
     /// Called when receiving the position of a new player
     pub fn on_new_position_update(&mut self, player_id: usize, position: Vector3) {
@@ -70,7 +70,7 @@ impl Server {
     }
 
     /// Returns the list of updates that the server sends to the client.
-    pub fn get_updates(&mut self, player_id: usize) -> Vec<ServerUpdate> {
+    pub fn consume_updates(&mut self, player_id: usize) -> Vec<ServerUpdate> {
         let updates  = self.server_updates_buffer[player_id].clone();
         self.server_updates_buffer[player_id] = Vec::new();
         updates

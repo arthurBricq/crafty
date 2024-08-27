@@ -114,8 +114,8 @@ impl WorldRenderer {
         self.hud_renderer.set_player_items(self.items.get_current_items());
         
         // Initially, ask for server updates
-        let updates = self.proxy.send_position_update(self.cam.position().clone());
-        self.handle_server_updates(updates);
+        self.proxy.send_position_update(self.cam.position().clone());
+        self.handle_server_updates();
 
         // Event loop
         let mut t = Instant::now();
@@ -130,16 +130,6 @@ impl WorldRenderer {
                     winit::event::WindowEvent::RedrawRequested => {
                         let mut target = display.draw();
                         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
-
-                        // Configure the GPU to do Depth testing (with a depth buffer)
-                        let params = glium::DrawParameters {
-                            depth: glium::Depth {
-                                test: glium::draw_parameters::DepthTest::IfLess,
-                                write: true,
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        };
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
@@ -159,10 +149,26 @@ impl WorldRenderer {
                         t = Instant::now();
 
                         // Server updates
-                        let updates = self.proxy.send_position_update(self.cam.position().clone());
-                        self.handle_server_updates(updates);
+                        self.proxy.send_position_update(self.cam.position().clone());
+                        self.handle_server_updates();
 
+                        // HUD updates
+                        if self.hud_renderer.show_debug() {
+                            self.hud_renderer
+                                .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation()));
+                        }
+                        
                         // I) Draw the cubes
+                        
+                        // Configure the GPU to do Depth testing (with a depth buffer)
+                        let params = glium::DrawParameters {
+                            depth: glium::Depth {
+                                test: glium::draw_parameters::DepthTest::IfLess,
+                                write: true,
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        };
 
                         // Define our uniforms (same uniforms for all cubes)...
                         let uniforms = uniform! {
@@ -190,15 +196,12 @@ impl WorldRenderer {
                             font_offsets: GLChar::get_offset(),
                             textures: cubes_texture_sampler
                         };
+                        
                         // We change the draw parameters here to allow transparency.
                         let draw_parameters = glium::draw_parameters::DrawParameters {
                             blend: glium::draw_parameters::Blend::alpha_blending(),
                             ..glium::draw_parameters::DrawParameters::default()
                         };
-                        if self.hud_renderer.show_debug() {
-                            let debug_data = DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation());
-                            self.hud_renderer.set_debug(debug_data);
-                        }
 
                         let rects_buffer = glium::VertexBuffer::dynamic(&display, self.hud_renderer.rects()).unwrap();
                         target.draw(
@@ -351,7 +354,8 @@ impl WorldRenderer {
         }
     }
 
-    fn handle_server_updates(&mut self, updates: Vec<ServerUpdate>) {
+    fn handle_server_updates(&mut self) {
+        let updates = self.proxy.consume_server_updates();
         for update in updates {
             match update {
                 ServerUpdate::LoadChunk(chunk) => {

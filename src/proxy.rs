@@ -18,9 +18,12 @@ impl SinglePlayerProxy {
         self.client_id = self.server.login("client");
     }
     
-    pub fn send_position_update(&mut self, position: Vector3) -> Vec<ServerUpdate> {
+    pub fn send_position_update(&mut self, position: Vector3) {
         self.server.on_new_position_update(self.client_id, position);
-        self.server.get_updates(self.client_id)
+    }
+    
+    pub fn consume_server_updates(&mut self) -> Vec<ServerUpdate> {
+        self.server.consume_updates(self.client_id)
     }
     
 }
