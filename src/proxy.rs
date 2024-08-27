@@ -1,14 +1,14 @@
 use crate::actions::Action;
-use crate::server::{Server, ServerUpdate};
+use crate::game_server::{GameServer, ServerUpdate};
 use crate::vector::Vector3;
 
 pub struct SinglePlayerProxy {
-    server: Server,
+    server: GameServer,
     client_id: usize
 }
 
 impl SinglePlayerProxy {
-    pub fn new(server: Server) -> Self {
+    pub fn new(server: GameServer) -> Self {
         Self {
             server,
             client_id: 0,

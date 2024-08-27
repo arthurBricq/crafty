@@ -25,7 +25,7 @@ use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Fullscreen, Window};
 use crate::block_kind::Block::COBBELSTONE;
 use crate::proxy::SinglePlayerProxy;
-use crate::server::ServerUpdate;
+use crate::game_server::ServerUpdate;
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 

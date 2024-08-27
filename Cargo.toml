@@ -3,6 +3,20 @@ name = "crafty"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "crafty"
+path = "src/main.rs"
+
+[[bin]]
+name = "server"
+path = "src/tcp_server.rs"
+
+[[bin]]
+name = "client"
+path = "src/tcp_client.rs"
+
+
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

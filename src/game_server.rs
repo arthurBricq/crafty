@@ -12,7 +12,7 @@ pub enum ServerUpdate {
 }
 
 
-pub struct Server {
+pub struct GameServer {
     /// The full world
     world: World,
 
@@ -27,7 +27,7 @@ pub struct Server {
 }
 
 
-impl Server {
+impl GameServer {
     pub fn new(world: World) -> Self {
         Self {
             world,

@@ -34,5 +34,6 @@ Why would I want a callback ?
 Why is it difficult ?
 - Because it would require the PROXY to have mutable access to the WORLD RENDERER.
 - Even if I use interior mutability and give the proxy with an immutable access, it is difficult. WHY? 
+- Because I am not sure of how I will implement the 'network scanner' that will wait for messages of the server. So maybe I would do a lot of extra work for nothing ?
 
 
