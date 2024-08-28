@@ -5,23 +5,25 @@ use crate::vector::Vector3;
 use std::f32::consts::PI;
 
 /// Data in the debug menu
-pub const DEBUG_MENU_DATA: [DebugItem;3] = [
+pub const DEBUG_MENU_DATA: [DebugItem;4] = [
 
     DebugItem::new("fps:"),
     DebugItem::new("coord:"),
     DebugItem::new("rot:"),
+    DebugItem::new("cube rendered:"),
 ];
 
 
 pub struct DebugData {
     fps: f32,
     pos: Vector3,
-    rotation: [f32;2]
+    rotation: [f32;2],
+    cube_rendered: usize
 }
 
 impl DebugData {
-    pub fn new(fps: f32, pos: Vector3, rotation: [f32;2]) -> Self {
-        Self { fps, pos: pos.clone(), rotation }
+    pub fn new(fps: f32, pos: Vector3, rotation: [f32;2], cube_rendered: usize) -> Self {
+        Self { fps, pos: pos.clone(), rotation, cube_rendered }
     }
     
     pub fn fps(&self) -> f32 {
@@ -34,6 +36,10 @@ impl DebugData {
     
     pub fn rotation(&self) -> [f32; 2] {
         self.rotation
+    }
+    
+    pub fn cube_rendered(&self) -> usize {
+        self.cube_rendered
     }
 }
 
@@ -121,6 +127,9 @@ impl DebugMenu {
         
         let rot_string = &format!("{:7.3}:{:7.3}",debug_data.rotation()[0] % (2.*PI),debug_data.rotation()[1]);
         StringRect::write_string(self.coord_to_update[2][0], self.coord_to_update[2][1], 0.015, rot_string, &mut self.rects);
+
+        let cube_string = &format!("{:7}",debug_data.cube_rendered());
+        StringRect::write_string(self.coord_to_update[3][0]+0.3, self.coord_to_update[3][1], 0.015, cube_string, &mut self.rects);
     }
 }
 

@@ -18,18 +18,6 @@ impl Cube {
         }
     }
 
-    pub fn model_matrix(&self) -> [[f32; 4]; 4] {
-        // TODO As you can see, I added 0.5 at each cube model
-        //      It's because I was lazy to edit all the values in `VERTICES` of +0.5, but
-        //      it would be nice to do it eventually :)
-        [
-            [1.00, 0.0, 0.0, 0.0],
-            [0.0, 1.00, 0.0, 0.0],
-            [0.0, 0.0, 1.00, 0.0],
-            [self.position[0] + 0.5, self.position[1] + 0.5, self.position[2] + 0.5, 1.0f32]
-        ]
-    }
-
     pub fn block(&self) -> &Block {
         &self.block
     }

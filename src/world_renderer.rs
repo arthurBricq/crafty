@@ -7,11 +7,12 @@ use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
 use crate::block_kind::Block;
 use crate::camera::{Camera, MotionState};
+use crate::cube::Cube;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
 use crate::graphics::menu_debug::DebugData;
-use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
+use crate::graphics::rectangle::{RectVertexAttr, RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::hud_renderer::HUDRenderer;
 use crate::player_items::PlayerItems;
 use crate::world::World;
@@ -22,10 +23,10 @@ use glium::{uniform, Display, Surface, Texture2d};
 use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{Fullscreen, Window};
 use crate::block_kind::Block::COBBELSTONE;
 use crate::proxy::SinglePlayerProxy;
 use crate::game_server::ServerUpdate;
+use winit::window::{CursorGrabMode, Fullscreen, Window};
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
@@ -88,6 +89,13 @@ impl WorldRenderer {
             self.items.collect(COBBELSTONE);
         }
 
+        // Try to lock the mouse to the window, this doen't work for all OS
+        let lock_mouse = window.set_cursor_grab(CursorGrabMode::Confined)
+                               .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
+        if lock_mouse.is_err() { println!("Can't lock")
+        }
+
+
         // Construct the buffer of vertices (for single objects, we use OpenGL's instancing to multiply them)
         let cube_vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
         let rect_vertex_buffer = glium::VertexBuffer::new(&display, &RECT_VERTICES).unwrap();
@@ -117,6 +125,9 @@ impl WorldRenderer {
         self.proxy.send_position_update(self.cam.position().clone());
         self.handle_server_updates();
 
+        // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
+        self.world.set_cubes_to_draw(self.cam.touched_cube());
+        
         // Event loop
         let mut t = Instant::now();
         event_loop.run(move |event, window_target| {
@@ -155,7 +166,7 @@ impl WorldRenderer {
                         // HUD updates
                         if self.hud_renderer.show_debug() {
                             self.hud_renderer
-                                .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation()));
+                                .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation(), self.world.number_cubes_rendered()));
                         }
                         
                         // I) Draw the cubes
@@ -182,7 +193,8 @@ impl WorldRenderer {
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
                         // OpenGL instancing = instead of setting 1000 times different uniforms, you give once 1000 attributes
-                        let position_buffer = glium::VertexBuffer::dynamic(&display, &self.world.get_cubes_to_draw(self.cam.touched_cube())).unwrap();
+                        self.world.set_selected_cube(self.cam.touched_cube());
+                        let position_buffer = glium::VertexBuffer::immutable(&display, self.world.cube_to_draw()).unwrap();
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,
@@ -226,7 +238,6 @@ impl WorldRenderer {
             };
         }).unwrap();
     }
-
 
     /// Builds the array of 2D textures using all the blocks
     /// Each block is associated with 3 textures: side, top and bottom
@@ -307,7 +318,9 @@ impl WorldRenderer {
                     self.items.collect(block);
                 }
             },
-            Add { at, block } => self.items.consume(block)
+            Add { at, block } => {
+                self.items.consume(block);
+            }
         }
         self.hud_renderer.set_player_items(self.items.get_current_items());
         
