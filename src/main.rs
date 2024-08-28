@@ -1,27 +1,9 @@
 
-mod cube;
-mod camera;
-mod world_renderer;
-mod world;
-mod world_generation;
-mod chunk;
-mod vector;
-mod gravity;
-mod graphics;
-mod actions;
-mod fps;
-mod block_kind;
-mod items_bar;
-mod player_items;
-mod proxy;
-mod game_server;
-mod world_dispatcher;
-
-use crate::camera::Camera;
-use crate::proxy::SinglePlayerProxy;
-use crate::game_server::GameServer;
-use crate::world::World;
-use crate::world_renderer::WorldRenderer;
+use crafty::camera::Camera;
+use crafty::game_server::GameServer;
+use crafty::proxy::SinglePlayerProxy;
+use crafty::world::World;
+use crafty::world_renderer::WorldRenderer;
 
 enum WorldInitializer {
     RANDOM, FLAT, DISK

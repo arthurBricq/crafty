@@ -486,7 +486,7 @@ mod tests {
         assert_eq!(world.chunks[0].cube_at(&bottom).unwrap().is_visible(), false);
 
         // Now we delete the top cube
-        world.apply_action(Action::Destroy {at: top});
+        world.apply_action(&Action::Destroy {at: top});
 
         // Assert the cube in the middle is now visible
         assert_eq!(world.chunks[0].cube_at(&middle).unwrap().is_visible(), true);
@@ -498,7 +498,7 @@ mod tests {
         assert_eq!(world.chunks[0].cube_at(&another_side).unwrap().is_visible(), false);
 
         // But we if delete the middle block, the sides get in contact with air, so they are supposed to be visible.
-        world.apply_action(Action::Destroy {at: middle});
+        world.apply_action(&Action::Destroy {at: middle});
         assert_eq!(world.chunks[0].cube_at(&one_side).unwrap().is_visible(), true);
         assert_eq!(world.chunks[0].cube_at(&another_side).unwrap().is_visible(), true);
     }
@@ -519,7 +519,7 @@ mod tests {
         let bottom = Vector3::new(4., 0., 4.);
 
         // First, we add a cube on top of the world
-        world.apply_action(Action::Add {at: above, block: Block::COBBELSTONE});
+        world.apply_action(&Action::Add {at: above, block: Block::COBBELSTONE});
 
         // Assert the visibility: the block 'top' should not be rendered anymore
         assert_eq!(world.chunks[0].cube_at(&above).unwrap().is_visible(), true);
