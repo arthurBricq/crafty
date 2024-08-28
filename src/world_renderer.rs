@@ -91,7 +91,7 @@ impl WorldRenderer {
 
         // Try to lock the mouse to the window, this doen't work for all OS
         let lock_mouse = window.set_cursor_grab(CursorGrabMode::Confined)
-            .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
+                               .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
         if lock_mouse.is_err() { println!("Can't lock")
         }
 
@@ -166,7 +166,7 @@ impl WorldRenderer {
                         // HUD updates
                         if self.hud_renderer.show_debug() {
                             self.hud_renderer
-                                .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation(),self.world.number_cubes_rendered()));
+                                .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation(), self.world.number_cubes_rendered()));
                         }
                         
                         // I) Draw the cubes

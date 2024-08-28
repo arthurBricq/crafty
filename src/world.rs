@@ -9,18 +9,18 @@ use crate::world_generation::perlin::PerlinNoise;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use strum::IntoEnumIterator;
-use crate::cubes_to_draw::CubesToDraw;
+use crate::cubes_to_draw::{self, CubesToDraw};
 
 pub struct World {
     /// The list of the chunks currently being displayed
     chunks: Vec<Chunk>,
-    cubes_to_draw: CubesToDraw,
+    cubes_to_draw: Option<CubesToDraw>,
 }
 
 impl World {
     pub fn empty() -> Self {
         let chunks = Vec::new();
-        Self { chunks, cubes_to_draw: CubesToDraw::new() }
+        Self { chunks, cubes_to_draw: None }
     }
 
     pub fn fill_for_demo(&mut self) {
@@ -34,7 +34,9 @@ impl World {
     }
     
     pub fn add_chunk(&mut self, chunk: Chunk) {
-        self.cubes_to_draw.add_chunk(&chunk);
+        if self.cubes_to_draw.is_some() {
+            self.cubes_to_draw.as_mut().unwrap().add_chunk(&chunk);
+        }
         self.chunks.push(chunk);
     }
     
@@ -70,7 +72,7 @@ impl World {
             }
         }
 
-        let mut world = Self { chunks, cubes_to_draw: CubesToDraw::new() };
+        let mut world = Self { chunks, cubes_to_draw: None };
         world.compute_visible_cubes();
         world
     }
@@ -116,7 +118,7 @@ impl World {
             }
         }
 
-        let mut world = Self { chunks, cubes_to_draw: CubesToDraw::new() };
+        let mut world = Self { chunks, cubes_to_draw: None };
         world.compute_visible_cubes();
         world
     }
@@ -164,26 +166,29 @@ impl World {
                             //      let's think in term of performance...
                             if c.is_visible() {
                                 let is_selected = selected_cube.is_some() && selected_cube.unwrap().to_cube_coordinates().equals(c.position());
-                                positions.push(CubeAttr::new(c.model_matrix(), c.block_id(), is_selected));
+                                positions.push(CubeAttr::new(c));
                             }
                         }
                     }
                 }
             }
         }
-        self.cubes_to_draw.set_cube_to_draw(positions);
+        if self.cubes_to_draw.is_none() {
+            self.cubes_to_draw= Some(CubesToDraw::new());
+        }
+        self.cubes_to_draw.as_mut().unwrap().set_cube_to_draw(positions);
     }
 
     pub fn set_selected_cube(&mut self, selected_cube: Option<Vector3>) {
-        self.cubes_to_draw.set_selected_cube(selected_cube)
+        self.cubes_to_draw.as_mut().unwrap().set_selected_cube(selected_cube)
     }
 
     pub fn cube_to_draw(&self) -> &Vec<CubeAttr> {
-        self.cubes_to_draw.cube_to_draw()
+        self.cubes_to_draw.as_ref().unwrap().cubes_to_draw()
     }
 
     pub fn number_cubes_rendered(&self) -> usize{
-        self.cubes_to_draw.number_cubes_rendered()
+        self.cubes_to_draw.as_ref().unwrap().number_cubes_rendered()
     }
 
     /// Returns the block at the given position
@@ -226,31 +231,26 @@ impl World {
     pub fn apply_action(&mut self, action: &Action) {
         match action {
             Action::Destroy { at } => {
-                let cubes_to_add = self.destroy_cube(at.clone());
-                self.cubes_to_draw.destroy_cube(&at);
-                for cube in cubes_to_add {
-                    self.cubes_to_draw.add_cube(&cube)
+                let revealed_cubes = self.destroy_cube(at.clone());
+                if self.cubes_to_draw.is_some() {
+                    // Remove the cube from the rendered cube
+                    self.cubes_to_draw.as_mut().unwrap().remove_cube(&at);
+                    // When a cube is supress some of its neighbors might become visible and have to be added to the cube_to_draw
+                    for cube in revealed_cubes {
+                        self.cubes_to_draw.as_mut().unwrap().add_cube(&cube)
+                    }
                 }
-
             },
             Action::Add { at, block } => {
                 let (cubes_to_destroy, cube) = self.add_cube(at.clone(), block.clone());
-                self.cubes_to_draw.add_cube(&cube);
-                for position in cubes_to_destroy {
-                    self.cubes_to_draw.destroy_cube(&position)
+                if self.cubes_to_draw.is_some() {
+                    // Add the cube from the rendered cube
+                    self.cubes_to_draw.as_mut().unwrap().add_cube(&cube);
+                    // When a cube is added some of its neighbors might become invisible and have to be remove to the cube_to_draw
+                    for position in cubes_to_destroy {
+                        self.cubes_to_draw.as_mut().unwrap().remove_cube(&position)
+                    }
                 }
-            }
-        }
-    }
-
-    pub fn apply_action_no_render(&mut self, action: &Action) {
-        match action {
-            Action::Destroy { at } => {
-                self.destroy_cube(at.clone());
-
-            },
-            Action::Add { at, block } => {
-                self.add_cube(at.clone(), block.clone());
             }
         }
     }
@@ -270,25 +270,21 @@ impl World {
     fn add_cube(&mut self, at: Vector3, block: Block) -> (Vec<Vector3>,Cube) {
         // For all the neighbors positions, increase their internal counter
         let mut count = 0;
-        let mut to_destroy = Vec::new();
+        let mut to_hide = Vec::new();
         for pos in Cube::neighbors_positions(at) {
             // Toggle this position
             if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
 
-                // When adding a cube, its neighbors might become non visible
-                // A cube become non visible if it have 5 neighbors before adding a cube
-                // If we test for non visible cube after adding the cube we have extra cube
-                // that were already non visible before
-                if cube_to_toggle.five_neighbors() {
-                    to_destroy.push(cube_to_toggle.position().clone())
-                }
                 // This cube now has a new neighbor
                 cube_to_toggle.add_neighhor();
+                if !cube_to_toggle.is_visible() {
+                    to_hide.push(cube_to_toggle.position().clone())
+                }
                 count += 1;
             }
         }
         self.add_cube_unsafe(at, block, count);
-        (to_destroy,self.cube_at_mut(at).unwrap().clone())
+        (to_hide,self.cube_at_mut(at).unwrap().clone())
     }
     
     /// Adds a cube without recomputing the visibility
@@ -424,7 +420,7 @@ impl World {
         // Build the world
         let mut world = Self {
             chunks, 
-            cubes_to_draw: CubesToDraw::new()
+            cubes_to_draw: None
         };
 
         // Fill all the chunks by building all the cubes

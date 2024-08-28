@@ -1,13 +1,7 @@
-use glium::backend::Facade;
-use glium::glutin::api::egl::display;
-use glium::glutin::surface::WindowSurface;
-use glium::{Display, VertexBuffer};
-
 use crate::cube::Cube;
 use crate::graphics::cube::CubeAttr;
 use crate::vector::Vector3;
 use crate::chunk::Chunk;
-use crate::world::World;
 
 /// Control the cubes to be drawn
 pub struct CubesToDraw {
@@ -16,62 +10,58 @@ pub struct CubesToDraw {
     // it will be easier to load/unload a "physical" chunk
     // apparently glium can build its buffer vector from multiple references 
     // so no need to copy everythink into one vector but it has to be tested (I haven't tested it)
-    cube_to_draw: Vec<CubeAttr>,
+    cubes_to_draw: Vec<CubeAttr>,
     selected_cube_index: Option<usize>
 }
 
 impl CubesToDraw {
     pub fn new() -> Self {
-        Self { cube_to_draw: Vec::new(), selected_cube_index: None }
+        Self { cubes_to_draw: Vec::new(), selected_cube_index: None }
     }
     
     /// Set the vector of CubeAttr from parameter
     pub fn set_cube_to_draw(&mut self, cubes_to_draw: Vec<CubeAttr>) {
-        self.cube_to_draw = cubes_to_draw;
+        self.cubes_to_draw = cubes_to_draw;
     }
 
     /// Add a CubeAttr to the Vector from the parameter of a Cube
     pub fn add_cube(&mut self, c: &Cube) {
-        self.cube_to_draw.push(CubeAttr::new(c.model_matrix(), c.block_id(), false));
+        self.cubes_to_draw.push(CubeAttr::new(c));
     }
 
     /// Try to remove a cube at at position, 
     /// Will not panic if a cubeAttr is not present in the Vec
-    pub fn destroy_cube(&mut self, position: &Vector3) {
+    pub fn remove_cube(&mut self, position: &Vector3) {
         
-        self.cube_to_draw.iter()
-        .position(|x| x.pos() == position.as_array())
-        .map(|x| {
+        self.cubes_to_draw.iter()
+        .position(|cube_attr| cube_attr.position() == position.as_array())
+        .map(|index| {
             if let Some(to_suppress_index) = self.selected_cube_index {
-                if to_suppress_index == x {
+                if to_suppress_index == index {
                     self.selected_cube_index=None;
                 }
             }
-            self.cube_to_draw.swap_remove(x);
+            self.cubes_to_draw.swap_remove(index);
             });
     }
 
     pub fn set_selected_cube(&mut self, selected_cube: Option<Vector3>) {
         if let Some(index) = self.selected_cube_index {
-            self.cube_to_draw[index].set_is_selected(false as u8);
+            self.cubes_to_draw[index].set_is_selected(false);
         }
         if selected_cube.is_none() {return;}
-        self.cube_to_draw.iter().position(|x| x.pos() == selected_cube.unwrap().to_cube_coordinates().as_array())
-            .map(|x| {
-                self.selected_cube_index = Some(x); 
-                self.cube_to_draw[x].set_is_selected(true as u8)});
+        self.cubes_to_draw.iter().position(|cube_attr| cube_attr.position() == selected_cube.unwrap().to_cube_coordinates().as_array())
+            .map(|index| {
+                self.selected_cube_index = Some(index); 
+                self.cubes_to_draw[index].set_is_selected(true)});
     }
 
-    pub fn cube_to_draw(&self) -> &Vec<CubeAttr> {
-        &self.cube_to_draw
+    pub fn cubes_to_draw(&self) -> &Vec<CubeAttr> {
+        &self.cubes_to_draw
     }
 
     pub fn number_cubes_rendered(&self) -> usize {
-        self.cube_to_draw.len()
-    }
-
-    pub fn buffer_to_draw(&self,display: &Display<WindowSurface>) -> glium::VertexBuffer<CubeAttr> {
-        glium::VertexBuffer::immutable(display, &self.cube_to_draw).unwrap()
+        self.cubes_to_draw.len()
     }
 
     /// Add the corresponding CubeAttr from he cube in a chunk
@@ -101,17 +91,17 @@ mod tests {
     fn test_add_remove_one_cube() {
         let mut cube_to_draw = CubesToDraw::new();
         let mut vec_to_draw= Vec::new();
-        let world_matrix= [[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]];
-        vec_to_draw.push(CubeAttr::new(world_matrix, 0, false));
+        let world_matrix= [[1., 0., 0., 0.],[0., 1., 0., 0.],[0., 0., 1., 0.],[0., 0., 0., 1.]];
+        vec_to_draw.push(Cube::new([0., 0., 0.], DIRT, 0) );
 
-        cube_to_draw.add_cube(&Cube::new([0.,0.,0.], DIRT, 0));
+        cube_to_draw.add_cube(&Cube::new([0., 0., 0.], DIRT, 0));
 
-        assert!(cube_to_draw.cube_to_draw().len()==1);
+        assert!(cube_to_draw.cubes_to_draw().len() == 1);
 
-        cube_to_draw.destroy_cube(&Vector3::newf([1.,0.,0.]));
-        assert!(cube_to_draw.cube_to_draw().len()==1);
+        cube_to_draw.remove_cube(&Vector3::newf([1., 0., 0.]));
+        assert!(cube_to_draw.cubes_to_draw().len() == 1);
 
-        cube_to_draw.destroy_cube(&Vector3::newf([0.,0.,0.]));
-        assert!(cube_to_draw.cube_to_draw().len()==0);
+        cube_to_draw.remove_cube(&Vector3::newf([0., 0., 0.]));
+        assert!(cube_to_draw.cubes_to_draw().len() ==0 );
     }
 }

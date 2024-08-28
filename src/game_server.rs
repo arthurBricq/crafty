@@ -66,7 +66,7 @@ impl GameServer {
     }
 
     pub fn on_new_action(&mut self, client: usize, action: Action) {
-        self.world.apply_action_no_render(&action);
+        self.world.apply_action(&action);
     }
 
     /// Returns the list of updates that the server sends to the client.
