@@ -2,11 +2,12 @@ use std::io::{Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::mpsc;
 use std::{io, thread};
+use std::sync::mpsc::Sender;
 use std::time::{Duration, Instant};
 
 const ONE_SEC: Duration = Duration::from_millis(1000);
 
-fn handle_client(mut stream: TcpStream) {
+fn handle_client(mut stream: TcpStream, tx: Sender<i8>) {
     let mut data = [0 as u8; 50];
     let mut t = Instant::now();
 
@@ -19,10 +20,19 @@ fn handle_client(mut stream: TcpStream) {
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                 // Read: https://doc.rust-lang.org/std/net/struct.TcpListener.html#method.set_nonblocking
                 if t.elapsed() > ONE_SEC {
-                    // TODO every second, send a message to the client
+                    // EXAMPLE: every second, send a message to the client
+                    // We can send strings to the client :+1:
                     t = Instant::now();
                     let message = b"action::add_cube";
                     stream.write(message).unwrap();
+                    
+                    // EXAMPLE: we can send event to the server, using rust's channels
+                    // TODO
+                    
+                    // Difficulty will be to 'receive' messages from the server, to be sent to 
+                    // the client
+                    // TODO (idea) create a new (rx,tx) for each client, we rx is given to the client
+                    
                 }
             }
             Err(_) => {
@@ -41,7 +51,9 @@ fn main() {
     listener.set_nonblocking(true).expect("Cannot set non-blocking");
     println!("Server is running: {}", listener.local_addr().unwrap());
 
-    // let (tx, rx) = mpsc::channel();
+
+    // We have a channel, but is it necessary?  Let's try using mutex.
+    let (tx, rx) = mpsc::channel();
 
     // Accept connections and process them, spawning a new thread for each one
     for stream in listener.incoming() {
@@ -53,7 +65,8 @@ fn main() {
 
                 // Create a new thread that will handle the connection with this client
                 // Note that each client must be able to send messages back to the world
-                thread::spawn(move || handle_client(stream) );
+                let new_tx = tx.clone();
+                thread::spawn(move || handle_client(stream, new_tx) );
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                 // In the non-blocking mode, this branch is called when the server is not receiving any new connections
