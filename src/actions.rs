@@ -2,6 +2,7 @@ use crate::block_kind::Block;
 use crate::vector::Vector3;
 
 /// An action is something that will alter the world
+#[derive(Debug, PartialEq)]
 pub enum Action {
     /// Destroys a cube of the world
     Destroy {

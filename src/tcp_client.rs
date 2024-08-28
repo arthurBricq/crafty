@@ -1,34 +1,21 @@
-use std::io::{Read, Write};
-use std::net::TcpStream;
-use std::str::from_utf8;
+use std::sync::{Arc, Mutex};
+use crafty::camera::Camera;
+use crafty::tcp_proxy::TcpProxy;
+use crafty::world::World;
+use crafty::world_renderer::WorldRenderer;
 
-fn handle_stream_with_server(mut stream: TcpStream) {
-    let msg = b"Hello!";
-    stream.write(msg).unwrap();
-    let mut data = [0 as u8; 516];
-    loop {
-        match stream.read(&mut data) {
-            Ok(size) => {
-                let as_string = from_utf8(&data[0..size]).unwrap();
-                println!("Received: {:?}", as_string);
-            },
-            Err(e) => {
-                println!("Failed to receive data: {}", e);
-            }
-        }
-    }
-}
 
 pub fn main() {
-    match TcpStream::connect("localhost:3333") {
-        Ok(stream) => {
-            println!("Successfully connected to server in port 3333");
-            handle_stream_with_server(stream);
-        },
-        Err(e) => {
-            println!("Failed to connect: {}", e);
-        }
-    }
-    println!("Terminated.");
+    // The proxy currently holds the server,
+    let proxy = TcpProxy::new("localhost:3333");
+
+    // The client is initialized with an empty world, as it will be the responsibility of the server
+    // to provide it with the chunks.
+    // Currently, the client 'owns' the proxy, this is really the part that sucks for now.
+    let mut client = WorldRenderer::new(proxy, World::empty(), Camera::new());
+    client.login();
+    
+    // This is blocking so we can't really do it...
+    client.run();
 }
 

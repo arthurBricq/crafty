@@ -1,20 +1,24 @@
 extern crate glium;
 extern crate winit;
 
-use std::time::Instant;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
 use crate::block_kind::Block;
+use crate::block_kind::Block::COBBELSTONE;
 use crate::camera::{Camera, MotionState};
-use crate::cube::Cube;
 use crate::fps::FpsManager;
+use crate::server_update::ServerUpdate;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
-use crate::graphics::menu_debug::DebugData;
-use crate::graphics::rectangle::{RectVertexAttr, RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::graphics::hud_renderer::HUDRenderer;
+use crate::graphics::menu_debug::DebugData;
+use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::player_items::PlayerItems;
+use crate::proxy::Proxy;
 use crate::world::World;
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
@@ -23,16 +27,13 @@ use glium::{uniform, Display, Surface, Texture2d};
 use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use crate::block_kind::Block::COBBELSTONE;
-use crate::proxy::SinglePlayerProxy;
-use crate::game_server::ServerUpdate;
 use winit::window::{CursorGrabMode, Fullscreen, Window};
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer {
-    proxy: SinglePlayerProxy,
+    proxy: Arc<Mutex<dyn Proxy>>,
 
     /// Currently displayed world
     world: World,
@@ -55,7 +56,7 @@ pub struct WorldRenderer {
 
 impl WorldRenderer {
 
-    pub fn new(proxy: SinglePlayerProxy, world: World, cam: Camera) -> Self {
+    pub fn new(proxy: Arc<Mutex<dyn Proxy>>, world: World, cam: Camera) -> Self {
         Self {
             proxy,
             world,
@@ -70,7 +71,7 @@ impl WorldRenderer {
     }
 
     pub fn login(&mut self) {
-        self.proxy.login();
+        self.proxy.lock().unwrap().login();
     }
 
     pub fn run(&mut self) {
@@ -122,12 +123,13 @@ impl WorldRenderer {
         self.hud_renderer.set_player_items(self.items.get_current_items());
         
         // Initially, ask for server updates
-        self.proxy.send_position_update(self.cam.position().clone());
+        self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
+        thread::sleep(Duration::from_millis(1000));
         self.handle_server_updates();
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
         self.world.set_cubes_to_draw(self.cam.touched_cube());
-        
+
         // Event loop
         let mut t = Instant::now();
         event_loop.run(move |event, window_target| {
@@ -160,7 +162,7 @@ impl WorldRenderer {
                         t = Instant::now();
 
                         // Server updates
-                        self.proxy.send_position_update(self.cam.position().clone());
+                        self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
                         self.handle_server_updates();
 
                         // HUD updates
@@ -328,7 +330,7 @@ impl WorldRenderer {
         self.world.apply_action(&action);
         
         // Forward to server
-        self.proxy.on_new_action(action);
+        self.proxy.lock().unwrap().on_new_action(action);
     }
 
     fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
@@ -374,7 +376,7 @@ impl WorldRenderer {
     }
 
     fn handle_server_updates(&mut self) {
-        let updates = self.proxy.consume_server_updates();
+        let updates = self.proxy.lock().unwrap().consume_server_updates();
         for update in updates {
             match update {
                 ServerUpdate::LoadChunk(chunk) => {

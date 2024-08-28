@@ -1,9 +1,9 @@
-
 use crafty::camera::Camera;
 use crafty::game_server::GameServer;
-use crafty::proxy::SinglePlayerProxy;
 use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;
+use std::sync::{Arc, Mutex};
+use crafty::single_player_proxy::SinglePlayerProxy;
 
 enum WorldInitializer {
     RANDOM, FLAT, DISK
@@ -27,7 +27,7 @@ fn main() {
     // The client is initialized with an empty world, as it will be the responsibility of the server
     // to provide it with the chunks.
     // Currently, the client 'owns' the proxy, this is really the part that sucks for now.
-    let mut renderer = WorldRenderer::new(proxy, World::empty(), Camera::new());
+    let mut renderer = WorldRenderer::new(Arc::new(Mutex::new(proxy)), World::empty(), Camera::new());
     renderer.login();
     renderer.run();
     /*

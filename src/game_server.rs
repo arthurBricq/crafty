@@ -1,17 +1,12 @@
 use crate::actions::Action;
 use crate::chunk::Chunk;
+use crate::server_update::ServerUpdate;
 use crate::vector::Vector3;
 use crate::world::World;
 use crate::world_dispatcher::WorldDispatcher;
 
-#[derive(Clone)]
-pub enum ServerUpdate {
-    /// Ask the client to load a new chunk
-    LoadChunk(Chunk),
-    None
-}
 
-
+/// The GameServer is the model of the server
 pub struct GameServer {
     /// The full world
     world: World,
@@ -52,6 +47,7 @@ impl GameServer {
 
     /// Called when receiving the position of a new player
     pub fn on_new_position_update(&mut self, player_id: usize, position: Vector3) {
+        println!("New pos for player {player_id}");
         if let Some((chunks_to_send, chunks_to_delete)) = self.world_dispatcher.update_position(player_id, (position.x(), position.z())) {
             let buffer = &mut self.server_updates_buffer[player_id];
             for corner in chunks_to_send {
