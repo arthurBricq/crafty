@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use strum::IntoEnumIterator;
 use crate::cubes_to_draw::{self, CubesToDraw};
+use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 
 pub struct World {
     /// The list of the chunks currently being displayed
@@ -365,46 +366,24 @@ impl World {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-struct SerializedWorld {
-    chunk_corners: Vec<[f32;2]>,
-    cubes_by_kind: HashMap<Block, Vec<[i32;4]>>
-}
-
 impl World {
 
     fn to_json(&self) -> String {
-
         // Provide all the chunks corner
         let chunk_corners: Vec<[f32;2]> = self.chunks.iter().map(|chunk| chunk.corner()).collect();
 
         // Provide all the cubes, sorted by kind
-        let mut all_cubes = HashMap::new();
-        for block_kind in Block::iter() {
-            all_cubes.insert(block_kind, Vec::<([i32; 4])>::new());
-        }
-
+        let mut all_cubes = get_serialize_container();
         for chunk in &self.chunks {
-            for cube in chunk.flattened_iter() {
-                if let Some(cube) = cube {
-                    // we can trust that the block has a container.
-                    let container = all_cubes.get_mut(cube.block()).unwrap();
-                    container.push([
-                        cube.position().x() as i32,
-                        cube.position().y() as i32,
-                        cube.position().z() as i32,
-                        cube.n_neighbors() as i32
-                    ]);
-                }
-            }
+            serialize_one_chunk(&mut all_cubes, chunk);
         }
 
         let world = SerializedWorld {
             chunk_corners,
             cubes_by_kind: all_cubes
         };
-        serde_json::to_string(&world).unwrap()
 
+        serde_json::to_string(&world).unwrap()
     }
 
     fn from_json(data: String) -> Self {
@@ -419,7 +398,7 @@ impl World {
 
         // Build the world
         let mut world = Self {
-            chunks, 
+            chunks,
             cubes_to_draw: None
         };
 
@@ -437,6 +416,7 @@ impl World {
 
         world
     }
+
 }
 
 #[cfg(test)]
@@ -592,5 +572,13 @@ mod tests {
         world.compute_visible_cubes();
         let bottom = Vector3::new(4., 0., 4.);
         assert_eq!(world.chunks[0].cube_at(&bottom).unwrap().is_visible(), false);
+    }
+
+    #[test]
+    fn test_world_persistence() {
+        let world = World::create_new_random_world(2);
+        let serialized = world.to_json();
+        let reconstructed = World::from_json(serialized);
+        assert_eq!(world.chunks, reconstructed.chunks);
     }
 }

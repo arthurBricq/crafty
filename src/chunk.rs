@@ -2,6 +2,8 @@ use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::cube::Cube;
 use crate::vector::Vector3;
+use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
+use strum::IntoEnumIterator;
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 pub type CubeIndex = (usize, usize, usize);
@@ -17,7 +19,7 @@ pub const CHUNK_FLOOR: usize = 9;
 /// * The chunk owns the cube that it contains and is responsible for properly constructing / modifying them.
 ///   As a consequence, it is the position in the `ChunkData` field that encodes the position of each cube.
 ///
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Chunk {
     cubes: ChunkData,
     corner: [f32; 2],
@@ -220,13 +222,43 @@ impl Chunk {
             }
         }
     }
+
+    fn to_json(&self) -> String {
+        let mut all_cubes = get_serialize_container();
+        serialize_one_chunk(&mut all_cubes, self);
+        let world = SerializedWorld {
+            chunk_corners: vec![self.corner],
+            cubes_by_kind: all_cubes
+        };
+        serde_json::to_string(&world).unwrap()
+    }
+
+    fn from_json(data: String) -> Self {
+        // If we end up with stack-overflows, we could not read the entire file but instead provide the reader.
+        let serialized_world: SerializedWorld = serde_json::from_str(data.as_str()).unwrap();
+        let mut chunk = Chunk::new(serialized_world.chunk_corners[0]);
+        for block_kind in Block::iter() {
+            let cubes = serialized_world.cubes_by_kind.get(&block_kind).unwrap();
+            for cube_data in cubes {
+                let x = cube_data[0] as f32;
+                let y = cube_data[1] as f32;
+                let z = cube_data[2] as f32;
+                let neighbors = cube_data[3] as u8;
+                chunk.add_cube(Vector3::new(x,y,z), block_kind, neighbors);
+            }
+        }
+        chunk
+    }
+
+
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::chunk::{Chunk, CHUNK_HEIGHT, CHUNK_SIZE};
     use crate::block_kind::Block::GRASS;
+    use crate::chunk::{Chunk, CHUNK_HEIGHT, CHUNK_SIZE};
     use crate::vector::Vector3;
+    use crate::world::World;
 
     #[test]
     fn test_bounding_area() {
@@ -324,5 +356,13 @@ mod tests {
 
         // In this case, we know the actual number of cubes not visible.
         assert_eq!(chunk.visible_cube_count(), 3 * CHUNK_SIZE * CHUNK_SIZE - (CHUNK_SIZE - 2) * (CHUNK_SIZE - 2));
+    }
+
+    #[test]
+    fn test_chunk_persistence() {
+        let chunk = Chunk::new_for_demo([3., 4.], 5);
+        let serialized = chunk.to_json();
+        let reconstructed = Chunk::from_json(serialized);
+        assert_eq!(chunk, reconstructed);
     }
 }

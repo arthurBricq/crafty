@@ -2,7 +2,7 @@ use crate::block_kind::Block;
 use crate::vector::Vector3;
 
 /// Model of a cube in the 3D world.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Cube {
     position: Vector3,
     block: Block,

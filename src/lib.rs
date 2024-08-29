@@ -20,3 +20,4 @@ pub mod tcp_protocol;
 pub mod tcp_proxy;
 pub mod single_player_proxy;
 pub mod server_update;
+pub mod world_serializer;
