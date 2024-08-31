@@ -16,6 +16,7 @@ pub enum MessageToServer {
 }
 
 impl MessageToServer {
+    /// Parse a list of bytes into a list of MessageToServer
     pub fn parse(data: &[u8], size: usize) -> Vec<Self> {
         // Potentially, there have been several messages squashed together
         // Therefore we make sure to split with '~' which is our message delimiter.
@@ -25,6 +26,7 @@ impl MessageToServer {
         for message in full_message.split('~') {
             if message.len() < HEADER_SIZE { continue; }
             match &message[0..HEADER_SIZE] {
+                // TODO change this stupid header format. Use an integer instead, like it was done for ServerUpdate
                 "login" => messages.push(Login),
                 "posit" => {
                     // Parse the end of the message into a new position
@@ -35,8 +37,7 @@ impl MessageToServer {
                     }
                     messages.push(OnNewPosition(pos));
                 }
-                // TODO change this stupid header format. Use an integer instead.
-                "actio" => todo!(),
+                "actio" => messages.push(OnNewAction(Action::from_str(&message[HEADER_SIZE..]))),
                 _ => {}
             };
         }
@@ -48,7 +49,11 @@ impl MessageToServer {
         match self {
             Login => b"login".to_vec(),
             OnNewPosition(pos) => format!("posit{},{},{}~", pos.x(), pos.y(), pos.z()).into_bytes(),
-            OnNewAction(_) => panic!("not implemented"),
+            OnNewAction(action) => {
+                let mut bytes = b"actio".to_vec();
+                bytes.append(&mut action.to_bytes());
+                bytes
+            },
         }
     }
 }

@@ -67,19 +67,23 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                         MessageToServer::Login => {
                             let id = game.lock().unwrap().login("player") as u8;
                             client_id = Some(id as usize);
-                            ServerUpdate::Response(id)
+                            Some(ServerUpdate::Response(id))
                         }
                         MessageToServer::OnNewPosition(new_pos) => {
                             game.lock().unwrap().on_new_position_update(client_id.unwrap(), new_pos);
-                            ServerUpdate::Response(RESPONSE_OK)
+                            None
                         }
-                        MessageToServer::OnNewAction(_) => {
-                            ServerUpdate::Response(RESPONSE_ERROR)
+                        MessageToServer::OnNewAction(action) => {
+                            println!("Client {client_id:?} has submitted an action: {action:?}");
+                            game.lock().unwrap().on_new_action(client_id.unwrap(), action);
+                            None
                         }
                     };
 
                     // Send the response to the client
-                    stream.write(response.to_bytes().as_slice()).unwrap();
+                    if let Some(response) = response {
+                        stream.write(response.to_bytes().as_slice()).unwrap();
+                    }
                 }
 
             }

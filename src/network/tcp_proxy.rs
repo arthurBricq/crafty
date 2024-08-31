@@ -19,6 +19,8 @@ fn handle_stream_with_server(mut stream: TcpStream, proxy: Arc<Mutex<TcpProxy>>,
     let mut data = [0u8; 2_usize.pow(17)];
     // let mut data = vec![];
 
+    // TODO handle messages that needs an answer, such as 'LOGIN'
+
     // First, send a logging request to the server
     // This is the first thing to do
     // We also keep track of the last message, to know how to parse the answer.
@@ -52,7 +54,6 @@ fn handle_stream_with_server(mut stream: TcpStream, proxy: Arc<Mutex<TcpProxy>>,
 
 /// A connection to the server using a TCP stream over the network
 pub struct TcpProxy {
-    client_id: usize,
     updates_transmitter: Sender<MessageToServer>,
     pending_updates: VecDeque<ServerUpdate>,
 }
@@ -65,7 +66,6 @@ impl TcpProxy {
 
         let proxy = Arc::new(Mutex::new(
             Self {
-                client_id: 0,
                 updates_transmitter: tx,
                 pending_updates: VecDeque::new(),
             }
@@ -91,11 +91,6 @@ impl TcpProxy {
     pub fn push_server_update(&mut self, update: ServerUpdate) {
         self.pending_updates.push_back(update);
     }
-
-    fn set_client_id(&mut self, id: usize) {
-        println!("Client was assigned ID {id} by server.");
-        self.client_id = id;
-    }
 }
 
 impl Proxy for TcpProxy {
@@ -112,7 +107,10 @@ impl Proxy for TcpProxy {
     }
 
     fn on_new_action(&mut self, action: Action) {
-        todo!()
+        match self.updates_transmitter.send(MessageToServer::OnNewAction(action)) {
+            Ok(_) => {}
+            Err(err) => println!("Error while sending: {err}")
+        }
     }
 
     fn consume_server_updates(&mut self) -> Vec<ServerUpdate> {

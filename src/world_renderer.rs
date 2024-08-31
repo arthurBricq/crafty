@@ -378,12 +378,9 @@ impl WorldRenderer {
         let updates = self.proxy.lock().unwrap().consume_server_updates();
         for update in updates {
             match update {
-                ServerUpdate::LoadChunk(chunk) => {
-                    self.world.add_chunk(chunk)
-                }
-                ServerUpdate::Response(code) => {
-                    // There's probably nothing to do here.
-                }
+                ServerUpdate::LoadChunk(chunk) => self.world.add_chunk(chunk),
+                ServerUpdate::Response(_) => {}
+                ServerUpdate::SendAction(action) => self.world.apply_action(&action)
             }
         }
     }

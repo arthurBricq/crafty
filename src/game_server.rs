@@ -1,6 +1,7 @@
 use crate::actions::Action;
 use crate::chunk::Chunk;
 use crate::network::server_update::ServerUpdate;
+use crate::network::server_update::ServerUpdate::SendAction;
 use crate::vector::Vector3;
 use crate::world::World;
 use crate::world_dispatcher::WorldDispatcher;
@@ -61,7 +62,15 @@ impl GameServer {
     }
 
     pub fn on_new_action(&mut self, client: usize, action: Action) {
+        // Edit the world of the server
         self.world.apply_action(&action);
+        // Forward the action to all OTHER clients
+        for i in 0..self.n_players {
+            if i != client {
+                self.server_updates_buffer[i].push(SendAction(action.clone()))
+            }
+        }
+
     }
 
     /// Returns the list of updates that the server sends to the client.

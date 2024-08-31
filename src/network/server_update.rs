@@ -1,6 +1,7 @@
 use crate::chunk::Chunk;
-use crate::network::server_update::ServerUpdate::{LoadChunk, Response};
+use crate::network::server_update::ServerUpdate::{LoadChunk, Response, SendAction};
 use std::str::from_utf8;
+use crate::actions::Action;
 
 pub const RESPONSE_OK: u8 = 100;
 pub const RESPONSE_ERROR: u8 = 101;
@@ -11,13 +12,15 @@ pub enum ServerUpdate {
     /// Ask the client to load a new chunk
     LoadChunk(Chunk),
     Response(u8),
+    SendAction(Action)
 }
 
 impl ServerUpdate {
     fn to_u8(&self) -> u8 {
         match self {
             LoadChunk(_) => 0,
-            Response(_) => 1
+            Response(_) => 1,
+            SendAction(_) => 2
         }
     }
 
@@ -25,7 +28,8 @@ impl ServerUpdate {
         // Compute the data inside the message
         let mut data = match self {
             LoadChunk(chunk) => chunk.to_json().into_bytes(),
-            Response(code) => vec![*code]
+            Response(code) => vec![*code],
+            SendAction(action) => action.to_bytes()
         };
 
         // First bytes contains the type
@@ -71,6 +75,12 @@ impl ServerUpdate {
                 }
                 1 => {
                     to_return.push(Response(bytes[start + 5]))
+                }
+                2 => {
+                    let as_json = from_utf8(&bytes[start + 5..start + 5 + len]).unwrap();
+                    let action = Action::from_str(as_json);
+                    to_return.push(SendAction(action));
+
                 }
                 _ => eprintln!("Cannot build server update from code {code}")
             }

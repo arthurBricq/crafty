@@ -1,8 +1,9 @@
+use serde::{Deserialize, Serialize};
 use crate::block_kind::Block;
 use crate::vector::Vector3;
 
 /// An action is something that will alter the world
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Action {
     /// Destroys a cube of the world
     Destroy {
@@ -19,7 +20,6 @@ pub enum Action {
 impl Action {
     /// Returns the position where to add a new cube, given the position of the cube that is touched.
     pub fn position_to_generate_cube(touched_cube: &Vector3) -> Vector3 {
-        
         let cube = touched_cube.to_cube_coordinates();
         let cube_center = cube + Vector3::new(0.5, 0.5, 0.5);
         let diff = touched_cube - &cube_center;
@@ -56,5 +56,14 @@ impl Action {
             }
             _ => panic!("Not sure why you have arrived here... diff = {diff:?}"),
         }
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let as_json = serde_json::to_string(self).unwrap();
+        as_json.into_bytes()
+    }
+
+    pub fn from_str(text: &str) -> Self {
+        serde_json::from_str(text).unwrap()
     }
 }
