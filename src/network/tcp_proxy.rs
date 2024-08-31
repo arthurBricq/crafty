@@ -125,4 +125,8 @@ impl Proxy for TcpProxy {
         }
         tmp
     }
+
+    fn loading_delay(&self) -> u64 {
+        3000
+    }
 }

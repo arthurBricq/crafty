@@ -36,4 +36,7 @@ impl Proxy for SinglePlayerProxy {
         self.server.consume_updates(self.client_id)
     }
 
+    fn loading_delay(&self) -> u64 {
+        0
+    }
 }

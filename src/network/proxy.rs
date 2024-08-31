@@ -8,4 +8,6 @@ pub trait Proxy {
     fn send_position_update(&mut self, position: Vector3);
     fn on_new_action(&mut self, action: Action);
     fn consume_server_updates(&mut self) -> Vec<ServerUpdate>;
+    /// Returns the delay to wait for at startup
+    fn loading_delay(&self) -> u64;
 }

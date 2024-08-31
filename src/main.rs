@@ -11,7 +11,7 @@ enum WorldInitializer {
 
 fn main() {
     // Create the initial world
-    let init = WorldInitializer::RANDOM;
+    let init = WorldInitializer::FLAT;
     let world = match init  {
         WorldInitializer::RANDOM => World::create_new_random_world(10),
         WorldInitializer::FLAT => World::create_new_flat_world(10),

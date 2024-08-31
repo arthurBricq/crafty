@@ -123,7 +123,7 @@ impl WorldRenderer {
 
         // Initially, ask for server updates
         self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
-        thread::sleep(Duration::from_millis(3000));
+        thread::sleep(Duration::from_millis(self.proxy.lock().unwrap().loading_delay()));
         self.handle_server_updates();
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
