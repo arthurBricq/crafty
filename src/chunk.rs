@@ -223,7 +223,7 @@ impl Chunk {
         }
     }
 
-    fn to_json(&self) -> String {
+    pub fn to_json(&self) -> String {
         let mut all_cubes = get_serialize_container();
         serialize_one_chunk(&mut all_cubes, self);
         let world = SerializedWorld {
@@ -233,9 +233,9 @@ impl Chunk {
         serde_json::to_string(&world).unwrap()
     }
 
-    fn from_json(data: String) -> Self {
+    pub fn from_json(data: &str) -> Self {
         // If we end up with stack-overflows, we could not read the entire file but instead provide the reader.
-        let serialized_world: SerializedWorld = serde_json::from_str(data.as_str()).unwrap();
+        let serialized_world: SerializedWorld = serde_json::from_str(data).unwrap();
         let mut chunk = Chunk::new(serialized_world.chunk_corners[0]);
         for block_kind in Block::iter() {
             let cubes = serialized_world.cubes_by_kind.get(&block_kind).unwrap();
@@ -249,7 +249,6 @@ impl Chunk {
         }
         chunk
     }
-
 
 }
 
@@ -362,7 +361,7 @@ mod tests {
     fn test_chunk_persistence() {
         let chunk = Chunk::new_for_demo([3., 4.], 5);
         let serialized = chunk.to_json();
-        let reconstructed = Chunk::from_json(serialized);
+        let reconstructed = Chunk::from_json(serialized.as_str());
         assert_eq!(chunk, reconstructed);
     }
 }

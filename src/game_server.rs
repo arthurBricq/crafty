@@ -1,6 +1,6 @@
 use crate::actions::Action;
 use crate::chunk::Chunk;
-use crate::server_update::ServerUpdate;
+use crate::network::server_update::ServerUpdate;
 use crate::vector::Vector3;
 use crate::world::World;
 use crate::world_dispatcher::WorldDispatcher;
@@ -28,7 +28,7 @@ impl GameServer {
             world,
             n_players: 0,
             world_dispatcher: WorldDispatcher::new(),
-            server_updates_buffer: Vec::new()
+            server_updates_buffer: Vec::new(),
         }
     }
 
@@ -47,7 +47,6 @@ impl GameServer {
 
     /// Called when receiving the position of a new player
     pub fn on_new_position_update(&mut self, player_id: usize, position: Vector3) {
-        println!("New pos for player {player_id}");
         if let Some((chunks_to_send, chunks_to_delete)) = self.world_dispatcher.update_position(player_id, (position.x(), position.z())) {
             let buffer = &mut self.server_updates_buffer[player_id];
             for corner in chunks_to_send {
@@ -67,7 +66,8 @@ impl GameServer {
 
     /// Returns the list of updates that the server sends to the client.
     pub fn consume_updates(&mut self, player_id: usize) -> Vec<ServerUpdate> {
-        let updates  = self.server_updates_buffer[player_id].clone();
+        // if player_id < self.n_players {return vec![]}
+        let updates = self.server_updates_buffer[player_id].clone();
         self.server_updates_buffer[player_id] = Vec::new();
         updates
     }

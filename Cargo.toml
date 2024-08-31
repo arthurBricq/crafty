@@ -9,11 +9,11 @@ path = "src/main.rs"
 
 [[bin]]
 name = "server"
-path = "src/tcp_server.rs"
+path = "src/main_server.rs"
 
 [[bin]]
 name = "client"
-path = "src/tcp_client.rs"
+path = "src/main_client.rs"
 
 
 

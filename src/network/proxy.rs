@@ -1,8 +1,8 @@
 use crate::actions::Action;
-use crate::server_update::ServerUpdate;
+use crate::network::server_update::ServerUpdate;
 use crate::vector::Vector3;
 
-/// Defines the interface that a client can use to communicate with the game server
+/// Defines the interface that a client use to communicate with the game server
 pub trait Proxy {
     fn login(&mut self);
     fn send_position_update(&mut self, position: Vector3);

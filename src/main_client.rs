@@ -1,6 +1,5 @@
-use std::sync::{Arc, Mutex};
 use crafty::camera::Camera;
-use crafty::tcp_proxy::TcpProxy;
+use crafty::network::tcp_proxy::TcpProxy;
 use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;
 

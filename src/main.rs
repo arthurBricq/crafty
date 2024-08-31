@@ -3,7 +3,7 @@ use crafty::game_server::GameServer;
 use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;
 use std::sync::{Arc, Mutex};
-use crafty::single_player_proxy::SinglePlayerProxy;
+use crafty::network::single_player_proxy::SinglePlayerProxy;
 
 enum WorldInitializer {
     RANDOM, FLAT, DISK

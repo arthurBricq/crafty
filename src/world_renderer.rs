@@ -11,14 +11,14 @@ use crate::block_kind::Block;
 use crate::block_kind::Block::COBBELSTONE;
 use crate::camera::{Camera, MotionState};
 use crate::fps::FpsManager;
-use crate::server_update::ServerUpdate;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::graphics::font::GLChar;
 use crate::graphics::hud_renderer::HUDRenderer;
 use crate::graphics::menu_debug::DebugData;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
+use crate::network::server_update::ServerUpdate;
 use crate::player_items::PlayerItems;
-use crate::proxy::Proxy;
+use crate::network::proxy::Proxy;
 use crate::world::World;
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
@@ -38,7 +38,7 @@ pub struct WorldRenderer {
     /// Currently displayed world
     world: World,
     /// Position and orientation of the player
-    cam:   Camera,
+    cam: Camera,
     /// Items of the player
     items: PlayerItems,
 
@@ -55,7 +55,6 @@ pub struct WorldRenderer {
 }
 
 impl WorldRenderer {
-
     pub fn new(proxy: Arc<Mutex<dyn Proxy>>, world: World, cam: Camera) -> Self {
         Self {
             proxy,
@@ -66,7 +65,7 @@ impl WorldRenderer {
             items: PlayerItems::new(),
             is_left_clicking: false,
             click_time: 0.0,
-            fullscreen: false
+            fullscreen: false,
         }
     }
 
@@ -84,7 +83,7 @@ impl WorldRenderer {
             .build(&event_loop);
 
         window.set_cursor_visible(false);
-        
+
         // Add some damn items
         for _ in 0..50 {
             self.items.collect(COBBELSTONE);
@@ -92,10 +91,10 @@ impl WorldRenderer {
 
         // Try to lock the mouse to the window, this doen't work for all OS
         let lock_mouse = window.set_cursor_grab(CursorGrabMode::Confined)
-                               .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
-        if lock_mouse.is_err() { println!("Can't lock")
+            .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
+        if lock_mouse.is_err() {
+            println!("Can't lock")
         }
-
 
         // Construct the buffer of vertices (for single objects, we use OpenGL's instancing to multiply them)
         let cube_vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
@@ -121,10 +120,10 @@ impl WorldRenderer {
 
         // Last details before running
         self.hud_renderer.set_player_items(self.items.get_current_items());
-        
+
         // Initially, ask for server updates
         self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
-        thread::sleep(Duration::from_millis(1000));
+        thread::sleep(Duration::from_millis(3000));
         self.handle_server_updates();
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
@@ -139,7 +138,7 @@ impl WorldRenderer {
                     winit::event::WindowEvent::CloseRequested => window_target.exit(),
                     winit::event::WindowEvent::Resized(_) => {
                         self.hud_renderer.set_dimension(display.get_framebuffer_dimensions());
-                    },
+                    }
                     winit::event::WindowEvent::RedrawRequested => {
                         let mut target = display.draw();
                         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
@@ -150,7 +149,7 @@ impl WorldRenderer {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
-                                self.apply_action(Destroy {at: self.cam.touched_cube().unwrap().to_cube_coordinates()});
+                                self.apply_action(Destroy { at: self.cam.touched_cube().unwrap().to_cube_coordinates() });
                                 self.is_left_clicking = false;
                                 self.click_time = 0.;
                             }
@@ -170,9 +169,9 @@ impl WorldRenderer {
                             self.hud_renderer
                                 .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation(), self.world.number_cubes_rendered()));
                         }
-                        
+
                         // I) Draw the cubes
-                        
+
                         // Configure the GPU to do Depth testing (with a depth buffer)
                         let params = glium::DrawParameters {
                             depth: glium::Depth {
@@ -191,7 +190,7 @@ impl WorldRenderer {
                             selected_texture: &selected_texture,
                             selected_intensity: if self.is_left_clicking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
                         };
-                        
+
                         // We use OpenGL's instancing feature which allows us to render huge amounts of
                         // cubes at once.
                         // OpenGL instancing = instead of setting 1000 times different uniforms, you give once 1000 attributes
@@ -210,7 +209,7 @@ impl WorldRenderer {
                             font_offsets: GLChar::get_offset(),
                             textures: cubes_texture_sampler
                         };
-                        
+
                         // We change the draw parameters here to allow transparency.
                         let draw_parameters = glium::draw_parameters::DrawParameters {
                             blend: glium::draw_parameters::Blend::alpha_blending(),
@@ -233,7 +232,7 @@ impl WorldRenderer {
                 winit::event::Event::DeviceEvent { event, .. } => match event {
                     winit::event::DeviceEvent::Key(key) => self.handle_key_event(key, &window),
                     winit::event::DeviceEvent::Motion { axis, value } => self.handle_motion_event(axis, value),
-                    winit::event::DeviceEvent::Button {button, state} => self.handle_button_event(button, state),
+                    winit::event::DeviceEvent::Button { button, state } => self.handle_button_event(button, state),
                     _ => {}
                 }
                 _ => (),
@@ -283,7 +282,7 @@ impl WorldRenderer {
                     KeyCode::Space => self.cam.jump(),
                     _ => {}
                 }
-            },
+            }
             _ => {}
         }
 
@@ -301,17 +300,17 @@ impl WorldRenderer {
                         }
                         KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F11 => self.toggle_fullscreen(&window),
-                        KeyCode::F3  => self.hud_renderer.toggle_debug_menu(),
+                        KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
                         KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
                         KeyCode::Escape => std::process::exit(1),
                         _ => {}
                     }
-                },
+                }
                 PhysicalKey::Unidentified(_) => {}
             }
         }
     }
-    
+
     fn apply_action(&mut self, action: Action) {
         // Handle items
         match action {
@@ -319,16 +318,16 @@ impl WorldRenderer {
                 if let Some(block) = self.world.block_at(&at) {
                     self.items.collect(block);
                 }
-            },
+            }
             Add { at, block } => {
                 self.items.consume(block);
             }
         }
         self.hud_renderer.set_player_items(self.items.get_current_items());
-        
+
         // Handle cubes
         self.world.apply_action(&action);
-        
+
         // Forward to server
         self.proxy.lock().unwrap().on_new_action(action);
     }
@@ -349,7 +348,7 @@ impl WorldRenderer {
                 if let Some(block) = self.items.get_current_block() {
                     self.apply_action(Action::Add {
                         at: Action::position_to_generate_cube(&touched),
-                        block
+                        block,
                     });
                 }
             }
@@ -382,7 +381,9 @@ impl WorldRenderer {
                 ServerUpdate::LoadChunk(chunk) => {
                     self.world.add_chunk(chunk)
                 }
-                ServerUpdate::None => {}
+                ServerUpdate::Response(code) => {
+                    // There's probably nothing to do here.
+                }
             }
         }
     }

@@ -1,8 +1,7 @@
-use std::str::from_utf8;
 use crate::actions::Action;
-use crate::block_kind::Block::COBBELSTONE;
-use crate::tcp_protocol::MessageToServer::{Login, OnNewAction, OnNewPosition};
+use crate::network::message_to_server::MessageToServer::{Login, OnNewAction, OnNewPosition};
 use crate::vector::Vector3;
+use std::str::from_utf8;
 
 const HEADER_SIZE: usize = 5;
 
@@ -21,10 +20,10 @@ impl MessageToServer {
         // Potentially, there have been several messages squashed together
         // Therefore we make sure to split with '~' which is our message delimiter.
         // Note: this function is probably not well optimized. We might reconsider its implementation in the future.
-        let full_message = from_utf8( &data[0..size]).unwrap();
+        let full_message = from_utf8(&data[0..size]).unwrap();
         let mut messages = vec![];
         for message in full_message.split('~') {
-            if message.len() < HEADER_SIZE {continue}
+            if message.len() < HEADER_SIZE { continue; }
             match &message[0..HEADER_SIZE] {
                 "login" => messages.push(Login),
                 "posit" => {
@@ -35,8 +34,8 @@ impl MessageToServer {
                         pos[i] = part.parse::<f32>().unwrap();
                     }
                     messages.push(OnNewPosition(pos));
-                },
-                // TODO
+                }
+                // TODO change this stupid header format. Use an integer instead.
                 "actio" => todo!(),
                 _ => {}
             };
@@ -54,50 +53,13 @@ impl MessageToServer {
     }
 }
 
-/// The server responds to every request using a single u8
-/// This enum holds the meaning of some answers
-#[repr(u8)]
-pub enum Response {
-    OK,
-    ERROR,
-    CODE(u8),
-}
-
-impl Response {
-    pub fn parse(data: &[u8]) -> Option<Self> {
-        if data.len() != 1 {
-            panic!("The answer does not have the right size: {}", data.len());
-        }
-
-        let answer = data[0];
-
-        // Going from u8 to enum is not part of Rust' std...
-        // So we have to copy and paste every possibility here.
-        match answer {
-            100 => Some(Self::OK),
-            101 => Some(Self::ERROR),
-            _ => Some(Self::CODE(answer))
-        }
-    }
-    
-    pub fn to_u8(&self) -> u8 {
-        match self {
-            Response::OK => 100,
-            Response::ERROR => 101,
-            Response::CODE(r) => *r
-        }
-    }
-}
-
-
-
 #[cfg(test)]
 mod tests {
-    use crate::tcp_protocol::MessageToServer;
+    use crate::network::message_to_server::MessageToServer;
     use crate::vector::Vector3;
 
     fn test_integrity(m: MessageToServer) {
-        let bytes= m.to_bytes();
+        let bytes = m.to_bytes();
         let parsed = MessageToServer::parse(bytes.as_slice(), bytes.len());
         assert_eq!(m, parsed[0]);
     }
