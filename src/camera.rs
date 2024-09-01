@@ -116,20 +116,46 @@ impl Camera {
 	    dbg!(self.position);
 	}
 
-	let target = Self::make_aabb(&(self.position + self.velocity * elapsed.as_secs_f32()));
+	let mut dt = elapsed.as_secs_f32();
+	dt = dt - self.move_with_collision(dt, world);
+	if dt > 0. {
+	    dt = dt - self.move_with_collision(dt, world);
+	}
+	// TODO we may want to do it a third time, to handle x-y-z diagonal
+	// movements. However, there are no slopes in the cubes for now, so it
+	// is not necessary
+	
+	// update in_air
+	let displacement = Vector3::new(0., -1e-5, 0.);
+	self.in_air = ! world.collides(&Self::make_aabb(&(self.position + displacement)));
+
+	dbg!(self.in_air);
+
+	if !self.in_air {
+	    // need to reset vertical velocity
+	    self.velocity[1] = 0.; 
+	}
+	
+        self.compute_selected_cube(world);
+    }
+
+    fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
+	let target = Self::make_aabb(&(self.position + self.velocity * dt));
 	dbg!(&target);
 
 	let (collision_time, normal) =
 	    world.collision_time(&Self::make_aabb(&self.position), &target, &self.velocity);
-	if collision_time >= elapsed.as_secs_f32() {
+	if collision_time >= dt {
 	    // can move straight away
 	    dbg!("can move straight away");
-	    self.position += self.velocity * elapsed.as_secs_f32(); 
+	    self.position += self.velocity * dt;
+
+	    dt
 	}
 	else {
 	    dbg!("could not move at best:");
 	    dbg!(collision_time);
-	    dbg!(elapsed.as_secs_f32());
+	    dbg!(dt);
 	    dbg!(self.velocity);
 	    dbg!(self.position);
 	    dbg!(self.velocity * (collision_time - 1e-6));
@@ -151,22 +177,11 @@ impl Camera {
 	    self.velocity = self.velocity - vnormal;
 
 	    dbg!(self.velocity);
+
+	    collision_time
 	}
-
-	// update in_air
-	let displacement = Vector3::new(0., -1e-5, 0.);
-	self.in_air = ! world.collides(&Self::make_aabb(&(self.position + displacement)));
-
-	dbg!(self.in_air);
-
-	if !self.in_air {
-	    // need to reset vertical velocity
-	    self.velocity[1] = 0.; 
-	}
-	
-        self.compute_selected_cube(world);
     }
-
+    
     fn make_aabb(position: &Vector3) -> AABB {
 	let diameter = 0.5;
 	let height = 1.8;
