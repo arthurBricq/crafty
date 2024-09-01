@@ -70,14 +70,7 @@ impl Cube {
     }
 
     pub fn collides(&self, aabb: &AABB) -> bool {
-	if self.aabb().collides(&aabb) {
-	    dbg!("collides with cube");
-	    dbg!(self);
-	    dbg!(aabb);
-
-	    return true
-	}
-	false
+	self.aabb().collides(&aabb)
     }
 
     pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
@@ -94,8 +87,6 @@ impl Cube {
 	if !target.collides(&cube_aabb) {
 	    return (f32::MAX, Vector3::empty())
 	}
-	
-	dbg!("previous collision was target collision check");
 	
 	// compute collision time in each direction
 	let mut tx = if velocity[0] > 0. { (cube_aabb.west - aabb.east) / velocity[0]}
