@@ -44,8 +44,8 @@ pub struct Camera {
     /// If there is no cube, it is set to none
     touched_cube: Option<Vector3>,
 
-    // TODO tmp
     in_air: bool,
+    jump_time: f32, // > 0 if we have to apply jump force
 }
 
 impl Camera {
@@ -62,6 +62,7 @@ impl Camera {
             gravity_handler: GravityHandler::new(),
             touched_cube: None,
 	    in_air: true, // will be updated every frame anyway
+	    jump_time: 0.,
         }
     }
 
@@ -94,10 +95,17 @@ impl Camera {
         let f = self.ground_direction_forward();
         let l = self.ground_direction_right();
         let mut next_pos = self.position.clone();
+	let mut dt = elapsed.as_secs_f32();
 
 	// add gravity
 	if self.in_air {
-	    self.velocity += Vector3::new(0., -9.81, 0.) * elapsed.as_secs_f32();
+	    self.velocity += Vector3::new(0., -9.81, 0.) * dt;
+	}
+
+	// add jump force
+	if self.jump_time > 0. {
+	    self.velocity += Vector3::new(0., 4. * 9.81, 0.) * dt;
+	    self.jump_time -= dt;
 	}
 	
 	// TODO will have to do something cleaner when other sources of
@@ -198,6 +206,9 @@ impl Camera {
     pub fn jump(&mut self) {
 	// TODO implement it
         // self.gravity_handler.jump();
+	if !self.in_air {
+	    self.jump_time = 0.1;
+	}
     }
 
     pub fn up(&mut self) {
