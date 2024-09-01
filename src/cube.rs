@@ -69,7 +69,17 @@ impl Cube {
 	}
     }
 
-    pub fn collision(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
+    pub fn collides(&self, aabb: &AABB) -> bool {
+	if self.aabb().collides(&aabb) {
+	    dbg!("collides with cube");
+	    dbg!(self);
+
+	    return true
+	}
+	false
+    }
+
+    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
 	let cube_aabb = self.aabb();
 	
 	if aabb.collides(&cube_aabb) {
@@ -94,14 +104,6 @@ impl Cube {
 	if ty <= 0. { ty = f32::MAX }
 	if tz <= 0. { tz = f32::MAX }
 
-	if tx < 1e3 {
-	    dbg!(self);
-	    dbg!(self.position);
-	    dbg!(velocity);
-	    dbg!([tx, ty, tz]);
-	}
-	
-	// *[tx, ty, tz].iter().min().unwrap()
 	tx.min(ty.min(tz))
     }
 }

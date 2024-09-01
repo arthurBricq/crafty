@@ -158,13 +158,23 @@ impl World {
         positions
     }
 
+    pub fn collides(&self, aabb: &AABB) -> bool {
+	for chunk in &self.chunks {
+	    if chunk.collides(aabb) {
+		return true
+	    }
+	}
+
+	false
+    }
+    
     // now returns collision time; f32::MAX if no collision
-    pub fn collision(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
+    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
 	// find with which chunks it is colliding
 	let mut collision_time = f32::MAX; 
 	// TODO be smarter
 	for chunk in &self.chunks {
-	    let chunk_collision_time = chunk.collision(aabb, target, velocity);
+	    let chunk_collision_time = chunk.collision_time(aabb, target, velocity);
 
 	    if chunk_collision_time < collision_time {
 		collision_time = chunk_collision_time;

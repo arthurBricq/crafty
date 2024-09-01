@@ -45,16 +45,14 @@ pub struct Camera {
     touched_cube: Option<Vector3>,
 
     // TODO tmp
-    // in seconds
-    // if > 0, need to apply the jump acceleration
-    jump_time: f32,
+    in_air: bool,
 }
 
 impl Camera {
     /// based on right hand perspective look along the positive z-Axis
     pub fn new() -> Self {
         Self {
-            position: Vector3::new(4.0, 1. + CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
+            position: Vector3::new(4.0, 2. + CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
 	    velocity: Vector3::new(0., 0., 0.),
             rotation: [PI, 0.0],
             w_pressed: false,
@@ -63,7 +61,7 @@ impl Camera {
             d_pressed: false,
             gravity_handler: GravityHandler::new(),
             touched_cube: None,
-	    jump_time: -1., // to make sure we are not jumping
+	    in_air: true, // will be updated every frame anyway
         }
     }
 
@@ -97,17 +95,43 @@ impl Camera {
         let l = self.ground_direction_right();
         let mut next_pos = self.position.clone();
 
-	self.velocity = self.controls_velocity();
+	// add gravity
+	if self.in_air {
+	    self.velocity += Vector3::new(0., -9.81, 0.) * elapsed.as_secs_f32();
+	}
+	
+	// TODO perhaps there is something cleaner to do
+	{
+	    let controls_vel = self.controls_velocity();
+	    self.velocity[0] = controls_vel[0];
+	    self.velocity[2] = controls_vel[2];
+	}
 
-	let target = Self::make_aabb(&(self.velocity * elapsed.as_secs_f32()));
-	let collision_time = world.collision(&Self::make_aabb(&self.position), &target, &self.velocity);
-	dbg!(collision_time);
+	let target = Self::make_aabb(&(self.position + self.velocity * elapsed.as_secs_f32()));
+	let collision_time = world.collision_time(&Self::make_aabb(&self.position), &target, &self.velocity);
 	if collision_time >= elapsed.as_secs_f32() {
 	    // can move straight away
 	    self.position += self.velocity * elapsed.as_secs_f32(); 
 	}
 	else {
+	    dbg!("could not move at best:");
+	    dbg!(collision_time);
+	    dbg!(elapsed.as_secs_f32());
+	    dbg!(self.velocity);
+	    dbg!(self.position);
+	    dbg!(self.velocity * (collision_time - 1e-6));
+	    
 	    self.position += self.velocity * (collision_time - 1e-6);
+	}
+
+	// update in_air
+	let displacement = Vector3::new(0., -1e-5, 0.);
+	self.in_air = ! world.collides(&Self::make_aabb(&(self.position + displacement)));
+
+	dbg!(self.in_air);
+	if !self.in_air {
+	    // need to reset vertical velocity
+	    self.velocity[1] = 0.; 
 	}
 	
         self.compute_selected_cube(world);
@@ -156,8 +180,7 @@ impl Camera {
     }
 
     pub fn jump(&mut self) {
-	// TODO prevent doing it mid-air
-	self.jump_time = 1.;
+	// TODO implement it
         // self.gravity_handler.jump();
     }
 

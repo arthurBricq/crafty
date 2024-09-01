@@ -209,7 +209,23 @@ impl Chunk {
         }
     }
 
-    pub fn collision(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
+    pub fn collides(&self, aabb: &AABB) -> bool {
+	for k in 0..CHUNK_HEIGHT {
+            for i in 0..CHUNK_SIZE {
+                for j in 0..CHUNK_SIZE {
+                    if let Some(cube) = self.cubes[k][i][j] {
+			if cube.collides(aabb) {
+			    return true
+			}
+                    }
+                }
+            }
+        }
+	
+	false
+    }
+
+    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
 	// TODO do it the dumb way for now, i.e. loop on all the cubes
 	let mut collision_time = f32::MAX;
 	
@@ -217,7 +233,7 @@ impl Chunk {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if let Some(cube) = self.cubes[k][i][j] {
-			let cube_collision_time = cube.collision(aabb, target, velocity);
+			let cube_collision_time = cube.collision_time(aabb, target, velocity);
 			
 			if cube_collision_time < collision_time {
 			    collision_time = cube_collision_time;

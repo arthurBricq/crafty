@@ -12,14 +12,14 @@ pub struct AABB {
 
 impl AABB {
     pub fn collides(&self, aabb: &AABB) -> bool {
-	self.east <= aabb.west &&
-	    self.west >= aabb.east &&
+	self.west <= aabb.east &&
+	    self.east >= aabb.west &&
 	    
-	    self.top <= aabb.bottom &&
-	    self.bottom >= aabb.top &&
+	    self.bottom <= aabb.top &&
+	    self.top >= aabb.bottom &&
 	    
-	    self.north <= aabb.south &&
-	    self.south >= aabb.north
+	    self.south <= aabb.north &&
+	    self.north >= aabb.south
     }
 }
 
@@ -52,5 +52,33 @@ impl DisplacementStatus {
 	    Self::from_scalar(displacement[1]),
 	    Self::from_scalar(displacement[2])
 	]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::aabb::*;
+
+    #[test]
+    fn test_aabb_collision() {
+	let aabb = AABB {
+	    north: 3.,
+	    south: 2.,
+	    top: 2.,
+	    bottom: 1.,
+	    east: 4.,
+	    west: 3.,
+	};
+
+	let aabb2 = AABB {
+	    north: 3.25,
+	    south: 2.75,
+	    top: 2.832886,
+	    bottom: 1.032886,
+	    east: 4.25,
+	    west: 3.75,
+	};
+
+	assert!(aabb.collides(&aabb2));
     }
 }
