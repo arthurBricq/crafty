@@ -131,11 +131,6 @@ impl Camera {
 
 	dbg!(self.in_air);
 
-	if !self.in_air {
-	    // need to reset vertical velocity
-	    self.velocity[1] = 0.; 
-	}
-	
         self.compute_selected_cube(world);
     }
 
