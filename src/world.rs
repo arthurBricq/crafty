@@ -169,19 +169,24 @@ impl World {
     }
     
     // now returns collision time; f32::MAX if no collision
-    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
+    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+			  -> (f32, Vector3) {
 	// find with which chunks it is colliding
-	let mut collision_time = f32::MAX; 
+	let mut collision_time = f32::MAX;
+	let mut normal = Vector3::empty();
+	
 	// TODO be smarter
 	for chunk in &self.chunks {
-	    let chunk_collision_time = chunk.collision_time(aabb, target, velocity);
+	    let (chunk_collision_time, chunk_normal) =
+		chunk.collision_time(aabb, target, velocity);
 
 	    if chunk_collision_time < collision_time {
 		collision_time = chunk_collision_time;
+		normal = chunk_normal;
 	    }
         }
 
-	collision_time
+	(collision_time, normal)
     }
     
     /// Returns true if there is a cube at this position

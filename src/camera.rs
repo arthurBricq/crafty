@@ -107,10 +107,23 @@ impl Camera {
 	    self.velocity[2] = controls_vel[2];
 	}
 
+	// need to make sure velocity * dt is not too big
+	{
+	    let dx = self.velocity * elapsed.as_secs_f32();
+	    dbg!(dx);
+	    dbg!("starting checks for position");
+	    dbg!(self.velocity * elapsed.as_secs_f32());
+	    dbg!(self.position);
+	}
+
 	let target = Self::make_aabb(&(self.position + self.velocity * elapsed.as_secs_f32()));
-	let collision_time = world.collision_time(&Self::make_aabb(&self.position), &target, &self.velocity);
+	dbg!(&target);
+
+	let (collision_time, normal) =
+	    world.collision_time(&Self::make_aabb(&self.position), &target, &self.velocity);
 	if collision_time >= elapsed.as_secs_f32() {
 	    // can move straight away
+	    dbg!("can move straight away");
 	    self.position += self.velocity * elapsed.as_secs_f32(); 
 	}
 	else {
@@ -120,8 +133,24 @@ impl Camera {
 	    dbg!(self.velocity);
 	    dbg!(self.position);
 	    dbg!(self.velocity * (collision_time - 1e-6));
+	    dbg!(normal);
+
+	    // we want to put a margin. Before, I used 1e-6 seconds, but we
+	    // actually want a fixed displacement, not a fixed time, hence the
+	    // complicated formula
 	    
-	    self.position += self.velocity * (collision_time - 1e-6);
+	    // TODO if we are here, we can assume the velocity is nonzero I
+	    // think, but I am not sure
+	    let dtmargin = 1e-5 / self.velocity.norm();
+	    dbg!(dtmargin); // used to be 1e-6
+	    self.position += self.velocity * (collision_time - dtmargin);
+	    dbg!(self.position);
+
+	    // remove component of velocity along the normal
+	    let vnormal = normal * normal.dot(&self.velocity);
+	    self.velocity = self.velocity - vnormal;
+
+	    dbg!(self.velocity);
 	}
 
 	// update in_air
@@ -129,6 +158,7 @@ impl Camera {
 	self.in_air = ! world.collides(&Self::make_aabb(&(self.position + displacement)));
 
 	dbg!(self.in_air);
+
 	if !self.in_air {
 	    // need to reset vertical velocity
 	    self.velocity[1] = 0.; 

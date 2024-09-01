@@ -225,25 +225,29 @@ impl Chunk {
 	false
     }
 
-    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
+    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+			  -> (f32, Vector3) {
 	// TODO do it the dumb way for now, i.e. loop on all the cubes
 	let mut collision_time = f32::MAX;
+	let mut normal = Vector3::empty();
 	
 	for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if let Some(cube) = self.cubes[k][i][j] {
-			let cube_collision_time = cube.collision_time(aabb, target, velocity);
+			let (cube_collision_time, cube_normal) =
+			    cube.collision_time(aabb, target, velocity);
 			
 			if cube_collision_time < collision_time {
 			    collision_time = cube_collision_time;
+			    normal = cube_normal;
 			}
                     }
                 }
             }
         }
 	
-	collision_time
+	(collision_time, normal)
     }
 }
 

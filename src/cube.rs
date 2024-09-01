@@ -73,30 +73,37 @@ impl Cube {
 	if self.aabb().collides(&aabb) {
 	    dbg!("collides with cube");
 	    dbg!(self);
+	    dbg!(aabb);
 
 	    return true
 	}
 	false
     }
 
-    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3) -> f32 {
+    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+			  -> (f32, Vector3) {
 	let cube_aabb = self.aabb();
 	
 	if aabb.collides(&cube_aabb) {
+	    dbg!(&aabb);
+	    dbg!(&cube_aabb);
 	    panic!("should not collide before !");
 	}
 
 	// if no collision, no need to bother
 	if !target.collides(&cube_aabb) {
-	    return f32::MAX
+	    return (f32::MAX, Vector3::empty())
 	}
-
+	
+	dbg!("previous collision was target collision check");
+	
 	// compute collision time in each direction
-	let mut tx = if velocity[0] > 0. { (aabb.west - cube_aabb.east) / velocity[0]}
+	let mut tx = if velocity[0] > 0. { (cube_aabb.west - aabb.east) / velocity[0]}
 	else { (cube_aabb.east - aabb.west) / velocity[0] };
-	let mut ty = if velocity[1] > 0. { (aabb.bottom - cube_aabb.top) / velocity[1]}
+	let mut ty = if velocity[1] > 0. { (cube_aabb.bottom - aabb.top) / velocity[1]}
 	else { (cube_aabb.top - aabb.bottom) / velocity[1] };
-	let mut tz = if velocity[2] > 0. { (aabb.south - cube_aabb.north) / velocity[2]}
+	
+	let mut tz = if velocity[2] > 0. { (cube_aabb.south - aabb.north) / velocity[2]}
 	else { (cube_aabb.north - aabb.south) / velocity[2] };
 
 	// if negative, means the collision will not happen: put ∞
@@ -104,6 +111,26 @@ impl Cube {
 	if ty <= 0. { ty = f32::MAX }
 	if tz <= 0. { tz = f32::MAX }
 
-	tx.min(ty.min(tz))
+	// tx.min(ty.min(tz))
+
+	// collision time too big, we can discard it (for some reason, it can be
+	// super high, but not ∞)
+	if tx.min(ty.min(tz)) > 1e10 {
+	    return (f32::MAX, Vector3::empty())
+	}
+
+	if tx < ty && tx < tz {
+	    (tx, Vector3::unit_x() *
+	     if velocity[0] > 0. { -1. } else { 1. })
+	} else if ty < tx && ty < tz {
+	    (ty, Vector3::unit_y() *
+	     if velocity[1] > 0. { -1. } else { 1. })
+	} else if tz < tx && tz < ty {
+	    (tz, Vector3::unit_z() *
+	     if velocity[2] > 0. { -1. } else { 1. })
+	} else {
+	    dbg!(tx, ty, tz);
+	    panic!("should not be here:");
+	}
     }
 }
