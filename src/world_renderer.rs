@@ -161,7 +161,9 @@ impl WorldRenderer {
                         t = Instant::now();
 
                         // Server updates
-                        self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
+                        if self.cam.is_moving() {
+                            self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
+                        }
                         self.handle_server_updates();
 
                         // HUD updates

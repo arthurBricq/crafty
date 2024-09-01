@@ -218,4 +218,8 @@ impl Camera {
     pub fn position(&self) -> &Vector3 {
         &self.position
     }
+
+    pub fn is_moving(&self) -> bool {
+        self.d_pressed || self.a_pressed || self.w_pressed || self.s_pressed
+    }
 }

@@ -99,7 +99,6 @@ impl Proxy for TcpProxy {
     }
 
     fn send_position_update(&mut self, position: Vector3) {
-        // TODO maybe we could call this only when the player is moving
         match self.updates_transmitter.send(MessageToServer::OnNewPosition(position)) {
             Ok(_) => {}
             Err(err) => println!("Error while sending: {err}")
