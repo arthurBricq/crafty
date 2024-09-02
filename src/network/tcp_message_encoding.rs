@@ -46,9 +46,10 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], size: usize) -> Vec<T> {
         let code = bytes[start];
 
         // This line is interesting for debugging.
-        println!("start = {start}, len = {}, end = {}, size = {size}", len + 5, start + 5 + len);
+        // println!("start = {start}, len = {}, end = {}, size = {size}", len + 5, start + 5 + len);
+        
+        // This is a safety...
         if start + 5 + len > size {
-            println!("ERROR. A chunk has been clipped.");
             break;
         }
 

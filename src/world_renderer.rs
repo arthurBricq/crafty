@@ -123,7 +123,6 @@ impl WorldRenderer {
 
         // Initially, ask for server updates
         self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
-        thread::sleep(Duration::from_millis(self.proxy.lock().unwrap().loading_delay()));
         self.handle_server_updates();
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
@@ -131,7 +130,18 @@ impl WorldRenderer {
 
         // Event loop
         let mut t = Instant::now();
+        let initial_waiting_delay = Duration::from_millis(self.proxy.lock().unwrap().loading_delay());
+        let mut is_initializing = true;
         event_loop.run(move |event, window_target| {
+
+            // This block is here to leave some initial time for the world to load updates.
+            if is_initializing && t.elapsed() < initial_waiting_delay {
+                return;
+            } else if is_initializing {
+                is_initializing = false;
+                t = Instant::now();
+            }
+
             match event {
                 winit::event::Event::WindowEvent { event, .. } => match event {
                     // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.

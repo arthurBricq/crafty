@@ -118,7 +118,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                     //      This is obviously really bad...
                     //      It seems that the most likely solution will be to use `tokio.rs` but I am
                     //      not sure to do this now. In the meanwhile we will just be patient
-                    thread::sleep(Duration::from_millis(100));
+                    thread::sleep(Duration::from_millis(20));
                 }
             }
         }

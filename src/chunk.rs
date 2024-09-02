@@ -359,7 +359,7 @@ mod tests {
     fn test_chunk_persistence() {
         let chunk = Chunk::new_for_demo([3., 4.], 5);
         let serialized = chunk.to_json();
-        let reconstructed = Chunk::from_json(serialized.as_str());
+        let reconstructed = Chunk::from_json(serialized.as_str()).unwrap();
         assert_eq!(chunk, reconstructed);
     }
 }
