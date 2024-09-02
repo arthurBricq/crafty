@@ -2,6 +2,7 @@ use crate::actions::Action;
 use crate::network::message_to_server::MessageToServer::{Login, OnNewAction, OnNewPosition};
 use crate::vector::Vector3;
 use std::str::from_utf8;
+use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
 const HEADER_SIZE: usize = 5;
 
@@ -15,45 +16,38 @@ pub enum MessageToServer {
     OnNewAction(Action),
 }
 
-impl MessageToServer {
-    /// Parse a list of bytes into a list of MessageToServer
-    pub fn parse(data: &[u8], size: usize) -> Vec<Self> {
-        // Potentially, there have been several messages squashed together
-        // Therefore we make sure to split with '~' which is our message delimiter.
-        // Note: this function is probably not well optimized. We might reconsider its implementation in the future.
-        let full_message = from_utf8(&data[0..size]).unwrap();
-        let mut messages = vec![];
-        for message in full_message.split('~') {
-            if message.len() < HEADER_SIZE { continue; }
-            match &message[0..HEADER_SIZE] {
-                // TODO change this stupid header format. Use an integer instead, like it was done for ServerUpdate
-                "login" => messages.push(Login),
-                "posit" => {
-                    // Parse the end of the message into a new position
-                    let remaining = &message[HEADER_SIZE..];
-                    let mut pos = Vector3::empty();
-                    for (i, part) in remaining.split(',').enumerate() {
-                        pos[i] = part.parse::<f32>().unwrap();
-                    }
-                    messages.push(OnNewPosition(pos));
-                }
-                "actio" => messages.push(OnNewAction(Action::from_str(&message[HEADER_SIZE..]))),
-                _ => {}
-            };
+impl TcpSerialize for MessageToServer {
+    fn to_u8(&self) -> u8 {
+        match self {
+            Login => 0,
+            OnNewPosition(_) => 1,
+            OnNewAction(_) => 2
         }
-
-        messages
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes_representation(&self) -> Vec<u8> {
         match self {
-            Login => b"login".to_vec(),
-            OnNewPosition(pos) => format!("posit{},{},{}~", pos.x(), pos.y(), pos.z()).into_bytes(),
-            OnNewAction(action) => {
-                let mut bytes = b"actio".to_vec();
-                bytes.append(&mut action.to_bytes());
-                bytes
-            },
+            Login => vec![],
+            OnNewPosition(pos) => format!("{},{},{}", pos.x(), pos.y(), pos.z()).into_bytes(),
+            OnNewAction(action) => action.to_bytes(),
+        }
+    }
+}
+
+impl TcpDeserialize for MessageToServer {
+    fn parse_bytes_representation(code: u8, bytes_to_parse: &[u8]) -> Self {
+        match code {
+            0 => Login,
+            1 => {
+                let text = from_utf8(bytes_to_parse).unwrap();
+                let mut pos = Vector3::empty();
+                for (i, part) in text.split(',').enumerate() {
+                    pos[i] = part.parse::<f32>().unwrap();
+                }
+                OnNewPosition(pos)
+            }
+            2 => OnNewAction(Action::from_str(from_utf8(bytes_to_parse).unwrap())),
+            _ => panic!("Cannot build message to server from code {code}")
         }
     }
 }
@@ -62,11 +56,12 @@ impl MessageToServer {
 mod tests {
     use crate::network::message_to_server::MessageToServer;
     use crate::network::message_to_server::MessageToServer::{Login, OnNewPosition};
+    use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
     use crate::vector::Vector3;
 
     fn test_integrity(m: MessageToServer) {
-        let bytes = m.to_bytes();
-        let parsed = MessageToServer::parse(bytes.as_slice(), bytes.len());
+        let bytes = to_tcp_repr(&m);
+        let parsed = from_tcp_repr(bytes.as_slice(), bytes.len());
         assert_eq!(m, parsed[0]);
     }
 
@@ -80,10 +75,10 @@ mod tests {
     fn test_multiple_messages(messages: &[MessageToServer]) {
         let bytes  = messages
             .iter()
-            .map(|m| m.to_bytes())
+            .map(|m| to_tcp_repr(m))
             .collect::<Vec<Vec<u8>>>()
             .concat();
-        let parsed = MessageToServer::parse(bytes.as_slice(), bytes.len());
+        let parsed = from_tcp_repr(bytes.as_slice(), bytes.len());
         assert_eq!(messages.len(), parsed.len());
         for (i, m) in messages.iter().enumerate() {
             assert_eq!(*m, parsed[i]);
@@ -95,7 +90,7 @@ mod tests {
         let p1 = Vector3::new(1., 2., 3.);
         let p2 = Vector3::new(5., 6., 7.);
         test_multiple_messages(&[OnNewPosition(p1), OnNewPosition(p2)]);
-        // test_multiple_messages(&[Login, OnNewPosition(p1)]);
+        test_multiple_messages(&[Login, OnNewPosition(p1)]);
     }
 }
 

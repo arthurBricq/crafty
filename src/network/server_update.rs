@@ -1,6 +1,7 @@
 use crate::chunk::Chunk;
 use crate::network::server_update::ServerUpdate::{LoadChunk, Response, SendAction};
 use std::str::from_utf8;
+use serde_json::Error;
 use crate::actions::Action;
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
@@ -37,11 +38,14 @@ impl TcpSerialize for ServerUpdate {
 
 impl TcpDeserialize for ServerUpdate {
     fn parse_bytes_representation(code: u8, bytes_to_parse: &[u8]) -> ServerUpdate {
-        let parsed = match code {
+        match code {
             0 => {
                 let as_json = from_utf8(bytes_to_parse).unwrap();
                 let chunk = Chunk::from_json(as_json);
-                LoadChunk(chunk)
+                match chunk {
+                    Ok(chunk) => LoadChunk(chunk),
+                    Err(err) => panic!("Error while parsing a chunk: {err}")
+                }
             }
             1 => {
                 Response(bytes_to_parse[0])
@@ -52,8 +56,7 @@ impl TcpDeserialize for ServerUpdate {
                 SendAction(action)
             }
             _ => panic!("Cannot build server update from code {code}")
-        };
-        parsed
+        }
     }
 }
 

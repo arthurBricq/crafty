@@ -9,7 +9,7 @@ use std::net::TcpStream;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
 use std::{io, thread};
-use crate::network::tcp_message_encoding::from_tcp_repr;
+use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
 
 /// Function that handles the thread that
 /// - sends messages to server
@@ -18,17 +18,16 @@ fn handle_stream_with_server(mut stream: TcpStream, proxy: Arc<Mutex<TcpProxy>>,
     // Buffer of data for the stream
     // We use 2 ** 15 so that it is possible to send big messages, such as a full chunk
     let mut data = [0u8; 2_usize.pow(17)];
-    // let mut data = vec![];
 
     // TODO handle messages that needs an answer, such as 'LOGIN'
+    //      does login requires an answer ?
+    //      We need to think a little bit about this, considering also entities
+    //      Each entity probably has an idea.
 
     // First, send a logging request to the server
     // This is the first thing to do
     // We also keep track of the last message, to know how to parse the answer.
-    let mut last_message_sent = None;
 
-    // Unlike in the server, this loop is blocking.
-    // This will need to be changed, obviously
     loop {
         match stream.read(&mut data) {
             Ok(size) => {
@@ -43,10 +42,8 @@ fn handle_stream_with_server(mut stream: TcpStream, proxy: Arc<Mutex<TcpProxy>>,
         // Try to read if the WorldRenderer tried to communicate something to the server
         match updates_receiver.try_recv() {
             Ok(message) => {
-                // Keep track of what was our last message sent
-                last_message_sent = Some(message);
                 // Send the message to the server
-                stream.write(last_message_sent.as_ref().unwrap().to_bytes().as_slice()).unwrap();
+                stream.write(to_tcp_repr(&message).as_slice()).unwrap();
             }
             Err(_) => {}
         }

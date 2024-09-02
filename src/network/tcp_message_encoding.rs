@@ -31,7 +31,6 @@ pub fn to_tcp_repr<T: TcpSerialize>(object: &T) -> Vec<u8>{
 
     // Finally, append all the bytes of the message
     data_to_send.append(&mut data);
-
     data_to_send
 }
 
@@ -47,7 +46,11 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], size: usize) -> Vec<T> {
         let code = bytes[start];
 
         // This line is interesting for debugging.
-        // println!("start = {start}, len = {}, end = {}, size = {size}", len + 5, start + 5 + len);
+        println!("start = {start}, len = {}, end = {}, size = {size}", len + 5, start + 5 + len);
+        if start + 5 + len > size {
+            println!("ERROR. A chunk has been clipped.");
+            break;
+        }
 
         // Depending on the type of the enum, parse correctly the content
         let bytes_to_parse = &bytes[start+5..start+5+len];

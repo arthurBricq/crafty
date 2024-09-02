@@ -233,9 +233,8 @@ impl Chunk {
         serde_json::to_string(&world).unwrap()
     }
 
-    pub fn from_json(data: &str) -> Self {
-        // If we end up with stack-overflows, we could not read the entire file but instead provide the reader.
-        let serialized_world: SerializedWorld = serde_json::from_str(data).unwrap();
+    pub fn from_json(data: &str) -> Result<Self, serde_json::Error> {
+        let serialized_world: SerializedWorld = serde_json::from_str(data)?;
         let mut chunk = Chunk::new(serialized_world.chunk_corners[0]);
         for block_kind in Block::iter() {
             let cubes = serialized_world.cubes_by_kind.get(&block_kind).unwrap();
@@ -247,7 +246,7 @@ impl Chunk {
                 chunk.add_cube(Vector3::new(x,y,z), block_kind, neighbors);
             }
         }
-        chunk
+        Ok(chunk)
     }
 
 }
@@ -257,7 +256,6 @@ mod tests {
     use crate::block_kind::Block::GRASS;
     use crate::chunk::{Chunk, CHUNK_HEIGHT, CHUNK_SIZE};
     use crate::vector::Vector3;
-    use crate::world::World;
 
     #[test]
     fn test_bounding_area() {

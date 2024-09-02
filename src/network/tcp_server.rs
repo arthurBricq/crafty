@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::game_server::GameServer;
 use crate::network::message_to_server::MessageToServer;
 use crate::network::server_update::{ServerUpdate, RESPONSE_ERROR, RESPONSE_OK};
-use crate::network::tcp_message_encoding::to_tcp_repr;
+use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
 
 pub struct TcpServer {
 
@@ -60,7 +60,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
         match stream.read(&mut data) {
             Ok(size) => {
                 // Read the messages sent by the client
-                let messages = MessageToServer::parse(&data, size);
+                let messages = from_tcp_repr::<MessageToServer>(&data, size);
 
                 // For each message, create a response and send it to the client.
                 for message in messages {
@@ -84,7 +84,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                     // Send the response to the client
                     if let Some(response) = response {
                         let bytes = to_tcp_repr(&response);
-                        stream.write(bytes.as_slice()).unwrap();
+                        stream.write_all(bytes.as_slice()).unwrap();
                     }
                 }
 
@@ -118,7 +118,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                     //      This is obviously really bad...
                     //      It seems that the most likely solution will be to use `tokio.rs` but I am
                     //      not sure to do this now. In the meanwhile we will just be patient
-                    thread::sleep(Duration::from_millis(50));
+                    thread::sleep(Duration::from_millis(100));
                 }
             }
         }
