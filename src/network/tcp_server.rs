@@ -6,6 +6,7 @@ use std::time::Duration;
 use crate::game_server::GameServer;
 use crate::network::message_to_server::MessageToServer;
 use crate::network::server_update::{ServerUpdate, RESPONSE_ERROR, RESPONSE_OK};
+use crate::network::tcp_message_encoding::to_tcp_repr;
 
 pub struct TcpServer {
 
@@ -82,7 +83,8 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
 
                     // Send the response to the client
                     if let Some(response) = response {
-                        stream.write(response.to_bytes().as_slice()).unwrap();
+                        let bytes = to_tcp_repr(&response);
+                        stream.write(bytes.as_slice()).unwrap();
                     }
                 }
 
@@ -102,7 +104,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
             if updates.len() > 0 {
                 println!("Server has {} updates for client {}", updates.len(), id);
                 for update in &updates {
-                    let msg = update.to_bytes();
+                    let msg = to_tcp_repr(update);
                     match stream.write_all(msg.as_slice()) {
                         Ok(_) => {}
                         Err(e) => {

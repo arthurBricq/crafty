@@ -61,6 +61,7 @@ impl MessageToServer {
 #[cfg(test)]
 mod tests {
     use crate::network::message_to_server::MessageToServer;
+    use crate::network::message_to_server::MessageToServer::{Login, OnNewPosition};
     use crate::vector::Vector3;
 
     fn test_integrity(m: MessageToServer) {
@@ -71,9 +72,30 @@ mod tests {
 
     #[test]
     fn test_message_integrity() {
-        test_integrity(MessageToServer::Login);
-        test_integrity(MessageToServer::OnNewPosition(Vector3::new(1.0, 1.0, 1.0)));
-        test_integrity(MessageToServer::OnNewPosition(Vector3::new(-1.0, 2.0, 100.012)));
+        test_integrity(Login);
+        test_integrity(OnNewPosition(Vector3::new(1.0, 1.0, 1.0)));
+        test_integrity(OnNewPosition(Vector3::new(-1.0, 2.0, 100.012)));
+    }
+
+    fn test_multiple_messages(messages: &[MessageToServer]) {
+        let bytes  = messages
+            .iter()
+            .map(|m| m.to_bytes())
+            .collect::<Vec<Vec<u8>>>()
+            .concat();
+        let parsed = MessageToServer::parse(bytes.as_slice(), bytes.len());
+        assert_eq!(messages.len(), parsed.len());
+        for (i, m) in messages.iter().enumerate() {
+            assert_eq!(*m, parsed[i]);
+        }
+    }
+
+    #[test]
+    fn test_multiple_message_integrity() {
+        let p1 = Vector3::new(1., 2., 3.);
+        let p2 = Vector3::new(5., 6., 7.);
+        test_multiple_messages(&[OnNewPosition(p1), OnNewPosition(p2)]);
+        // test_multiple_messages(&[Login, OnNewPosition(p1)]);
     }
 }
 

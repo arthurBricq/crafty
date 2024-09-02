@@ -2,6 +2,7 @@ use crate::chunk::Chunk;
 use crate::network::server_update::ServerUpdate::{LoadChunk, Response, SendAction};
 use std::str::from_utf8;
 use crate::actions::Action;
+use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
 pub const RESPONSE_OK: u8 = 100;
 pub const RESPONSE_ERROR: u8 = 101;
@@ -15,7 +16,7 @@ pub enum ServerUpdate {
     SendAction(Action)
 }
 
-impl ServerUpdate {
+impl TcpSerialize for ServerUpdate {
     fn to_u8(&self) -> u8 {
         match self {
             LoadChunk(_) => 0,
@@ -24,78 +25,35 @@ impl ServerUpdate {
         }
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes_representation(&self) -> Vec<u8> {
         // Compute the data inside the message
-        let mut data = match self {
+        match self {
             LoadChunk(chunk) => chunk.to_json().into_bytes(),
             Response(code) => vec![*code],
             SendAction(action) => action.to_bytes()
-        };
-
-        // First bytes contains the type
-        let mut data_to_send = vec![self.to_u8()];
-
-        // Second 4-bytes contain the length of the message
-        let len = data.len() as u32;
-        for n in len.to_le_bytes() {
-            data_to_send.push(n);
         }
-
-        // Finally, append all the bytes of the message
-        data_to_send.append(&mut data);
-
-        // Finally add an 'EOL' to the packet
-        data_to_send.push(b'\n');
-
-        data_to_send
     }
+}
 
-    pub fn from_bytes(bytes: &[u8], size: usize) -> Vec<Self> {
-        let mut to_return = vec![];
-
-        let mut start = 0;
-
-        loop {
-            // Read the header
-            // - type of the enum
-            // - length of the message being sent
-            let length_bytes: [u8; 4] = bytes[start + 1..start + 5].try_into().unwrap();
-            let len = u32::from_le_bytes(length_bytes) as usize;
-            let code = bytes[start];
-
-            // This line is interesting for debugging.
-            // println!("start = {start}, len = {}, end = {}, size = {size}", len + 5, start + 5 + len);
-
-            // Depending on the type of the enum, parse correctly the content
-            match code {
-                0 => {
-                    let as_json = from_utf8(&bytes[start + 5..start + 5 + len]).unwrap();
-                    let chunk = Chunk::from_json(as_json);
-                    to_return.push(LoadChunk(chunk));
-                }
-                1 => {
-                    to_return.push(Response(bytes[start + 5]))
-                }
-                2 => {
-                    let as_json = from_utf8(&bytes[start + 5..start + 5 + len]).unwrap();
-                    let action = Action::from_str(as_json);
-                    to_return.push(SendAction(action));
-
-                }
-                _ => eprintln!("Cannot build server update from code {code}")
+impl TcpDeserialize for ServerUpdate {
+    fn parse_bytes_representation(code: u8, bytes_to_parse: &[u8]) -> ServerUpdate {
+        let parsed = match code {
+            0 => {
+                let as_json = from_utf8(bytes_to_parse).unwrap();
+                let chunk = Chunk::from_json(as_json);
+                LoadChunk(chunk)
             }
-
-            // Increase the header
-            start += len + 5;
-            // Increase the footer
-            start += 1;
-            // Safety
-            if start + 5 >= size {
-                break;
+            1 => {
+                Response(bytes_to_parse[0])
             }
-        }
-
-        to_return
+            2 => {
+                let as_json = from_utf8(bytes_to_parse).unwrap();
+                let action = Action::from_str(as_json);
+                SendAction(action)
+            }
+            _ => panic!("Cannot build server update from code {code}")
+        };
+        parsed
     }
 }
 
@@ -104,13 +62,14 @@ mod tests {
     use crate::chunk::Chunk;
     use crate::network::server_update::ServerUpdate;
     use crate::network::server_update::ServerUpdate::{LoadChunk, Response};
+    use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
 
     #[test]
     fn test_load_chunks_encoding_decoding() {
         let chunk = Chunk::new_for_demo([3., 5.], 5);
         let update = LoadChunk(chunk);
-        let bytes = update.to_bytes();
-        let parsed = ServerUpdate::from_bytes(bytes.as_slice(), bytes.len());
+        let bytes = to_tcp_repr(&update);
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len());
 
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
@@ -123,8 +82,8 @@ mod tests {
     fn test_response_encoding_decoding() {
         let chunk = Chunk::new_for_demo([3., 5.], 5);
         let update = Response(113);
-        let bytes = update.to_bytes();
-        let parsed = ServerUpdate::from_bytes(bytes.as_slice(), bytes.len());
+        let bytes = to_tcp_repr(&update);
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len());
 
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
@@ -142,14 +101,14 @@ mod tests {
         let update_2 = LoadChunk(chunk2);
         let update_3 = Response(113);
 
-        let mut bytes1 = update_1.to_bytes();
-        let mut bytes2 = update_2.to_bytes();
-        let mut bytes3 = update_3.to_bytes();
+        let mut bytes1 = to_tcp_repr(&update_1);
+        let mut bytes2 = to_tcp_repr(&update_2);
+        let mut bytes3 = to_tcp_repr(&update_3);
 
         bytes1.append(&mut bytes2);
         bytes1.append(&mut bytes3);
 
-        let parsed = ServerUpdate::from_bytes(bytes1.as_slice(), bytes1.len());
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes1.as_slice(), bytes1.len());
         assert_eq!(3, parsed.len());
 
         match (&update_1, &parsed[0]) {

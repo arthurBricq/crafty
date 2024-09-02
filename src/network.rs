@@ -4,3 +4,4 @@ pub mod tcp_proxy;
 pub mod tcp_server;
 pub mod proxy;
 pub mod single_player_proxy;
+mod tcp_message_encoding;

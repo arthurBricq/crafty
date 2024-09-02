@@ -9,6 +9,7 @@ use std::net::TcpStream;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
 use std::{io, thread};
+use crate::network::tcp_message_encoding::from_tcp_repr;
 
 /// Function that handles the thread that
 /// - sends messages to server
@@ -31,7 +32,7 @@ fn handle_stream_with_server(mut stream: TcpStream, proxy: Arc<Mutex<TcpProxy>>,
     loop {
         match stream.read(&mut data) {
             Ok(size) => {
-                for update in ServerUpdate::from_bytes(&data, size) {
+                for update in from_tcp_repr(&data, size) {
                     proxy.lock().unwrap().push_server_update(update);
                 }
             }
