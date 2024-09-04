@@ -33,10 +33,10 @@ impl EntityManager {
         self.entity_list[id].position()
     }
 
-    pub fn draw (&mut self) -> Vec<EntityCube> {
+    pub fn get_opengl_entities (&mut self) -> Vec<EntityCube> {
         let mut entity_cube = Vec::new();
         for i in 0..self.n_entity {
-            entity_cube.append(&mut self.entity_list[i].draw_entity())
+            entity_cube.append(&mut self.entity_list[i].get_opengl_entities())
         }
         entity_cube
     }

@@ -143,11 +143,9 @@ impl WorldRenderer {
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
         self.world.set_cubes_to_draw(self.cam.touched_cube());
 
-        // Add an entity cooresponding to the player
+        // Add an entity
         self.entity_manager.new_entity();
-        // Add another entity
-        self.entity_manager.new_entity();
-        self.entity_manager.set_position(1, Vector3::new(3., 11.3, 3.2));
+        self.entity_manager.set_position(0, Vector3::new(3., 11.3, 3.2));
 
         // Uniform for rect computed before the loop
         let rect_uniforms = uniform! {
@@ -210,10 +208,6 @@ impl WorldRenderer {
                                 .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation(), self.world.number_cubes_rendered()));
                         }
 
-                        // Update the position and orientation of the player entity
-                        self.entity_manager.set_position(0, self.cam.position().clone());
-                        self.entity_manager.set_orientation(0, self.cam.rotation());
-
                         // I) Draw the cubes
 
                         // Configure the GPU to do Depth testing (with a depth buffer)
@@ -257,7 +251,7 @@ impl WorldRenderer {
                         };
 
                         // Prepare the entity buffer to send to the gpu
-                        let entity_buffer = glium::VertexBuffer::dynamic(&display, &mut self.entity_manager.draw()).unwrap();
+                        let entity_buffer = glium::VertexBuffer::dynamic(&display, &mut self.entity_manager.get_opengl_entities()).unwrap();
                         target.draw(
                             (&cube_vertex_buffer, entity_buffer.per_instance().unwrap()),
                             &indices,
@@ -324,7 +318,12 @@ impl WorldRenderer {
         Texture2d::new(display, image).unwrap()
     }
 
-    /// Loads a texture,cut it and returns it
+    /// Loads an image from a path,
+    /// uses cut to divide the image into sub images,
+    /// cuts is in the format \[x, y, height, width\],
+    /// rescales the sub image to a common size and
+    /// returns a Texture2dArray with this images.
+    /// (0, 0) is top left and x, y, height and width are in pixels.
     fn load_texture_cut(bytes: &[u8], display: &Display<WindowSurface>, cut: Vec<[u32; 4]>) -> Texture2dArray {
         let image = image::load(std::io::Cursor::new(bytes),
                                 image::ImageFormat::Png).unwrap().to_rgba8();

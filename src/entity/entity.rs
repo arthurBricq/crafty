@@ -52,11 +52,11 @@ impl Entity {
     }
 
     /// Draw the entity and return a Vec of EntityCube
-    pub fn draw_entity(&mut self) -> Vec<EntityCube> {
+    pub fn get_opengl_entities(&mut self) -> Vec<EntityCube> {
 
         let ent = match self.entity_type {
             EntityKind::Player => {
-                humanoid::draw( self.position, self.orientation)
+                humanoid::get_opengl_entities( self.position, self.orientation)
             }
         };
 

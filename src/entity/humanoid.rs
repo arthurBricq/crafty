@@ -40,27 +40,27 @@ pub const PATRON_PLAYER_CUT: [[u32; 4]; 24] = [
 ];
 
 
-pub fn draw(position: Vector3, rot: [f32; 2]) -> Vec<EntityCube> {
+pub fn get_opengl_entities(position: Vector3, rot: [f32; 2]) -> Vec<EntityCube> {
 
     let mut position = position;
     let mut ent = Vec::new();
 
     // Head
-    ent.push(EntityCube::new(&position, 0, [PLAYER_HEAD_SIZE; 3], rot ));
+    ent.push(EntityCube::new(&position, 0, [PLAYER_HEAD_SIZE; 3], rot[0], rot[1] ));
     // Body
     position += Vector3::new(0., PLAYER_BODY_SHIFT, 0.);
-    ent.push(EntityCube::new(&position, 2, PLAYER_BODY_SCALE, [rot[0], 0.]));
+    ent.push(EntityCube::new(&position, 2, PLAYER_BODY_SCALE, rot[0], 0.));
     // Arm
     position += Vector3::new(0., 0., PLAYER_ARM_WIDTH_SHIFT).rotation_y(rot[0]);
-    ent.push(EntityCube::new(&position, 3, PLAYER_ARM_SCALE, [rot[0], 0.]));
+    ent.push(EntityCube::new(&position, 3, PLAYER_ARM_SCALE, rot[0], 0.));
     position += Vector3::new(0., 0., -2. * PLAYER_ARM_WIDTH_SHIFT).rotation_y(rot[0]);
-    ent.push(EntityCube::new(&position, 3, PLAYER_ARM_SCALE, [rot[0], 0.]));
+    ent.push(EntityCube::new(&position, 3, PLAYER_ARM_SCALE, rot[0], 0.));
     position += Vector3::new(0., 0., PLAYER_ARM_WIDTH_SHIFT).rotation_y(rot[0]);
         // Leg
     position += Vector3::new(0., PLAYER_LEG_SHIFT, PLAYER_LEG_WIDTH_SHIFT).rotation_y(rot[0]);
-    ent.push(EntityCube::new(&position, 1, PLAYER_LEG_SCALE, [rot[0], 0.0]));
+    ent.push(EntityCube::new(&position, 1, PLAYER_LEG_SCALE, rot[0], 0.));
     position += Vector3::new(0., 0., -2. * PLAYER_LEG_WIDTH_SHIFT).rotation_y(rot[0]);
-    ent.push(EntityCube::new(&position, 1, PLAYER_LEG_SCALE, [rot[0], 0.0 ]));
+    ent.push(EntityCube::new(&position, 1, PLAYER_LEG_SCALE, rot[0], 0. ));
     
     ent
 }

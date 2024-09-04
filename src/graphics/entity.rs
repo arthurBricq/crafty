@@ -68,9 +68,9 @@ impl EntityCube {
     /// A Yaw rotation is applied (first component of rot)
     /// A Pitch roation is then apllied (second component of rot)
     // Maybe implement roll one day ?
-    pub fn new(position: &Vector3, body_part_id: u8, scale: [f32; 3], rot: [f32; 2]) -> Self {
+    pub fn new(position: &Vector3, body_part_id: u8, scale: [f32; 3], yaw: f32, pitch: f32) -> Self {
         Self { 
-            world_matrix: Self::model_matrix_rot_yx(position, scale, rot), 
+            world_matrix: Self::model_matrix_rot_yx(position, scale, yaw, pitch), 
             // body part_id correspond to the [6*body_part_id,6*body_part_id+5] texture loaded
             body_part_id,
         }
@@ -79,12 +79,12 @@ impl EntityCube {
     /// Generate a world matrix with a scaing over each direction
     /// a rotation around y then
     /// a rotation around local x
-    fn model_matrix_rot_yx(position: &Vector3, scale: [f32; 3], rot: [f32; 2]) -> [[f32; 4]; 4] {
+    fn model_matrix_rot_yx(position: &Vector3, scale: [f32; 3], yaw: f32, pitch: f32) -> [[f32; 4]; 4] {
         [
-            [  scale[0] * rot[0].cos() * rot[1].cos(), scale[0] * rot[1].sin(),  scale[0] * rot[0].sin() * rot[1].cos(), 0.0],
-            [ -scale[1] * rot[0].cos() * rot[1].sin(), scale[1] * rot[1].cos(), -scale[1] * rot[0].sin() * rot[1].sin(), 0.0],
-            [ -scale[2] * rot[0].sin()               , 0.0                    ,  scale[2] * rot[0].cos()               , 0.0],
-            
+            [  scale[0] * yaw.cos() * pitch.cos(), scale[0] *pitch.sin(),  scale[0] * yaw.sin() * pitch.cos(), 0.0],
+            [ -scale[1] * yaw.cos() * pitch.sin(), scale[1] *pitch.cos(), -scale[1] * yaw.sin() * pitch.sin(), 0.0],
+            [ -scale[2] * yaw.sin()              , 0.0                  ,  scale[2] * yaw.cos()              , 0.0],
+
             [position[0]                             , position[1]            , position[2]                            , 1.0f32]
         ]
     }
