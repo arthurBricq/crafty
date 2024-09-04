@@ -10,3 +10,4 @@ pub mod font;
 pub mod menu_help;
 pub mod menu_debug;
 pub mod string_rect;
+pub mod entity;

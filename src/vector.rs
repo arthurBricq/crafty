@@ -160,6 +160,15 @@ impl Vector3 {
         }
     }
 
+    /// Rotation around the vertical y with angle radian
+    pub fn rotation_y(&self, angle: f32) -> Self {
+        Self {
+            x:  angle.cos() * self.x - angle.sin() * self.z,
+            y: self.y,
+            z: angle.sin() * self.x + angle.cos() * self.z,
+        }
+    }
+
     pub fn norm(&self) -> f32 {
         f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
     }

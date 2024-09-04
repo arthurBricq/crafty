@@ -17,3 +17,6 @@ pub mod world_dispatcher;
 pub mod cubes_to_draw;
 pub mod world_serializer;
 pub mod network;
+pub mod entity;
+pub mod math;
+pub mod humanoid;
