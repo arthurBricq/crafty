@@ -12,6 +12,10 @@ use crate::block_kind::Block::COBBELSTONE;
 use crate::camera::{Camera, MotionState};
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
+use crate::entity::entity_manager::EntityManager;
+use crate::entity::humanoid::PATRON_PLAYER_CUT;
+
+use crate::graphics::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER};
 use crate::graphics::font::GLChar;
 use crate::graphics::hud_renderer::HUDRenderer;
 use crate::graphics::menu_debug::DebugData;
@@ -19,11 +23,14 @@ use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_
 use crate::network::server_update::ServerUpdate;
 use crate::player_items::PlayerItems;
 use crate::network::proxy::Proxy;
+use crate::vector::Vector3;
 use crate::world::World;
+use crate::math;
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Display, Surface, Texture2d};
+use image::GenericImageView;
 use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
@@ -44,6 +51,8 @@ pub struct WorldRenderer {
 
     hud_renderer: HUDRenderer,
     fps_manager: FpsManager,
+
+    entity_manager: EntityManager,
 
     // Logic for when the user is clicking
     // TODO encapsulate that in another struct
@@ -66,6 +75,7 @@ impl WorldRenderer {
             is_left_clicking: false,
             click_time: 0.0,
             fullscreen: false,
+            entity_manager: EntityManager::empty()
         }
     }
 
@@ -109,9 +119,14 @@ impl WorldRenderer {
         let selected_texture = Self::load_texture(std::fs::read("./resources/selected.png").unwrap().as_slice(), &display);
         let font_atlas = Self::load_texture(std::fs::read("./resources/fonts.png").unwrap().as_slice(), &display);
 
+        // Textures for the player
+        let player_texture = Self::load_texture_cut(std::fs::read("./resources/entity/player.png").unwrap().as_slice(), &display, Vec::from(PATRON_PLAYER_CUT) );
+        let player_texture_sample = player_texture.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
+
         // Build the shader programs
         let cube_program = glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None).unwrap();
         let rect_program = glium::Program::from_source(&display, RECT_VERTEX_SHADER, RECT_FRAGMENT_SHADER, None).unwrap();
+        let entity_program = glium::Program::from_source(&display, ENTITY_VERTEX_SHADER, ENTITY_FRAGMENT_SHADER, None).unwrap();
 
         // Start rendering by creating a new frame
         let mut target = display.draw();
@@ -127,6 +142,17 @@ impl WorldRenderer {
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
         self.world.set_cubes_to_draw(self.cam.touched_cube());
+
+        // Add an entity
+        self.entity_manager.new_entity();
+        self.entity_manager.set_position(0, Vector3::new(3., 11.3, 3.2));
+
+        // Uniform for rect computed before the loop
+        let rect_uniforms = uniform! {
+            font_atlas: &font_atlas,
+            font_offsets: GLChar::get_offset(),
+            textures: cubes_texture_sampler
+        };
 
         // Event loop
         let mut t = Instant::now();
@@ -215,12 +241,25 @@ impl WorldRenderer {
                             &uniforms,
                             &params).unwrap();
 
-                        // II) Drawn the tiles
-                        let rect_uniforms = uniform! {
-                            font_atlas: &font_atlas,
-                            font_offsets: GLChar::get_offset(),
-                            textures: cubes_texture_sampler
+                        // II) Draw the entity
+
+                        // Define our uniforms (same uniforms for all cubes)...
+                        let entity_uniforms = uniform! {
+                            view: self.cam.view_matrix(),
+                            perspective: self.cam.perspective_matrix(target.get_dimensions()),
+                            textures: player_texture_sample
                         };
+
+                        // Prepare the entity buffer to send to the gpu
+                        let entity_buffer = glium::VertexBuffer::dynamic(&display, &mut self.entity_manager.get_opengl_entities()).unwrap();
+                        target.draw(
+                            (&cube_vertex_buffer, entity_buffer.per_instance().unwrap()),
+                            &indices,
+                            &entity_program,
+                            &entity_uniforms,
+                            &params).unwrap();
+
+                        // III) Drawn the tiles
 
                         // We change the draw parameters here to allow transparency.
                         let draw_parameters = glium::draw_parameters::DrawParameters {
@@ -235,7 +274,6 @@ impl WorldRenderer {
                             &rect_program,
                             &rect_uniforms,
                             &draw_parameters).unwrap();
-
                         target.finish().unwrap();
                     }
                     _ => (),
@@ -278,6 +316,31 @@ impl WorldRenderer {
         let image_dimensions = image.dimensions();
         let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
         Texture2d::new(display, image).unwrap()
+    }
+
+    /// Loads an image from a path,
+    /// uses cut to divide the image into sub images,
+    /// cuts is in the format \[x, y, height, width\],
+    /// rescales the sub image to a common size and
+    /// returns a Texture2dArray with this images.
+    /// (0, 0) is top left and x, y, height and width are in pixels.
+    fn load_texture_cut(bytes: &[u8], display: &Display<WindowSurface>, cut: Vec<[u32; 4]>) -> Texture2dArray {
+        let image = image::load(std::io::Cursor::new(bytes),
+                                image::ImageFormat::Png).unwrap().to_rgba8();
+        let mut source= Vec::new();
+        // Set a scaling factor which is a common multiplier for every texture
+        let mut lcm_x: u32 = 1;
+        let mut lcm_y: u32 = 1;
+        for cut_pos in &cut {
+            lcm_x= math::lcm(lcm_x, cut_pos[2]);
+            lcm_y= math::lcm(lcm_y, cut_pos[3]);
+        }
+        for cut_pos in cut {
+            let sub_image = image.view(cut_pos[0], cut_pos[1], cut_pos[2], cut_pos[3]).to_image();
+            let sub_image = image::imageops::resize(&sub_image, lcm_x, lcm_y, image::imageops::FilterType::Nearest);
+            source.push(glium::texture::RawImage2d::from_raw_rgba_reversed(&sub_image.into_raw(), (lcm_x, lcm_y)) );
+        }
+        Texture2dArray::new(display, source).unwrap()
     }
 
     fn handle_key_event(&mut self, event: RawKeyEvent, window: &Window) {
