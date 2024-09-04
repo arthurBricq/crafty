@@ -39,7 +39,8 @@ impl GameServer {
         let id = self.n_players;
         println!("[SERVER] New player registered: {name} (ID={})", id);
         self.n_players += 1;
-        self.server_updates_buffer.push(Vec::new());
+        // Create a new buffer of updates, and initialize it directly with a LoggedIn message
+        self.server_updates_buffer.push(vec![ServerUpdate::LoggedIn(id as u8)]);
         self.world_dispatcher.register_player(id);
         id
     }
@@ -70,7 +71,6 @@ impl GameServer {
                 self.server_updates_buffer[i].push(SendAction(action.clone()))
             }
         }
-
     }
 
     /// Returns the list of updates that the server sends to the client.

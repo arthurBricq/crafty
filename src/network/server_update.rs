@@ -1,5 +1,5 @@
 use crate::chunk::Chunk;
-use crate::network::server_update::ServerUpdate::{LoadChunk, Response, SendAction};
+use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, SendAction};
 use std::str::from_utf8;
 use serde_json::Error;
 use crate::actions::Action;
@@ -13,7 +13,9 @@ pub const RESPONSE_ERROR: u8 = 101;
 pub enum ServerUpdate {
     /// Ask the client to load a new chunk
     LoadChunk(Chunk),
-    Response(u8),
+    /// The server forwards to the client his client id
+    LoggedIn(u8),
+    /// The server forwards to the client an action to be executed
     SendAction(Action)
 }
 
@@ -21,7 +23,7 @@ impl TcpSerialize for ServerUpdate {
     fn to_u8(&self) -> u8 {
         match self {
             LoadChunk(_) => 0,
-            Response(_) => 1,
+            LoggedIn(_) => 1,
             SendAction(_) => 2
         }
     }
@@ -30,7 +32,7 @@ impl TcpSerialize for ServerUpdate {
         // Compute the data inside the message
         match self {
             LoadChunk(chunk) => chunk.to_json().into_bytes(),
-            Response(code) => vec![*code],
+            LoggedIn(code) => vec![*code],
             SendAction(action) => action.to_bytes()
         }
     }
@@ -48,7 +50,7 @@ impl TcpDeserialize for ServerUpdate {
                 }
             }
             1 => {
-                Response(bytes_to_parse[0])
+                LoggedIn(bytes_to_parse[0])
             }
             2 => {
                 let as_json = from_utf8(bytes_to_parse).unwrap();
@@ -64,7 +66,7 @@ impl TcpDeserialize for ServerUpdate {
 mod tests {
     use crate::chunk::Chunk;
     use crate::network::server_update::ServerUpdate;
-    use crate::network::server_update::ServerUpdate::{LoadChunk, Response};
+    use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn};
     use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
 
     #[test]
@@ -84,13 +86,13 @@ mod tests {
     #[test]
     fn test_response_encoding_decoding() {
         let chunk = Chunk::new_for_demo([3., 5.], 5);
-        let update = Response(113);
+        let update = LoggedIn(113);
         let bytes = to_tcp_repr(&update);
         let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len());
 
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
-            (Response(a), Response(b)) => assert_eq!(a, b),
+            (LoggedIn(a), LoggedIn(b)) => assert_eq!(a, b),
             (_, _) => assert!(false)
         }
     }
@@ -102,7 +104,7 @@ mod tests {
 
         let update_1 = LoadChunk(chunk1);
         let update_2 = LoadChunk(chunk2);
-        let update_3 = Response(113);
+        let update_3 = LoggedIn(113);
 
         let mut bytes1 = to_tcp_repr(&update_1);
         let mut bytes2 = to_tcp_repr(&update_2);
@@ -125,7 +127,7 @@ mod tests {
         }
 
         match (&update_3, &parsed[2]) {
-            (Response(a), Response(b)) => assert_eq!(a, b),
+            (LoggedIn(a), LoggedIn(b)) => assert_eq!(a, b),
             (_, _) => assert!(false)
         }
     }

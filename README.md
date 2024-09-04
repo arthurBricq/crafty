@@ -46,8 +46,9 @@ Under the hood, there is always a server that is started and contains the world'
 
 - Better implementation of the collision detection 
 - Automatic & Infinite map creation [Johan]
-- Improvements of the multiplayer architecture
-- Entities: display other players
-- Entities: add monsters
-- Crafting
+- Improvements of the multiplayer architecture (this might not be necessary...)
+- Entities: display other players (as they move)
+- Entities: monsters display
+- Entities: monsters logic
+- Crafting menu & logic
 - Stabilization of all the bugs that we find...

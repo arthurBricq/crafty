@@ -454,7 +454,10 @@ impl WorldRenderer {
         for update in updates {
             match update {
                 ServerUpdate::LoadChunk(chunk) => self.world.add_chunk(chunk),
-                ServerUpdate::Response(_) => {}
+                ServerUpdate::LoggedIn(client_id) => {
+                    println!("Client registered ID: {client_id}")
+                    // TODO if needed, here is the ID of the player
+                }
                 ServerUpdate::SendAction(action) => self.world.apply_action(&action)
             }
         }

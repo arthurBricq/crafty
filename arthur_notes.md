@@ -36,18 +36,20 @@ Why is it difficult ?
 - Even if I use interior mutability and give the proxy with an immutable access, it is difficult. WHY? 
 - Because I am not sure of how I will implement the 'network scanner' that will wait for messages of the server. So maybe I would do a lot of extra work for nothing ?
 
-
 ### Server TODO list
 
 Example provided by https://riptutorial.com/rust/example/4404/a-simple-tcp-client-and-server-application--echo
 
-- [x] Create a stream between two objects
-- [ ] Give the 'WORLD' to the server
+## Entities
 
-The server must be able to
-- [ ] Receive actions --> mutate the world
-- [ ] Receive positions --> mutate internal state 
-- [ ] bi-sided channel is required !
-- [ ] Send 'server updates'
-  - [ ] actions
-  - [ ] chunks
+What is an entity ? 
+- ID
+- Name
+- Position + Orientation
+- 3D rendering description
+
+### Players
+
+When a player moves, the server must forward to the other players its position.
+
+

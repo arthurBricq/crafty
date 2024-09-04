@@ -16,19 +16,11 @@ use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
 /// - receives updates from server
 fn handle_stream_with_server(mut stream: TcpStream, proxy: Arc<Mutex<TcpProxy>>, updates_receiver: Receiver<MessageToServer>) {
     // Buffer of data for the stream
-    // We use 2 ** 15 so that it is possible to send big messages, such as a full chunk
     let mut data = [0u8; 2_usize.pow(17)];
 
-    // TODO handle messages that needs an answer, such as 'LOGIN'
-    //      does login requires an answer ?
-    //      We need to think a little bit about this, considering also entities
-    //      Each entity probably has an idea.
-
-    // First, send a logging request to the server
-    // This is the first thing to do
-    // We also keep track of the last message, to know how to parse the answer.
-
     loop {
+
+        // Continuously read the bytes received by the server
         match stream.read(&mut data) {
             Ok(size) => {
                 for update in from_tcp_repr(&data, size) {
