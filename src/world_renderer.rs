@@ -12,10 +12,10 @@ use crate::block_kind::Block::COBBELSTONE;
 use crate::camera::{Camera, MotionState};
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
-use crate::entity::EntityManager;
-use crate::humanoid::PATRON_PLAYER_CUT;
+use crate::entity::entity_manager::EntityManager;
+use crate::entity::humanoid::PATRON_PLAYER_CUT;
 
-use crate::graphics::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER, ENTITY_VERTICES};
+use crate::graphics::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER};
 use crate::graphics::font::GLChar;
 use crate::graphics::hud_renderer::HUDRenderer;
 use crate::graphics::menu_debug::DebugData;
@@ -109,7 +109,6 @@ impl WorldRenderer {
         // Construct the buffer of vertices (for single objects, we use OpenGL's instancing to multiply them)
         let cube_vertex_buffer = glium::VertexBuffer::new(&display, &VERTICES).unwrap();
         let rect_vertex_buffer = glium::VertexBuffer::new(&display, &RECT_VERTICES).unwrap();
-        let entity_vertex_buffer = glium::VertexBuffer::new(&display, &ENTITY_VERTICES).unwrap();
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
         // Build the texture library, and change the sampler to use the proper filters
@@ -260,7 +259,7 @@ impl WorldRenderer {
                         // Prepare the entity buffer to send to the gpu
                         let entity_buffer = glium::VertexBuffer::dynamic(&display, &mut self.entity_manager.draw()).unwrap();
                         target.draw(
-                            (&entity_vertex_buffer, entity_buffer.per_instance().unwrap()),
+                            (&cube_vertex_buffer, entity_buffer.per_instance().unwrap()),
                             &indices,
                             &entity_program,
                             &entity_uniforms,
@@ -334,8 +333,8 @@ impl WorldRenderer {
         let mut lcm_x: u32 = 1;
         let mut lcm_y: u32 = 1;
         for cut_pos in &cut {
-            lcm_x= math::lcm(lcm_x,cut_pos[2]);
-            lcm_y= math::lcm(lcm_y,cut_pos[3]);
+            lcm_x= math::lcm(lcm_x, cut_pos[2]);
+            lcm_y= math::lcm(lcm_y, cut_pos[3]);
         }
         for cut_pos in cut {
             let sub_image = image.view(cut_pos[0], cut_pos[1], cut_pos[2], cut_pos[3]).to_image();

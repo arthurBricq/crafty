@@ -163,7 +163,7 @@ impl Vector3 {
     /// Rotation around the vertical y with angle radian
     pub fn rotation_y(&self, angle: f32) -> Self {
         Self {
-            x:  angle.cos() * self.x - angle.sin() * self.z,
+            x: angle.cos() * self.x - angle.sin() * self.z,
             y: self.y,
             z: angle.sin() * self.x + angle.cos() * self.z,
         }

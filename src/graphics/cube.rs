@@ -62,10 +62,10 @@ pub const CUBE_FRAGMENT_SHADER: &str = r#"
             // Each block has 3 types of faces
             int idx = block_id_s * 3;
 
-            if (face_s == 4) {
+            if (face_s == 5) {
                 // bottom
                 color = texture(textures, vec3(v_tex_coords, idx + 2));
-            } else if (face_s == 5) {
+            } else if (face_s == 4) {
                 // top
                 color = texture(textures, vec3(v_tex_coords, idx + 1));
             } else {
@@ -91,42 +91,49 @@ pub struct CubeVertex {
 implement_vertex!(CubeVertex, position, tex_coords, face);
 
 pub const VERTICES: [CubeVertex; 36] = [
+    
+    // Right side
     CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
     CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 },
     CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
     CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
     CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 0 },
     CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 1 },
+    // Front
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
+    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 1 },
+    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 },
+    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 },
     CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 1 },
     CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 1 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 1 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 2 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 2 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 2 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 1.0], face: 4 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 4 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 5 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 0.0], face: 5 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 }
+    // Left side
+    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 },
+    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 },
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
+    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 2 },
+    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 },
+    // Back
+    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
+    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 },
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
+    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 },
+    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
+    // Top
+    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
+    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 0.0], face: 4 },
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
+    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 4 },
+    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
+    //  Bottom
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
+    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 5 },
+    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
+    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
+    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 5 },
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
 ];
 
 

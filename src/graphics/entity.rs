@@ -53,66 +53,6 @@ pub const ENTITY_FRAGMENT_SHADER: &str = r#"
          }
     "#;
 
-
-/// A vertex of a cube
-/// The position is expressed into the OpenGL reference frame
-#[derive(Copy, Clone)]
-pub struct EntityVertex {
-    position: [f32; 3],
-    tex_coords: [f32; 2],
-    face: u8,
-}
-
-implement_vertex!(EntityVertex, position, tex_coords, face);
-
-/// This is different from CubeVertex, the face numbering have been changed
-pub const ENTITY_VERTICES: [EntityVertex; 36] = [
-    
-    // Right side
-    EntityVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
-    EntityVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 },
-    EntityVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
-    EntityVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
-    EntityVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 0 },
-    EntityVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
-    // Front
-    EntityVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
-    EntityVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 1 },
-    EntityVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 },
-    EntityVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 },
-    EntityVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 1 },
-    EntityVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
-    // Left side
-    EntityVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 },
-    EntityVertex { position: [0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 },
-    EntityVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    EntityVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    EntityVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 2 },
-    EntityVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 },
-    // Back
-    EntityVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
-    EntityVertex { position: [-0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 },
-    EntityVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    EntityVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    EntityVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 },
-    EntityVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
-    // Top
-    EntityVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
-    EntityVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 0.0], face: 4 },
-    EntityVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    EntityVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    EntityVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 4 },
-    EntityVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
-    //  Bottom
-    EntityVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
-    EntityVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 5 },
-    EntityVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    EntityVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    EntityVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 5 },
-    EntityVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
-];
-
-
 /// An OpenGL type that contains the information for OpenGL's instancing
 #[derive(Copy, Clone)]
 pub struct EntityCube {
