@@ -28,7 +28,7 @@ impl TcpSerialize for MessageToServer {
     fn to_bytes_representation(&self) -> Vec<u8> {
         match self {
             Login => vec![],
-            OnNewPosition(pos) => format!("{},{},{}", pos.x(), pos.y(), pos.z()).into_bytes(),
+            OnNewPosition(pos) => pos.to_bytes(),
             OnNewAction(action) => action.to_bytes(),
         }
     }
@@ -38,14 +38,7 @@ impl TcpDeserialize for MessageToServer {
     fn parse_bytes_representation(code: u8, bytes_to_parse: &[u8]) -> Self {
         match code {
             0 => Login,
-            1 => {
-                let text = from_utf8(bytes_to_parse).unwrap();
-                let mut pos = Vector3::empty();
-                for (i, part) in text.split(',').enumerate() {
-                    pos[i] = part.parse::<f32>().unwrap();
-                }
-                OnNewPosition(pos)
-            }
+            1 => OnNewPosition(Vector3::from_bytes(bytes_to_parse)),
             2 => OnNewAction(Action::from_str(from_utf8(bytes_to_parse).unwrap())),
             _ => panic!("Cannot build message to server from code {code}")
         }

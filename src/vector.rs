@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub, SubAssign};
+use std::str::from_utf8;
 
 /// A vector in 3 coordinates
 ///
@@ -95,6 +96,19 @@ impl Vector3 {
     
     pub fn to_cube_coordinates(&self) -> Vector3 {
         Vector3::new(self.x.floor(), self.y.floor(), self.z.floor())
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        format!("{},{},{}", self.x, self.y, self.z).into_bytes()
+    }
+
+    pub fn from_bytes(bytes_to_parse: &[u8]) -> Self {
+        let text = from_utf8(bytes_to_parse).unwrap();
+        let mut pos = Vector3::empty();
+        for (i, part) in text.split(',').enumerate() {
+            pos[i] = part.parse::<f32>().unwrap();
+        }
+        pos
     }
 }
 
