@@ -2,15 +2,14 @@ use std::f32::consts::PI;
 use std::time::Duration;
 
 use crate::chunk::CHUNK_FLOOR;
-use crate::gravity::GravityHandler;
 use crate::vector::Vector3;
 use crate::world::World;
 use crate::aabb::{AABB, DisplacementStatus};
 
 /// Travel speed [m/s] or [cube/s]
-const SPEED: f32 = 2.;
-
-pub const PLAYER_HEIGHT: f32 = 2.;
+const SPEED: f32 = 4.;
+// TODO for some obscure reason, actual speed is lower than that. Perhaps the dt
+// is wrong, or yet again the collision ?
 
 pub enum MotionState {
     W,
@@ -37,9 +36,6 @@ pub struct Camera {
     a_pressed: bool,
     d_pressed: bool,
 
-    /// For handling free-fall
-    gravity_handler: GravityHandler,
-
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
     touched_cube: Option<Vector3>,
@@ -52,14 +48,13 @@ impl Camera {
     /// based on right hand perspective look along the positive z-Axis
     pub fn new() -> Self {
         Self {
-            position: Vector3::new(4.0, 2. + CHUNK_FLOOR as f32 + PLAYER_HEIGHT, 3.0),
+            position: Vector3::new(4.0, 24. + CHUNK_FLOOR as f32, 3.0),
 	    velocity: Vector3::new(0., 0., 0.),
             rotation: [PI, 0.0],
             w_pressed: false,
             s_pressed: false,
             a_pressed: false,
             d_pressed: false,
-            gravity_handler: GravityHandler::new(),
             touched_cube: None,
 	    in_air: true, // will be updated every frame anyway
 	    jump_time: 0.,
@@ -72,19 +67,18 @@ impl Camera {
 	let f = self.ground_direction_forward();
         let l = self.ground_direction_right();
 	
-	let amplitude = SPEED;
 	let mut displacement = Vector3::empty();
         if self.w_pressed {
-            displacement += f * amplitude;
+            displacement += f * SPEED;
         }
         if self.s_pressed {
-            displacement -= f * amplitude;
+            displacement -= f * SPEED;
         }
         if self.d_pressed {
-            displacement += l * amplitude;
+            displacement += l * SPEED;
         }
         if self.a_pressed {
-            displacement -= l * amplitude;
+            displacement -= l * SPEED;
         }
 
 	displacement
@@ -132,6 +126,8 @@ impl Camera {
         self.compute_selected_cube(world);
     }
 
+    /// Integrate the velocity to move the camera, with collision. Returns the
+    /// dt (in seconds), which can be smaller than `dt` if there is a collision.
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
 	let target = Self::make_aabb(&(self.position + self.velocity * dt));
 	
@@ -144,9 +140,7 @@ impl Camera {
 	    dt
 	}
 	else {
-	    // we want to put a margin. Before, I used 1e-6 seconds, but we
-	    // actually want a fixed displacement, not a fixed time, hence the
-	    // complicated formula
+	    // we want to put a margin, to avoid collision even with floats rounding
 	    
 	    // TODO if we are here, we can assume the velocity is nonzero I
 	    // think, but I am not sure
@@ -184,7 +178,8 @@ impl Camera {
         let unit_direction = self.direction();
         for i in 1..(REACH_DISTANCE / STEP) as usize {
             let query = self.position + unit_direction * i as f32 * STEP;
-            // If the query position is not free, it means that we have found the selected cube
+            // If the query position is not free, it means that we have found
+            // the selected cube
             if !world.is_position_free(&query) {
                 self.touched_cube = Some(query);
                 return
@@ -204,8 +199,6 @@ impl Camera {
     }
 
     pub fn jump(&mut self) {
-	// TODO implement it
-        // self.gravity_handler.jump();
 	if !self.in_air {
 	    self.jump_time = 0.1;
 	}

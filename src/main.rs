@@ -7,7 +7,6 @@ mod world;
 mod world_generation;
 mod chunk;
 mod vector;
-mod gravity;
 mod graphics;
 mod actions;
 mod fps;
