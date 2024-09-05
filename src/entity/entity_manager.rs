@@ -1,45 +1,59 @@
+use std::collections::HashMap;
 use crate::entity::entity::{Entity, EntityKind};
 use crate::vector::Vector3;
 use crate::graphics::entity::EntityCube;
 
 /// Contain all the entities
 pub struct EntityManager {
-    entity_list: Vec<Entity>,
-    n_entity: usize
+    entities: HashMap<u8, Entity>
 }
 
 impl EntityManager {
-    pub fn empty() -> Self {
+    pub fn new() -> Self {
         Self { 
-            entity_list: Vec::new(),
-            n_entity: 0
+            entities: HashMap::new(),
         }
     }
 
-    pub fn new_entity(&mut self) {
-        self.n_entity += 1;
-        self.entity_list.push(Entity::new(self.n_entity, EntityKind::Player, Vector3::empty(), [0.,0.]));
+    /// Register another player, provided its id and initial position
+    pub fn register_new_player(&mut self, id: u8, pos: Vector3) {
+        let entity = Entity::new(id as usize, EntityKind::Player, pos, [0.,0.]);
+        self.entities.insert(id, entity);
     }
 
-    pub fn set_position(&mut self, id: usize, position: Vector3) {
-        self.entity_list[id].set_position(position);
+    pub fn set_position(&mut self, id: u8, position: Vector3) {
+        self.entities.get_mut(&id).map(|entity| entity.set_position(position));
     }
 
-    pub fn set_orientation(&mut self, id: usize, orientation: [f32;2]) {
-        self.entity_list[id].set_orientation(orientation);
+    pub fn set_orientation(&mut self, id: u8, orientation: [f32; 2]) {
+        self.entities.get_mut(&id).map(|entity| entity.set_orientation(orientation));
     }
 
-    pub fn position(&self, id: usize) -> &Vector3 {
-        self.entity_list[id].position()
+    /// Returns the list of OpenGL attributes to be rendered
+    pub fn get_opengl_entities (&self) -> Vec<EntityCube> {
+        self.entities
+            .iter()
+            .map(|(_, entity)| entity.get_opengl_entities())
+            .collect::<Vec<Vec<EntityCube>>>()
+            .concat()
     }
 
-    pub fn get_opengl_entities (&mut self) -> Vec<EntityCube> {
-        let mut entity_cube = Vec::new();
-        for i in 0..self.n_entity {
-            entity_cube.append(&mut self.entity_list[i].get_opengl_entities())
-        }
-        entity_cube
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::entity::entity_manager::EntityManager;
+    use crate::vector::Vector3;
+
+    #[test]
+    fn test_basic_functionality() {
+        let mut mgr = EntityManager::new();
+        assert_eq!(0, mgr.get_opengl_entities().len());
+
+        mgr.register_new_player(2, Vector3::unit_x());
+        assert_eq!(6, mgr.get_opengl_entities().len());
+
+        mgr.register_new_player(4, Vector3::unit_x());
+        assert_eq!(12, mgr.get_opengl_entities().len());
     }
-
-
 }

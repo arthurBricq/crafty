@@ -75,7 +75,7 @@ impl WorldRenderer {
             is_left_clicking: false,
             click_time: 0.0,
             fullscreen: false,
-            entity_manager: EntityManager::empty()
+            entity_manager: EntityManager::new()
         }
     }
 
@@ -142,10 +142,6 @@ impl WorldRenderer {
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
         self.world.set_cubes_to_draw(self.cam.touched_cube());
-
-        // Add an entity
-        self.entity_manager.new_entity();
-        self.entity_manager.set_position(0, Vector3::new(3., 11.3, 3.2));
 
         // Uniform for rect computed before the loop
         let rect_uniforms = uniform! {
@@ -459,9 +455,7 @@ impl WorldRenderer {
                     // TODO if needed, here is the ID of the player
                 }
                 ServerUpdate::SendAction(action) => self.world.apply_action(&action),
-                ServerUpdate::RegisterEntity(id, pos) => {
-                    todo!()
-                }
+                ServerUpdate::RegisterEntity(id, pos) => self.entity_manager.register_new_player(id, pos)
             }
         }
     }

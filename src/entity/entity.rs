@@ -52,7 +52,7 @@ impl Entity {
     }
 
     /// Draw the entity and return a Vec of EntityCube
-    pub fn get_opengl_entities(&mut self) -> Vec<EntityCube> {
+    pub fn get_opengl_entities(&self) -> Vec<EntityCube> {
 
         let ent = match self.entity_type {
             EntityKind::Player => {
