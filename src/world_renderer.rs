@@ -458,7 +458,10 @@ impl WorldRenderer {
                     println!("Client registered ID: {client_id}")
                     // TODO if needed, here is the ID of the player
                 }
-                ServerUpdate::SendAction(action) => self.world.apply_action(&action)
+                ServerUpdate::SendAction(action) => self.world.apply_action(&action),
+                ServerUpdate::RegisterEntity(id, pos) => {
+                    todo!()
+                }
             }
         }
     }
