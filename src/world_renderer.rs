@@ -247,6 +247,7 @@ impl WorldRenderer {
                         };
 
                         // Prepare the entity buffer to send to the gpu
+                        // TODO why is this dynamic and not immutable ?
                         let entity_buffer = glium::VertexBuffer::dynamic(&display, &mut self.entity_manager.get_opengl_entities()).unwrap();
                         target.draw(
                             (&cube_vertex_buffer, entity_buffer.per_instance().unwrap()),

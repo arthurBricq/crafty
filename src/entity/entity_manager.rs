@@ -17,6 +17,7 @@ impl EntityManager {
 
     /// Register another player, provided its id and initial position
     pub fn register_new_player(&mut self, id: u8, pos: Vector3) {
+        println!("New player has joined the game: {id}");
         let entity = Entity::new(id as usize, EntityKind::Player, pos, [0.,0.]);
         self.entities.insert(id, entity);
     }

@@ -1,11 +1,9 @@
 use crate::actions::Action;
-use crate::chunk::Chunk;
 use crate::network::server_update::ServerUpdate;
-use crate::network::server_update::ServerUpdate::SendAction;
+use crate::network::server_update::ServerUpdate::{LoggedIn, RegisterEntity, SendAction};
 use crate::vector::Vector3;
 use crate::world::World;
 use crate::world_dispatcher::WorldDispatcher;
-
 
 /// The GameServer is the model of the server
 pub struct GameServer {
@@ -22,7 +20,6 @@ pub struct GameServer {
     server_updates_buffer: Vec<Vec<ServerUpdate>>,
 }
 
-
 impl GameServer {
     pub fn new(world: World) -> Self {
         Self {
@@ -36,12 +33,29 @@ impl GameServer {
     /// Logins a new player into the server
     /// Returns the ID of the registered player
     pub fn login(&mut self, name: &str) -> usize {
+        // Create the new ID
         let id = self.n_players;
-        println!("[SERVER] New player registered: {name} (ID={})", id);
         self.n_players += 1;
-        // Create a new buffer of updates, and initialize it directly with a LoggedIn message
-        self.server_updates_buffer.push(vec![ServerUpdate::LoggedIn(id as u8)]);
+        println!("[SERVER] New player registered: {name} (ID={})", id);
+
+        // Create a new buffer of updates, and initialize it directly with a LoggedIn message and the position of the other players
+        let mut initial_updates = vec![LoggedIn(id as u8)];
+        for i in 0..self.n_players - 1 {
+            // TODO find the actual position of each player...
+            initial_updates.push(RegisterEntity(i as u8, Vector3::empty()))
+        }
+
+        self.server_updates_buffer.push(initial_updates);
+
+
+        // Register the player in the dispatcher
         self.world_dispatcher.register_player(id);
+
+        // Register the player to other players of the game.
+        for i in 0..self.n_players - 1 {
+            self.server_updates_buffer[i].push(RegisterEntity(id as u8, Vector3::empty()))
+        }
+
         id
     }
 
