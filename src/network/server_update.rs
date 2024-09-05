@@ -4,6 +4,7 @@ use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterE
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 use crate::primitives::vector::Vector3;
 use std::str::from_utf8;
+use crate::primitives::position::Position;
 
 pub const RESPONSE_OK: u8 = 100;
 pub const RESPONSE_ERROR: u8 = 101;
@@ -18,9 +19,9 @@ pub enum ServerUpdate {
     /// The server forwards to the client an action to be executed
     SendAction(Action),
     /// Tell the client that a new player is part of the game
-    RegisterEntity(u8, Vector3),
+    RegisterEntity(u8, Position),
     /// Update the position of an existing entity
-    UpdatePosition(u8, Vector3)
+    UpdatePosition(u8, Position)
 }
 
 impl ServerUpdate {
@@ -77,10 +78,10 @@ impl TcpDeserialize for ServerUpdate {
                 SendAction(action)
             }
             3 => {
-                RegisterEntity(bytes_to_parse[0], Vector3::from_bytes(&bytes_to_parse[1..]))
+                RegisterEntity(bytes_to_parse[0], Position::from_bytes(&bytes_to_parse[1..]))
             }
             4 => {
-                UpdatePosition(bytes_to_parse[0], Vector3::from_bytes(&bytes_to_parse[1..]))
+                UpdatePosition(bytes_to_parse[0], Position::from_bytes(&bytes_to_parse[1..]))
             }
             _ => panic!("Cannot build server update from code {code}")
         }
@@ -93,6 +94,7 @@ mod tests {
     use crate::network::server_update::ServerUpdate;
     use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity};
     use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
+    use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
 
     #[test]
@@ -131,7 +133,7 @@ mod tests {
         let update_1 = LoadChunk(chunk1);
         let update_2 = LoadChunk(chunk2);
         let update_3 = LoggedIn(113);
-        let update_4 = RegisterEntity(113, Vector3::new(-3., 2., 34.532));
+        let update_4 = RegisterEntity(113, Position::from_pos(Vector3::new(-3., 2., 34.532)));
 
         let mut bytes1 = to_tcp_repr(&update_1);
         let mut bytes2 = to_tcp_repr(&update_2);

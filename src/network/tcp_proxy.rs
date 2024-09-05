@@ -1,15 +1,15 @@
 use crate::actions::Action;
 use crate::network::message_to_server::MessageToServer;
-use crate::network::server_update::ServerUpdate;
 use crate::network::proxy::Proxy;
-use crate::primitives::vector::Vector3;
+use crate::network::server_update::ServerUpdate;
+use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
+use crate::primitives::position::Position;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
 use std::{io, thread};
-use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
 
 /// Function that handles the thread that
 /// - sends messages to server
@@ -88,7 +88,7 @@ impl Proxy for TcpProxy {
         self.updates_transmitter.send(MessageToServer::Login).unwrap();
     }
 
-    fn send_position_update(&mut self, position: Vector3) {
+    fn send_position_update(&mut self, position: Position) {
         match self.updates_transmitter.send(MessageToServer::OnNewPosition(position)) {
             Ok(_) => {}
             Err(err) => println!("Error while sending: {err}")

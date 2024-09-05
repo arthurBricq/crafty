@@ -1,8 +1,8 @@
 use crate::actions::Action;
 use crate::network::message_to_server::MessageToServer::{Login, OnNewAction, OnNewPosition};
-use crate::primitives::vector::Vector3;
-use std::str::from_utf8;
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
+use crate::primitives::position::Position;
+use std::str::from_utf8;
 
 const HEADER_SIZE: usize = 5;
 
@@ -12,7 +12,7 @@ pub enum MessageToServer {
     /// Ask the server to log in a new player
     /// The response provides the client with the player ID
     Login,
-    OnNewPosition(Vector3),
+    OnNewPosition(Position),
     OnNewAction(Action),
 }
 
@@ -38,7 +38,7 @@ impl TcpDeserialize for MessageToServer {
     fn parse_bytes_representation(code: u8, bytes_to_parse: &[u8]) -> Self {
         match code {
             0 => Login,
-            1 => OnNewPosition(Vector3::from_bytes(bytes_to_parse)),
+            1 => OnNewPosition(Position::from_bytes(bytes_to_parse)),
             2 => OnNewAction(Action::from_str(from_utf8(bytes_to_parse).unwrap())),
             _ => panic!("Cannot build message to server from code {code}")
         }
@@ -50,6 +50,7 @@ mod tests {
     use crate::network::message_to_server::MessageToServer;
     use crate::network::message_to_server::MessageToServer::{Login, OnNewPosition};
     use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
+    use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
 
     fn test_integrity(m: MessageToServer) {
@@ -61,8 +62,8 @@ mod tests {
     #[test]
     fn test_message_integrity() {
         test_integrity(Login);
-        test_integrity(OnNewPosition(Vector3::new(1.0, 1.0, 1.0)));
-        test_integrity(OnNewPosition(Vector3::new(-1.0, 2.0, 100.012)));
+        test_integrity(OnNewPosition(Position::new_vec(1.0, 1.0, 1.0)));
+        test_integrity(OnNewPosition(Position::new_vec(-1.0, 2.0, 100.012)));
     }
 
     fn test_multiple_messages(messages: &[MessageToServer]) {
@@ -82,8 +83,8 @@ mod tests {
     fn test_multiple_message_integrity() {
         let p1 = Vector3::new(1., 2., 3.);
         let p2 = Vector3::new(5., 6., 7.);
-        test_multiple_messages(&[OnNewPosition(p1), OnNewPosition(p2)]);
-        test_multiple_messages(&[Login, OnNewPosition(p1)]);
+        test_multiple_messages(&[OnNewPosition(Position::from_pos(p1.clone())), OnNewPosition(Position::from_pos(p2))]);
+        test_multiple_messages(&[Login, OnNewPosition(Position::from_pos(p1))]);
     }
 }
 

@@ -2,6 +2,7 @@ use crate::actions::Action;
 use crate::chunk::CHUNK_FLOOR;
 use crate::network::server_update::ServerUpdate;
 use crate::network::server_update::ServerUpdate::{LoggedIn, RegisterEntity, SendAction, UpdatePosition};
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 use crate::world_dispatcher::WorldDispatcher;
@@ -43,7 +44,7 @@ impl GameServer {
         let mut initial_updates = vec![LoggedIn(id as u8)];
         for i in 0..self.n_players - 1 {
             // TODO find the actual position of each player...
-            initial_updates.push(RegisterEntity(i as u8, Vector3::newi(0, CHUNK_FLOOR as i32 + 2, 0)))
+            initial_updates.push(RegisterEntity(i as u8, Position::from_pos(Vector3::newi(0, CHUNK_FLOOR as i32 + 2, 0))))
         }
 
         self.server_updates_buffer.push(initial_updates);
@@ -54,7 +55,7 @@ impl GameServer {
 
         // Register the player to other players of the game.
         for i in 0..self.n_players - 1 {
-            self.server_updates_buffer[i].push(RegisterEntity(id as u8, Vector3::newi(0, CHUNK_FLOOR as i32 + 2, 0)))
+            self.server_updates_buffer[i].push(RegisterEntity(id as u8, Position::from_pos(Vector3::newi(0, CHUNK_FLOOR as i32 + 2, 0))))
         }
 
         id
@@ -63,7 +64,7 @@ impl GameServer {
     // Implementation of the 'callbacks': entry points of the server
 
     /// Called when receiving the position of a new player
-    pub fn on_new_position_update(&mut self, player_id: usize, position: Vector3) {
+    pub fn on_new_position_update(&mut self, player_id: usize, position: Position) {
         // Update the world dispatcher. to compute if the player needs to be sent new chunks
         if let Some((chunks_to_send, chunks_to_delete)) = self.world_dispatcher.update_position(player_id, (position.x(), position.z())) {
             let buffer = &mut self.server_updates_buffer[player_id];
@@ -80,7 +81,7 @@ impl GameServer {
         // Update other players
         for i in 0..self.n_players {
             if i != player_id {
-                self.server_updates_buffer[i].push(UpdatePosition(player_id as u8, position))
+                self.server_updates_buffer[i].push(UpdatePosition(player_id as u8, position.clone()))
             }
         }
 

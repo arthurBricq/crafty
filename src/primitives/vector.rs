@@ -257,6 +257,14 @@ impl AddAssign for Vector3 {
     }
 }
 
+// impl AddAssign<Vector3> for &mut Vector3 {
+//     fn add_assign(&mut self, rhs: Self) {
+//         self.x += rhs.x;
+//         self.y += rhs.y;
+//         self.z += rhs.z;
+//     }
+// }
+
 impl SubAssign for Vector3 {
     fn sub_assign(&mut self, rhs: Self) {
         self.x -= rhs.x;
@@ -264,6 +272,14 @@ impl SubAssign for Vector3 {
         self.z -= rhs.z;
     }
 }
+
+// impl SubAssign<Vector3> for &mut Vector3 {
+//     fn sub_assign(&mut self, rhs: Self) {
+//         self.x -= rhs.x;
+//         self.y -= rhs.y;
+//         self.z -= rhs.z;
+//     }
+// }
 
 impl Mul<f32> for Vector3 {
     type Output = Vector3;
@@ -276,7 +292,6 @@ impl Mul<f32> for Vector3 {
         }
     }
 }
-
 
 impl Div<f32> for Vector3 {
     type Output = Vector3;

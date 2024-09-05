@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use crate::chunk::CHUNK_FLOOR;
 use crate::gravity::GravityHandler;
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 
@@ -23,10 +24,7 @@ pub enum MotionState {
 /// The state includes the position and the speed
 pub struct Camera {
     /// Position of the camera
-    position: Vector3,
-
-    /// Orientation of the camera Yaw, Pitch
-    rotation: [f32; 2],
+    position: Position,
 
     // state: MotionState
     // TODO Maybe we can build a better encapsulation of this logic
@@ -47,8 +45,7 @@ impl Camera {
     /// based on right hand perspective look along the positive z-Axis
     pub fn new() -> Self {
         Self {
-            position: Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT + 5., 3.0),
-            rotation: [PI, 0.0],
+            position: Position::new(Vector3::new(4.0, CHUNK_FLOOR as f32 + PLAYER_HEIGHT + 5., 3.0), PI, 0.),
             w_pressed: false,
             s_pressed: false,
             a_pressed: false,
@@ -59,15 +56,18 @@ impl Camera {
     }
 
     pub fn step(&mut self, elapsed: Duration, world: &World) {
-        // Compute the next position
-        let f = self.ground_direction_forward();
-        let l = self.ground_direction_right();
-        let mut next_pos = self.position.clone();
-        let mut next_pos_amplified = self.position.clone();
-        let amplitude = SPEED * elapsed.as_secs_f32();
         // TODO The problem of hardcoding a ratio is that `dt` depends on the OpenGL performance.
         //      We need to have the physics computation done at a constant `dt`...
         //      This won't be easy in Rust.
+
+        // Compute the next position
+        let f = self.ground_direction_forward();
+        let l = self.ground_direction_right();
+
+        let mut next_pos = self.position.pos().clone();
+        let mut next_pos_amplified = self.position.pos().clone();
+
+        let amplitude = SPEED * elapsed.as_secs_f32();
         let ratio = 20.;
         if self.w_pressed {
             next_pos += f * amplitude;
@@ -96,7 +96,7 @@ impl Camera {
 
         // Position update
         if is_free {
-            self.position = next_pos;
+            self.position.set_position(next_pos);
         } else { 
             
         }
@@ -111,7 +111,7 @@ impl Camera {
         const REACH_DISTANCE: f32 = 5.0;
         let unit_direction = self.direction();
         for i in 1..(REACH_DISTANCE / STEP) as usize {
-            let query = self.position + unit_direction * i as f32 * STEP;
+            let query = self.position.pos() + unit_direction * i as f32 * STEP;
             // If the query position is not free, it means that we have found the selected cube
             if !world.is_position_free(&query) {
                 self.touched_cube = Some(query);
@@ -136,11 +136,11 @@ impl Camera {
     }
 
     pub fn up(&mut self) {
-        self.position[1] += 5.;
+        self.position.translate_y(5.);
     }
 
     pub fn down(&mut self) {
-        self.position[1] -= 1.;
+        self.position.translate_y(-1.);
     }
 
     pub fn debug(&mut self) {
@@ -150,17 +150,17 @@ impl Camera {
 
     /// Returns the normalized direction vector
     fn direction(&self) -> Vector3 {
-        let yaw = self.rotation[0];
-        let pitch = self.rotation[1];
-        Vector3::new(yaw.cos() * pitch.cos(), pitch.sin(), yaw.sin() * pitch.cos())
+        Vector3::new(
+            self.position.yaw().cos() * self.position.pitch().cos(),
+            self.position.pitch().sin(), self.position.yaw().sin() * self.position.pitch().cos())
     }
 
     fn ground_direction_forward(&self) -> Vector3 {
-        Vector3::new(self.rotation[0].cos(), 0., self.rotation[0].sin())
+        Vector3::new(self.position.yaw().cos(), 0., self.position.yaw().sin())
     }
 
     fn ground_direction_right(&self) -> Vector3 {
-        Vector3::new(self.rotation[0].sin(), 0., -self.rotation[0].cos())
+        Vector3::new(self.position.yaw().sin(), 0., self.position.yaw().cos())
     }
 
     pub fn perspective_matrix(&self, dim: (u32, u32)) -> [[f32; 4]; 4] {
@@ -186,9 +186,10 @@ impl Camera {
         let mut s = camera_up.cross(&forward);
         s.normalize();
         let u = forward.cross(&s);
-        let p = [-self.position[0] * s[0] - self.position[1] * s[1] - self.position[2] * s[2],
-            -self.position[0] * u[0] - self.position[1] * u[1] - self.position[2] * u[2],
-            -self.position[0] * forward[0] - self.position[1] * forward[1] - self.position[2] * forward[2]];
+        let position = self.position.pos();
+        let p = [-position[0] * s[0] - position[1] * s[1] - position[2] * s[2],
+            -position[0] * u[0] - position[1] * u[1] - position[2] * u[2],
+            -position[0] * forward[0] - position[1] * forward[1] - position[2] * forward[2]];
         [
             [s[0], u[0], forward[0], 0.0],
             [s[1], u[1], forward[1], 0.0],
@@ -198,11 +199,11 @@ impl Camera {
     }
 
     pub fn mousemove(&mut self, horizontal: f32, vertical: f32, sensitivity: f32) {
-        self.rotation[0] -= horizontal * sensitivity;
-        if vertical > 0.0 && self.rotation[1] < PI * 0.5 - 0.05 {
-            self.rotation[1] += vertical * sensitivity;
-        } else if vertical < 0.0 && self.rotation[1] > -PI * 0.5 + 0.05 {
-            self.rotation[1] += vertical * sensitivity;
+        self.position.rotate_yaw(-horizontal * sensitivity);
+        if vertical > 0.0 && self.position.pitch() < PI * 0.5 - 0.05 {
+            self.position.rotate_pitch(vertical * sensitivity);
+        } else if vertical < 0.0 && self.position.pitch() > -PI * 0.5 + 0.05 {
+            self.position.rotate_pitch(vertical * sensitivity);
         }
     }
 
@@ -211,11 +212,7 @@ impl Camera {
         self.touched_cube
     }
 
-    pub fn rotation(&self) -> [f32; 2] {
-        self.rotation
-    }
-
-    pub fn position(&self) -> &Vector3 {
+    pub fn position(&self) -> &Position {
         &self.position
     }
 

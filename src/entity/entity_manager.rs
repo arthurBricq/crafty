@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use crate::entity::entity::{Entity, EntityKind};
-use crate::primitives::vector::Vector3;
 use crate::graphics::entity::EntityCube;
+use crate::primitives::position::Position;
+use std::collections::HashMap;
 
 /// Contain all the entities
 pub struct EntityManager {
@@ -16,19 +16,15 @@ impl EntityManager {
     }
 
     /// Register another player, provided its id and initial position
-    pub fn register_new_player(&mut self, id: u8, pos: Vector3) {
+    pub fn register_new_player(&mut self, id: u8, pos: Position) {
         println!("New player has joined the game: {id}");
-        let entity = Entity::new(id as usize, EntityKind::Player, pos, [0.,0.]);
+        let entity = Entity::new(id as usize, EntityKind::Player, pos);
         self.entities.insert(id, entity);
     }
 
-    pub fn set_position(&mut self, id: u8, position: Vector3) {
+    pub fn set_position(&mut self, id: u8, position: Position) {
         println!("Updating pos for player: {id}");
         self.entities.get_mut(&id).map(|entity| entity.set_position(position));
-    }
-
-    pub fn set_orientation(&mut self, id: u8, orientation: [f32; 2]) {
-        self.entities.get_mut(&id).map(|entity| entity.set_orientation(orientation));
     }
 
     /// Returns the list of OpenGL attributes to be rendered
@@ -45,6 +41,7 @@ impl EntityManager {
 #[cfg(test)]
 mod tests {
     use crate::entity::entity_manager::EntityManager;
+    use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
 
     #[test]
@@ -52,10 +49,10 @@ mod tests {
         let mut mgr = EntityManager::new();
         assert_eq!(0, mgr.get_opengl_entities().len());
 
-        mgr.register_new_player(2, Vector3::unit_x());
+        mgr.register_new_player(2, Position::from_pos(Vector3::unit_x()));
         assert_eq!(6, mgr.get_opengl_entities().len());
 
-        mgr.register_new_player(4, Vector3::unit_x());
+        mgr.register_new_player(3, Position::from_pos(Vector3::unit_x()));
         assert_eq!(12, mgr.get_opengl_entities().len());
     }
 }

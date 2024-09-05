@@ -2,7 +2,6 @@ extern crate glium;
 extern crate winit;
 
 use std::sync::{Arc, Mutex};
-use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::actions::Action;
@@ -10,22 +9,21 @@ use crate::actions::Action::{Add, Destroy};
 use crate::block_kind::Block;
 use crate::block_kind::Block::COBBELSTONE;
 use crate::camera::{Camera, MotionState};
-use crate::fps::FpsManager;
-use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid::PATRON_PLAYER_CUT;
+use crate::fps::FpsManager;
+use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 
 use crate::graphics::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER};
 use crate::graphics::font::GLChar;
 use crate::graphics::hud_renderer::HUDRenderer;
 use crate::graphics::menu_debug::DebugData;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
+use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
 use crate::player_items::PlayerItems;
-use crate::network::proxy::Proxy;
-use crate::primitives::vector::Vector3;
-use crate::world::World;
 use crate::primitives::math;
+use crate::world::World;
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
@@ -75,7 +73,7 @@ impl WorldRenderer {
             is_left_clicking: false,
             click_time: 0.0,
             fullscreen: false,
-            entity_manager: EntityManager::new()
+            entity_manager: EntityManager::new(),
         }
     }
 
@@ -120,7 +118,7 @@ impl WorldRenderer {
         let font_atlas = Self::load_texture(std::fs::read("./resources/fonts.png").unwrap().as_slice(), &display);
 
         // Textures for the player
-        let player_texture = Self::load_texture_cut(std::fs::read("./resources/entity/player.png").unwrap().as_slice(), &display, Vec::from(PATRON_PLAYER_CUT) );
+        let player_texture = Self::load_texture_cut(std::fs::read("./resources/entity/player.png").unwrap().as_slice(), &display, Vec::from(PATRON_PLAYER_CUT));
         let player_texture_sample = player_texture.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
         // Build the shader programs
@@ -201,7 +199,7 @@ impl WorldRenderer {
                         // HUD updates
                         if self.hud_renderer.show_debug() {
                             self.hud_renderer
-                                .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.cam.rotation(), self.world.number_cubes_rendered()));
+                                .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.world.number_cubes_rendered()));
                         }
 
                         // I) Draw the cubes
@@ -324,18 +322,18 @@ impl WorldRenderer {
     fn load_texture_cut(bytes: &[u8], display: &Display<WindowSurface>, cut: Vec<[u32; 4]>) -> Texture2dArray {
         let image = image::load(std::io::Cursor::new(bytes),
                                 image::ImageFormat::Png).unwrap().to_rgba8();
-        let mut source= Vec::new();
+        let mut source = Vec::new();
         // Set a scaling factor which is a common multiplier for every texture
         let mut lcm_x: u32 = 1;
         let mut lcm_y: u32 = 1;
         for cut_pos in &cut {
-            lcm_x= math::lcm(lcm_x, cut_pos[2]);
-            lcm_y= math::lcm(lcm_y, cut_pos[3]);
+            lcm_x = math::lcm(lcm_x, cut_pos[2]);
+            lcm_y = math::lcm(lcm_y, cut_pos[3]);
         }
         for cut_pos in cut {
             let sub_image = image.view(cut_pos[0], cut_pos[1], cut_pos[2], cut_pos[3]).to_image();
             let sub_image = image::imageops::resize(&sub_image, lcm_x, lcm_y, image::imageops::FilterType::Nearest);
-            source.push(glium::texture::RawImage2d::from_raw_rgba_reversed(&sub_image.into_raw(), (lcm_x, lcm_y)) );
+            source.push(glium::texture::RawImage2d::from_raw_rgba_reversed(&sub_image.into_raw(), (lcm_x, lcm_y)));
         }
         Texture2dArray::new(display, source).unwrap()
     }

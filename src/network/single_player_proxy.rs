@@ -2,6 +2,7 @@ use crate::actions::Action;
 use crate::game_server::GameServer;
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 
 pub struct SinglePlayerProxy {
@@ -24,7 +25,7 @@ impl Proxy for SinglePlayerProxy {
         self.client_id = self.server.login("client");
     }
 
-    fn send_position_update(&mut self, position: Vector3) {
+    fn send_position_update(&mut self, position: Position) {
         self.server.on_new_position_update(self.client_id, position);
     }
 
