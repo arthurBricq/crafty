@@ -456,7 +456,8 @@ impl WorldRenderer {
                     // TODO if needed, here is the ID of the player
                 }
                 ServerUpdate::SendAction(action) => self.world.apply_action(&action),
-                ServerUpdate::RegisterEntity(id, pos) => self.entity_manager.register_new_player(id, pos)
+                ServerUpdate::RegisterEntity(id, pos) => self.entity_manager.register_new_player(id, pos),
+                ServerUpdate::UpdatePosition(id, pos) => self.entity_manager.set_position(id, pos),
             }
         }
     }

@@ -40,6 +40,8 @@ Why is it difficult ?
 
 Example provided by https://riptutorial.com/rust/example/4404/a-simple-tcp-client-and-server-application--echo
 
+- share the orientation of players
+
 ## Entities
 
 What is an entity ? 

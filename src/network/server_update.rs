@@ -1,6 +1,6 @@
 use crate::actions::Action;
 use crate::chunk::Chunk;
-use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity, SendAction};
+use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 use crate::vector::Vector3;
 use std::str::from_utf8;
@@ -18,7 +18,17 @@ pub enum ServerUpdate {
     /// The server forwards to the client an action to be executed
     SendAction(Action),
     /// Tell the client that a new player is part of the game
-    RegisterEntity(u8, Vector3)
+    RegisterEntity(u8, Vector3),
+    /// Update the position of an existing entity
+    UpdatePosition(u8, Vector3)
+}
+
+impl ServerUpdate {
+    /// Returns true if this update is big enough to require a special treatment when sent over the
+    /// network.
+    pub fn is_heavy(&self) -> bool {
+        matches!(self, LoadChunk(_))
+    }
 }
 
 impl TcpSerialize for ServerUpdate {
@@ -27,7 +37,8 @@ impl TcpSerialize for ServerUpdate {
             LoadChunk(_) => 0,
             LoggedIn(_) => 1,
             SendAction(_) => 2,
-            RegisterEntity(_, _) => 3
+            RegisterEntity(_, _) => 3,
+            UpdatePosition(_, _) => 4
         }
     }
 
@@ -37,7 +48,7 @@ impl TcpSerialize for ServerUpdate {
             LoadChunk(chunk) => chunk.to_json().into_bytes(),
             LoggedIn(code) => vec![*code],
             SendAction(action) => action.to_bytes(),
-            RegisterEntity(id, pos) => {
+            RegisterEntity(id, pos) | UpdatePosition(id, pos)=> {
                 let mut bytes = vec![*id];
                 bytes.extend_from_slice(&pos.to_bytes());
                 bytes
@@ -68,6 +79,9 @@ impl TcpDeserialize for ServerUpdate {
             3 => {
                 RegisterEntity(bytes_to_parse[0], Vector3::from_bytes(&bytes_to_parse[1..]))
             }
+            4 => {
+                UpdatePosition(bytes_to_parse[0], Vector3::from_bytes(&bytes_to_parse[1..]))
+            }
             _ => panic!("Cannot build server update from code {code}")
         }
     }
@@ -79,7 +93,7 @@ mod tests {
     use crate::network::server_update::ServerUpdate;
     use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity};
     use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
-    use crate::vector::Vector3;
+    use crate::primitives::vector::Vector3;
 
     #[test]
     fn test_load_chunks_encoding_decoding() {

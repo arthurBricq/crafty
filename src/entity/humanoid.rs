@@ -28,6 +28,7 @@ const PLAYER_ARM_SCALE: [f32; 3] = [PLAYER_ARM_LENGTH, PLAYER_ARM_HEIGHT, PLAYER
 const PLAYER_LEG_SCALE: [f32; 3] = [PLAYER_LEG_LENGTH, PLAYER_LEG_HEIGHT, PLAYER_LEG_WIDTH];
 
 // Define the position of the textures to use for the player
+// TODO if this remain public, it needs a much clearer documentation
 pub const PATRON_PLAYER_CUT: [[u32; 4]; 24] = [
     // Head
     [0, 24, 8, 8], [8, 24, 8, 8], [16, 24, 8, 8], [24, 24, 8, 8], [32, 24, 8, 8], [40, 24, 8, 8], 

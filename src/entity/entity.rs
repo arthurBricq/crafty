@@ -28,6 +28,7 @@ impl Entity {
     }
     
     pub fn set_position(&mut self, position: Vector3) {
+        println!("{} ->  {:?}", self.id, position);
         self.position = position;
     }
     
