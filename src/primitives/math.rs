@@ -21,7 +21,7 @@ pub fn lcm(a: u32, b: u32) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::math::{gcd, lcm};
+    use crate::primitives::math::{gcd, lcm};
 
  
     #[test]

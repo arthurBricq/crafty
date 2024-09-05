@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::entity::entity::{Entity, EntityKind};
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use crate::graphics::entity::EntityCube;
 
 /// Contain all the entities
@@ -45,7 +45,7 @@ impl EntityManager {
 #[cfg(test)]
 mod tests {
     use crate::entity::entity_manager::EntityManager;
-    use crate::vector::Vector3;
+    use crate::primitives::vector::Vector3;
 
     #[test]
     fn test_basic_functionality() {

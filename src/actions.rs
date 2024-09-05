@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::block_kind::Block;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 
 /// An action is something that will alter the world
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]

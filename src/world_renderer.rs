@@ -23,9 +23,9 @@ use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_
 use crate::network::server_update::ServerUpdate;
 use crate::player_items::PlayerItems;
 use crate::network::proxy::Proxy;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use crate::world::World;
-use crate::math;
+use crate::primitives::math;
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};

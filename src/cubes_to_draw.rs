@@ -1,6 +1,6 @@
 use crate::cube::Cube;
 use crate::graphics::cube::CubeAttr;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use crate::chunk::Chunk;
 
 /// Control the cubes to be drawn
@@ -81,11 +81,11 @@ impl CubesToDraw {
 
 #[cfg(test)]
 mod tests {
-    use crate::{cube::Cube, graphics::cube::CubeAttr, vector::Vector3};
+    use crate::cube::Cube;
 
     use super::CubesToDraw;
     use crate::block_kind::Block::DIRT;
-
+    use crate::primitives::vector::Vector3;
 
     #[test]
     fn test_add_remove_one_cube() {

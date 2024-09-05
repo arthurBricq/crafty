@@ -2,7 +2,7 @@ use crate::actions::Action;
 use crate::chunk::Chunk;
 use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use std::str::from_utf8;
 
 pub const RESPONSE_OK: u8 = 100;

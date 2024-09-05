@@ -1,6 +1,6 @@
 use crate::graphics::rectangle::RectVertexAttr;
 use crate::graphics::string_rect::StringRect;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 
 use std::f32::consts::PI;
 

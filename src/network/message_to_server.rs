@@ -1,6 +1,6 @@
 use crate::actions::Action;
 use crate::network::message_to_server::MessageToServer::{Login, OnNewAction, OnNewPosition};
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use std::str::from_utf8;
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
@@ -50,7 +50,7 @@ mod tests {
     use crate::network::message_to_server::MessageToServer;
     use crate::network::message_to_server::MessageToServer::{Login, OnNewPosition};
     use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
-    use crate::vector::Vector3;
+    use crate::primitives::vector::Vector3;
 
     fn test_integrity(m: MessageToServer) {
         let bytes = to_tcp_repr(&m);

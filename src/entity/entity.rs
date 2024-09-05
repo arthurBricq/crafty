@@ -1,6 +1,6 @@
 use crate::graphics::entity::EntityCube;
 use crate::entity::humanoid;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 
 
 #[derive(Debug, PartialEq)]
@@ -28,7 +28,6 @@ impl Entity {
     }
     
     pub fn set_position(&mut self, position: Vector3) {
-        println!("{} ->  {:?}", self.id, position);
         self.position = position;
     }
     
@@ -70,7 +69,7 @@ impl Entity {
 #[cfg(test)]
 mod tests {
     use crate::entity::entity::EntityKind;
-    use crate::vector::Vector3;
+    use crate::primitives::vector::Vector3;
     use super::Entity;
 
     #[test]

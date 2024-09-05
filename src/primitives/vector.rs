@@ -114,7 +114,7 @@ impl Vector3 {
 
 #[cfg(test)]
 mod tests {
-    use crate::vector::Vector3;
+    use crate::primitives::vector::Vector3;
 
     #[test]
     fn test_line_to() {

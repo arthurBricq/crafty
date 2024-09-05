@@ -4,7 +4,7 @@ use crate::block_kind::Block::{DIRT, GRASS};
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
 use crate::cube::Cube;
 use crate::graphics::cube::CubeAttr;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use crate::world_generation::perlin::PerlinNoise;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -425,7 +425,7 @@ mod tests {
     use crate::block_kind::Block;
     use crate::block_kind::Block::GRASS;
     use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
-    use crate::vector::Vector3;
+    use crate::primitives::vector::Vector3;
     use crate::world::World;
 
     #[test]

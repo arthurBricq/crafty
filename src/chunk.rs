@@ -1,7 +1,7 @@
 use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::cube::Cube;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use strum::IntoEnumIterator;
 
@@ -255,7 +255,7 @@ impl Chunk {
 mod tests {
     use crate::block_kind::Block::GRASS;
     use crate::chunk::{Chunk, CHUNK_HEIGHT, CHUNK_SIZE};
-    use crate::vector::Vector3;
+    use crate::primitives::vector::Vector3;
 
     #[test]
     fn test_bounding_area() {

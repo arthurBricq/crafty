@@ -2,7 +2,7 @@ use crate::actions::Action;
 use crate::chunk::CHUNK_FLOOR;
 use crate::network::server_update::ServerUpdate;
 use crate::network::server_update::ServerUpdate::{LoggedIn, RegisterEntity, SendAction, UpdatePosition};
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use crate::world::World;
 use crate::world_dispatcher::WorldDispatcher;
 

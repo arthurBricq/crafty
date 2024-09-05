@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use crate::chunk::CHUNK_FLOOR;
 use crate::gravity::GravityHandler;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use crate::world::World;
 
 /// Travel speed [m/s] or [cube/s]

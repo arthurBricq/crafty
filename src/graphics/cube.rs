@@ -1,6 +1,7 @@
 use glium::implement_vertex;
 
-use crate::{cube::Cube, vector::Vector3};
+use crate::cube::Cube;
+use crate::primitives::vector::Vector3;
 
 // Vertex shader
 // Most basic example with a camera

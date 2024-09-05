@@ -2,7 +2,7 @@ use crate::actions::Action;
 use crate::network::message_to_server::MessageToServer;
 use crate::network::server_update::ServerUpdate;
 use crate::network::proxy::Proxy;
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::net::TcpStream;

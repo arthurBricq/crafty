@@ -1,6 +1,6 @@
 use glium::implement_vertex;
 
-use crate::vector::Vector3;
+use crate::primitives::vector::Vector3;
 
 pub const ENTITY_VERTEX_SHADER: &str = r#"
         #version 150
