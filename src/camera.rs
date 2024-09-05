@@ -4,7 +4,7 @@ use std::time::Duration;
 use crate::chunk::CHUNK_FLOOR;
 use crate::vector::Vector3;
 use crate::world::World;
-use crate::aabb::{AABB, DisplacementStatus};
+use crate::aabb::{AABB};
 
 /// Travel speed [m/s] or [cube/s]
 const SPEED: f32 = 4.;

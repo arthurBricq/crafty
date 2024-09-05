@@ -1,6 +1,6 @@
 use crate::block_kind::Block;
 use crate::vector::Vector3;
-use crate::aabb::{AABB, DisplacementStatus};
+use crate::aabb::AABB;
 
 /// Model of a cube in the 3D world.
 #[derive(Clone, Copy, Debug)]

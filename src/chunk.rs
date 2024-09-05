@@ -2,7 +2,7 @@ use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::cube::Cube;
 use crate::vector::Vector3;
-use crate::aabb::{AABB, DisplacementStatus};
+use crate::aabb::AABB;
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 pub type CubeIndex = (usize, usize, usize);

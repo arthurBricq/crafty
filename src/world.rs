@@ -9,7 +9,7 @@ use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::cube::Cube;
 use crate::world_generation::perlin::PerlinNoise;
-use crate::aabb::{AABB, DisplacementStatus};
+use crate::aabb::AABB;
 
 pub struct World {
     /// The list of the chunks currently being displayed
