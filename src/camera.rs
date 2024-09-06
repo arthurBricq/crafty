@@ -209,9 +209,18 @@ impl Camera {
         }
     }
 
-    /// Returns the optional position of the cube that the player is looking at.
-    pub fn touched_cube(&self) -> Option<(Cube, Vector3)> {
+    /// Returns the optional (cube, position on the cube) of the cube that the player is looking at.
+    pub fn selection_internals(&self) -> Option<(Cube, Vector3)> {
         self.touched_cube
+    }
+    
+    pub fn is_selecting_cube(&self) -> bool {
+        self.touched_cube.is_some()
+    }
+
+    /// Returns the optional position of the cube that the player is looking at.
+    pub fn selected_cube(&self) -> Option<Cube> {
+        self.touched_cube.map(|(cube, _)| cube)
     }
 
     pub fn position(&self) -> &Position {

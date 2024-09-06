@@ -175,11 +175,11 @@ impl WorldRenderer {
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
-                        if self.cam.touched_cube().is_some() && self.is_left_clicking {
+                        if self.cam.is_selecting_cube() && self.is_left_clicking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
-                                self.apply_action(Destroy { at: self.cam.touched_cube().unwrap().0.to_cube_coordinates() });
+                                self.apply_action(Destroy { at: self.cam.selected_cube().unwrap().to_cube_coordinates() });
                                 self.is_left_clicking = false;
                                 self.click_time = 0.;
                             }
@@ -225,8 +225,7 @@ impl WorldRenderer {
 
                         // We use OpenGL's instancing feature which allows us to render huge amounts ot cubes at once.
                         // OpenGL instancing = instead of setting 1000 times different uniforms, you give once 1000 attributes
-                        let selected_cube = self.cam.touched_cube().map(|(cube, _)| cube);
-                        let position_buffer = self.world.get_cubes_buffer(&display, selected_cube);
+                        let position_buffer = self.world.get_cubes_buffer(&display, self.cam.selected_cube());
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,
@@ -413,7 +412,7 @@ impl WorldRenderer {
         } else if button == 3 && state == Pressed {
             // Right click = add a new cube
             // We know where is the player and we know 
-            if let Some((touched_cube, touched_pos)) = self.cam.touched_cube() {
+            if let Some((touched_cube, touched_pos)) = self.cam.selection_internals() {
                 if let Some(block) = self.items.get_current_block() {
                     self.apply_action(Action::Add {
                         at: Action::position_to_generate_cube(&touched_cube, &touched_pos),
