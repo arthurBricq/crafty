@@ -2,7 +2,7 @@ use crate::actions::Action;
 use crate::network::message_to_server::MessageToServer;
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
-use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
+use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
 use crate::primitives::position::Position;
 use std::collections::VecDeque;
 use std::io::{Read, Write};
@@ -10,6 +10,7 @@ use std::net::TcpStream;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
 use std::{io, thread};
+use std::task::Context;
 
 /// Function that handles the thread that
 /// - sends messages to server
@@ -18,12 +19,14 @@ fn handle_stream_with_server(mut stream: TcpStream, proxy: Arc<Mutex<TcpProxy>>,
     // Buffer of data for the stream
     let mut data = [0u8; 2_usize.pow(17)];
 
+    let mut context = ParseContext::new();
+
     loop {
 
         // Continuously read the bytes received by the server
         match stream.read(&mut data) {
             Ok(size) => {
-                for update in from_tcp_repr(&data, size) {
+                for update in from_tcp_repr(&data[0..size], size, &mut context) {
                     proxy.lock().unwrap().push_server_update(update);
                 }
             }

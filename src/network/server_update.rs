@@ -93,7 +93,7 @@ mod tests {
     use crate::chunk::Chunk;
     use crate::network::server_update::ServerUpdate;
     use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity};
-    use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
+    use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
     use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
 
@@ -102,7 +102,8 @@ mod tests {
         let chunk = Chunk::new_for_demo([3., 5.], 5);
         let update = LoadChunk(chunk);
         let bytes = to_tcp_repr(&update);
-        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len());
+        let mut context = ParseContext::new();
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len(), &mut context);
 
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
@@ -116,7 +117,8 @@ mod tests {
         let chunk = Chunk::new_for_demo([3., 5.], 5);
         let update = LoggedIn(113);
         let bytes = to_tcp_repr(&update);
-        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len());
+        let mut context = ParseContext::new();
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len(), &mut context);
 
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
@@ -144,7 +146,8 @@ mod tests {
         bytes1.append(&mut bytes3);
         bytes1.append(&mut bytes4);
 
-        let parsed = from_tcp_repr::<ServerUpdate>(bytes1.as_slice(), bytes1.len());
+        let mut context = ParseContext::new();
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes1.as_slice(), bytes1.len(), &mut context);
         assert_eq!(4, parsed.len());
 
         match (&update_1, &parsed[0]) {
@@ -169,5 +172,28 @@ mod tests {
             },
             (_, _) => assert!(false)
         }
+    }
+
+    #[test]
+    fn test_one_message_sent_over_mutliple_packet() {
+        let chunk1 = Chunk::new_for_demo([3., 5.], 5);
+        let update_1 = LoadChunk(chunk1);
+        let bytes1 = to_tcp_repr(&update_1);
+        let len = bytes1.len();
+
+        let packet1 = &bytes1[0..500];
+        let packet2 = &bytes1[500..1500];
+        let packet3 = &bytes1[1500..];
+
+        let mut context = ParseContext::new();
+
+        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet1, len, &mut context);
+        assert_eq!(0, parsed.len());
+        
+        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet2, len, &mut context);
+        assert_eq!(0, parsed.len());
+        
+        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet3, len, &mut context);
+        assert_eq!(1, parsed.len())
     }
 }

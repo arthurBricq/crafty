@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::game_server::GameServer;
 use crate::network::message_to_server::MessageToServer;
 use crate::network::server_update::{ServerUpdate, RESPONSE_ERROR, RESPONSE_OK};
-use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
+use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
 
 pub struct TcpServer {
 
@@ -52,6 +52,7 @@ impl TcpServer {
 fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
     let mut data = [0_u8; 2_usize.pow(10)];
     let mut client_id = None;
+    let mut context = ParseContext::new();
 
     // A while loop that continues to work for as long as the server lives.
     // This TCP stream is set to non-blocking, this is why there is a thread::sleep at the end of the
@@ -60,7 +61,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
         match stream.read(&mut data) {
             Ok(size) => {
                 // Read the messages sent by the client
-                let messages = from_tcp_repr::<MessageToServer>(&data, size);
+                let messages = from_tcp_repr::<MessageToServer>(&data[0..size], size, &mut context);
 
                 // For each message, create a response and send it to the client.
                 for message in messages {

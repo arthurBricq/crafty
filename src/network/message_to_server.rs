@@ -49,13 +49,14 @@ impl TcpDeserialize for MessageToServer {
 mod tests {
     use crate::network::message_to_server::MessageToServer;
     use crate::network::message_to_server::MessageToServer::{Login, OnNewPosition};
-    use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr};
+    use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
     use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
 
     fn test_integrity(m: MessageToServer) {
         let bytes = to_tcp_repr(&m);
-        let parsed = from_tcp_repr(bytes.as_slice(), bytes.len());
+        let mut context = ParseContext::new();
+        let parsed = from_tcp_repr(bytes.as_slice(), bytes.len(), &mut context);
         assert_eq!(m, parsed[0]);
     }
 
@@ -72,7 +73,8 @@ mod tests {
             .map(|m| to_tcp_repr(m))
             .collect::<Vec<Vec<u8>>>()
             .concat();
-        let parsed = from_tcp_repr(bytes.as_slice(), bytes.len());
+        let mut context = ParseContext::new();
+        let parsed = from_tcp_repr(bytes.as_slice(), bytes.len(), &mut context);
         assert_eq!(messages.len(), parsed.len());
         for (i, m) in messages.iter().enumerate() {
             assert_eq!(*m, parsed[i]);

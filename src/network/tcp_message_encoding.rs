@@ -34,33 +34,93 @@ pub fn to_tcp_repr<T: TcpSerialize>(object: &T) -> Vec<u8>{
     data_to_send
 }
 
-pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], size: usize) -> Vec<T> {
+pub struct ParseContext {
+    bytes: Vec<u8>,
+    code: u8,
+    len: usize,
+}
+
+impl ParseContext{
+    pub fn new() -> Self {
+        Self {
+            bytes: vec![],
+            len: 0,
+            code: 0,
+        }
+    }
+
+    pub fn flush(&mut self) {
+        self.bytes = vec![]
+    }
+
+    pub fn store(&mut self, data: &[u8]) {
+        self.bytes.extend_from_slice(data)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.bytes.is_empty()
+    }
+
+    pub fn set_message_len(&mut self, len: usize) {
+        self.len = len;
+    }
+
+    pub fn remaining_length_to_read(&self) -> usize {
+        self.len - self.bytes.len()
+    }
+
+    pub fn set_code(&mut self, code: u8) {
+        self.code = code;
+    }
+}
+
+
+// TODO remove `size`
+pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], size: usize, context: &mut ParseContext) -> Vec<T> {
     let mut to_return = vec![];
     let mut start = 0;
     loop {
-        // Read the header
-        // - type of the enum
-        // - length of the message being sent
-        let length_bytes: [u8; 4] = bytes[start + 1..start + 5].try_into().unwrap();
-        let len = u32::from_le_bytes(length_bytes) as usize;
-        let code = bytes[start];
+        
+        if context.is_empty()  {
+            // It means it's a new message to be read.
+            // Read the header
+            // - type of the enum
+            // - length of the message being sent
+            let length_bytes: [u8; 4] = bytes[start + 1..start + 5].try_into().unwrap();
+            let len = u32::from_le_bytes(length_bytes) as usize;
+            let code = bytes[start];
+            context.set_code(code);
+            context.set_message_len(len);
+            start += 5;
+        }
 
         // This line is interesting for debugging.
         // println!("start = {start}, len = {}, end = {}, size = {size}", len + 5, start + 5 + len);
-        
-        // This is a safety...
-        if start + 5 + len > size {
+
+        let len = context.remaining_length_to_read();
+
+        if start + len > bytes.len() {
+            // This means that the message sent was too small to be sent over 1 byte
+            // So we have to wait for the next message
+            context.store(&bytes[start..]);
+
+            // Wait for next message
             break;
+        } else {
+            context.store(&bytes[start..start+len]);
         }
 
-        // Depending on the type of the enum, parse correctly the content
-        let bytes_to_parse = &bytes[start+5..start+5+len];
-        let parsed = T::parse_bytes_representation(code, bytes_to_parse);
-        to_return.push(parsed);
+        // Once we arrive here, we know that we can parse 1 message.
 
-        // Increase the counter
-        start += len + 5;
-        if start + 5 >= size {
+        // Depending on the type of the enum, parse correctly the content
+        let parsed = T::parse_bytes_representation(context.code, &context.bytes);
+        to_return.push(parsed);
+        context.flush();
+
+        // Increase the counter, in the case that there are several messaages to be parsed
+        // in the current packet.
+        start += len;
+        if start >= bytes.len() {
             break;
         }
     }
