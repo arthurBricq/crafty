@@ -61,7 +61,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
         match stream.read(&mut data) {
             Ok(size) => {
                 // Read the messages sent by the client
-                let messages = from_tcp_repr::<MessageToServer>(&data[0..size], size, &mut context);
+                let messages = from_tcp_repr::<MessageToServer>(&data[0..size], &mut context);
 
                 // For each message, create a response and send it to the client.
                 for message in messages {

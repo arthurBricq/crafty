@@ -103,7 +103,7 @@ mod tests {
         let update = LoadChunk(chunk);
         let bytes = to_tcp_repr(&update);
         let mut context = ParseContext::new();
-        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len(), &mut context);
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), &mut context);
 
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
@@ -118,7 +118,7 @@ mod tests {
         let update = LoggedIn(113);
         let bytes = to_tcp_repr(&update);
         let mut context = ParseContext::new();
-        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), bytes.len(), &mut context);
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes.as_slice(), &mut context);
 
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
@@ -147,7 +147,7 @@ mod tests {
         bytes1.append(&mut bytes4);
 
         let mut context = ParseContext::new();
-        let parsed = from_tcp_repr::<ServerUpdate>(bytes1.as_slice(), bytes1.len(), &mut context);
+        let parsed = from_tcp_repr::<ServerUpdate>(bytes1.as_slice(), &mut context);
         assert_eq!(4, parsed.len());
 
         match (&update_1, &parsed[0]) {
@@ -187,13 +187,13 @@ mod tests {
 
         let mut context = ParseContext::new();
 
-        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet1, len, &mut context);
+        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet1, &mut context);
         assert_eq!(0, parsed.len());
         
-        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet2, len, &mut context);
+        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet2, &mut context);
         assert_eq!(0, parsed.len());
         
-        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet3, len, &mut context);
+        let parsed: Vec<ServerUpdate> = from_tcp_repr(packet3, &mut context);
         assert_eq!(1, parsed.len())
     }
 }

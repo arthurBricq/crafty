@@ -49,34 +49,33 @@ impl ParseContext{
         }
     }
 
-    pub fn flush(&mut self) {
+    fn flush(&mut self) {
         self.bytes = vec![]
     }
 
-    pub fn store(&mut self, data: &[u8]) {
+    fn store(&mut self, data: &[u8]) {
         self.bytes.extend_from_slice(data)
     }
 
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.bytes.is_empty()
     }
 
-    pub fn set_message_len(&mut self, len: usize) {
+    fn set_message_len(&mut self, len: usize) {
         self.len = len;
     }
 
-    pub fn remaining_length_to_read(&self) -> usize {
+    fn remaining_length_to_read(&self) -> usize {
         self.len - self.bytes.len()
     }
 
-    pub fn set_code(&mut self, code: u8) {
+    fn set_code(&mut self, code: u8) {
         self.code = code;
     }
 }
 
 
-// TODO remove `size`
-pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], size: usize, context: &mut ParseContext) -> Vec<T> {
+pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext) -> Vec<T> {
     let mut to_return = vec![];
     let mut start = 0;
     loop {
