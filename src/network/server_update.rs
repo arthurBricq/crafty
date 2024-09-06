@@ -2,7 +2,7 @@ use crate::actions::Action;
 use crate::chunk::Chunk;
 use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
-use crate::primitives::vector::Vector3;
+
 use std::str::from_utf8;
 use crate::primitives::position::Position;
 
@@ -114,7 +114,6 @@ mod tests {
 
     #[test]
     fn test_response_encoding_decoding() {
-        let chunk = Chunk::new_for_demo([3., 5.], 5);
         let update = LoggedIn(113);
         let bytes = to_tcp_repr(&update);
         let mut context = ParseContext::new();
@@ -179,7 +178,6 @@ mod tests {
         let chunk1 = Chunk::new_for_demo([3., 5.], 5);
         let update_1 = LoadChunk(chunk1);
         let bytes1 = to_tcp_repr(&update_1);
-        let len = bytes1.len();
 
         let packet1 = &bytes1[0..500];
         let packet2 = &bytes1[500..1500];

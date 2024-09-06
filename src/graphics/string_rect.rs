@@ -1,7 +1,7 @@
 use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::RectVertexAttr;
 
-use crate::graphics::color::Color::{LightCoral,LightGray,Red};
+
 
 /// Represent a string with rectangles
 pub struct StringRect {

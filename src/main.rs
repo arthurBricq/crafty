@@ -5,6 +5,7 @@ use crafty::world_renderer::WorldRenderer;
 use std::sync::{Arc, Mutex};
 use crafty::network::single_player_proxy::SinglePlayerProxy;
 
+#[allow(dead_code)]
 enum WorldInitializer {
     RANDOM, FLAT, DISK
 }

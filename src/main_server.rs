@@ -3,6 +3,7 @@ use crafty::network::tcp_server::TcpServer;
 use crafty::world::World;
 use std::sync::{Arc, Mutex};
 
+#[allow(dead_code)]
 enum WorldInitializer {
     RANDOM,
     FLAT,

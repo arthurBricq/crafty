@@ -1,5 +1,5 @@
-use crate::block_kind::Block;
-use crate::block_kind::Block::{COBBELSTONE, GRASS};
+
+
 use crate::graphics::color::Color::{LightGray, Red};
 use crate::graphics::rectangle::RectVertexAttr;
 use crate::graphics::string_rect::StringRect;
@@ -13,7 +13,7 @@ pub struct ItemBar {
 
 impl ItemBar {
     pub fn new() -> Self {
-        let mut menu = Self {
+        let menu = Self {
             items: Vec::new(),
             aspect_ratio: 2.0,
             rects: Vec::new()
@@ -48,7 +48,7 @@ impl ItemBar {
             
             // And we want to print the number of remaining items
             let text = format!("{quantity}");
-            let mut quantity = StringRect::new(&text, x0 + ITEM_SIDE / 5. + (i as f32) * (ITEM_SIDE) , BOTTOM - 1. + 0. * PADDING, 0.03);
+            let quantity = StringRect::new(&text, x0 + ITEM_SIDE / 5. + (i as f32) * (ITEM_SIDE) , BOTTOM - 1. + 0. * PADDING, 0.03);
             rects.append(&mut quantity.rects().clone())
         }
 

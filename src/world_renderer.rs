@@ -387,7 +387,7 @@ impl WorldRenderer {
                     self.items.collect(block);
                 }
             }
-            Add { at, block } => {
+            Add { at: _, block } => {
                 self.items.consume(block);
             }
         }

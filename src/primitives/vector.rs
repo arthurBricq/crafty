@@ -13,10 +13,6 @@ pub struct Vector3 {
     z: f32,
 }
 
-pub static UNIT_X: Vector3 = Vector3::newi(1, 0, 0);
-pub static UNIT_Y: Vector3 = Vector3::newi(0, 1, 0);
-pub static UNIT_Z: Vector3 = Vector3::newi(0, 0, 1);
-
 impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }

@@ -66,7 +66,7 @@ impl GameServer {
     /// Called when receiving the position of a new player
     pub fn on_new_position_update(&mut self, player_id: usize, position: Position) {
         // Update the world dispatcher. to compute if the player needs to be sent new chunks
-        if let Some((chunks_to_send, chunks_to_delete)) = self.world_dispatcher.update_position(player_id, (position.x(), position.z())) {
+        if let Some((chunks_to_send, _chunks_to_delete)) = self.world_dispatcher.update_position(player_id, (position.x(), position.z())) {
             let buffer = &mut self.server_updates_buffer[player_id];
             for corner in chunks_to_send {
                 // Find the correct chunk

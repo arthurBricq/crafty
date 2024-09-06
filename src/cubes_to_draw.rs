@@ -97,7 +97,6 @@ mod tests {
     fn test_add_remove_one_cube() {
         let mut cube_to_draw = CubesToDraw::new();
         let mut vec_to_draw = Vec::new();
-        let world_matrix = [[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0., 1., 0.], [0., 0., 0., 1.]];
         vec_to_draw.push(Cube::new([0., 0., 0.], DIRT, 0));
 
         cube_to_draw.add_cube(&Cube::new([0., 0., 0.], DIRT, 0));

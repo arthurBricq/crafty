@@ -1,5 +1,5 @@
 use crate::graphics::color::Color::LightGray;
-use crate::graphics::color::Color::LightCoral;
+
 use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::RectVertexAttr;
 

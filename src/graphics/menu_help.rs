@@ -1,7 +1,7 @@
 use crate::graphics::rectangle::RectVertexAttr;
-use crate::graphics::font::GLChar;
-use crate::graphics::color::Color::LightGray;
-use crate::graphics::color::Color::LightCoral;
+
+
+
 use crate::graphics::string_rect::StringRect;
 
 /// Data in the help menu

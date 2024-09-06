@@ -3,7 +3,7 @@ use crate::game_server::GameServer;
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
 use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
+
 
 pub struct SinglePlayerProxy {
     server: GameServer,

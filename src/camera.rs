@@ -94,7 +94,7 @@ impl Camera {
         // Free-fall handling
         let is_falling = world.is_position_free_falling(&next_pos_amplified);
         let dz_fall = self.gravity_handler.step(is_falling, elapsed);
-        next_pos[1] -= dz_fall;;
+        next_pos[1] -= dz_fall;
 
         // Position update
         if is_free {

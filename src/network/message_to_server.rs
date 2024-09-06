@@ -4,8 +4,6 @@ use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 use crate::primitives::position::Position;
 use std::str::from_utf8;
 
-const HEADER_SIZE: usize = 5;
-
 /// List of message that can be exchanged between to the server from the client
 #[derive(Debug, PartialEq)]
 pub enum MessageToServer {

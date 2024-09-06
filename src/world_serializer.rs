@@ -14,7 +14,7 @@ pub struct SerializedWorld {
 pub fn get_serialize_container() -> HashMap<Block, Vec<[i32; 4]>> {
     let mut all_cubes = HashMap::new();
     for block_kind in Block::iter() {
-        all_cubes.insert(block_kind, Vec::<([i32; 4])>::new());
+        all_cubes.insert(block_kind, Vec::<[i32; 4]>::new());
     }
     all_cubes
 }

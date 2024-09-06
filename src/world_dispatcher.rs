@@ -28,7 +28,7 @@ impl WorldDispatcher {
         }
     }
 
-    pub fn register_player(&mut self, id: usize) {
+    pub fn register_player(&mut self, _id: usize) {
         self.player_chunks.push(HashSet::new());
         self.player_current_chunk.push((-10, -10))
     }

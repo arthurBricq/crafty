@@ -129,11 +129,11 @@ mod tests {
     #[test]
     fn test_fractional_space() {
 	{
-	    let mut noise = PerlinNoise::new(42, 1.);
+	    let noise = PerlinNoise::new(42, 1.);
 	    assert_eq!(noise.coord_to_fractional_space([1.5, 2.5]), [1.5, 2.5])
 	}
 	{
-	    let mut noise = PerlinNoise::new(42, 8.);
+	    let noise = PerlinNoise::new(42, 8.);
 	    assert_eq!(noise.coord_to_fractional_space([1.5, 2.5]), [1.5 / 8., 2.5 / 8.])
 	}
     }
@@ -141,11 +141,11 @@ mod tests {
     #[test]
     fn test_closest_corner() {
 	{
-	    let mut noise = PerlinNoise::new(42, 1.);
+	    let noise = PerlinNoise::new(42, 1.);
 	    assert_eq!(noise.closest_corner([1.5, 2.1]), [1, 2])
 	}
 	{
-	    let mut noise = PerlinNoise::new(42, 4.);
+	    let noise = PerlinNoise::new(42, 4.);
 	    assert_eq!(noise.closest_corner([1.5, 6.1]), [0, 1])
 	}
     }

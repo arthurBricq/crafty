@@ -1,4 +1,4 @@
-use crate::network::server_update::ServerUpdate;
+
 
 /// A trait that an enum or a struct implement to be shared over the network.
 /// This trait can be used by `to_tcp_repr` to encode a message on our custom protocol.

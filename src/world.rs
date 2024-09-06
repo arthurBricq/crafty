@@ -10,7 +10,7 @@ use crate::world_generation::perlin::PerlinNoise;
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, VertexBuffer};
-use serde::{Deserialize, Serialize};
+
 use strum::IntoEnumIterator;
 
 pub struct World {
@@ -321,7 +321,7 @@ impl World {
 
         let mut cubes_to_add= Vec::new();
         // Mark all the neighbors cube as visible
-        if let Some(cube) = self.chunks[chunk_index].cube_at(&at) {
+        if let Some(_cube) = self.chunks[chunk_index].cube_at(&at) {
             for pos in Cube::neighbors_positions(at) {
                 if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
                     // If the cube was not visible before, add it
@@ -338,6 +338,7 @@ impl World {
         cubes_to_add
     }
 
+    #[cfg(test)]
     fn visible_cubes_count(&self) -> usize {
         self.chunks.iter().map(|chunk| chunk.visible_cube_count()).sum()
     }
@@ -561,8 +562,6 @@ mod tests {
 
         let above = Vector3::new(4., 3., 4.);
         let top = Vector3::new(4., 2., 4.);
-        let middle = Vector3::new(4., 1., 4.);
-        let bottom = Vector3::new(4., 0., 4.);
 
         // First, we add a cube on top of the world
         world.apply_action(&Action::Add {at: above, block: Block::COBBELSTONE});

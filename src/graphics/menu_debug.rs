@@ -74,7 +74,6 @@ impl DebugMenuData {
 /// Implement the debug menu
 pub struct DebugMenu {
     static_part: Vec<RectVertexAttr>,
-    dynamic_part: Vec<Vec<RectVertexAttr>>,
     coord_to_update: Vec<[f32; 2]>,
     rects: Vec<RectVertexAttr>,
 }
@@ -82,7 +81,6 @@ pub struct DebugMenu {
 impl DebugMenu {
     pub fn new(debug_menu_data: &DebugMenuData) -> Self {
         let mut static_part = Vec::new();
-        let mut dynamic_part: Vec<Vec<RectVertexAttr>> = Vec::new();
         let mut coord_to_update: Vec<[f32; 2]> = Vec::new();
         let mut y = 0.8;
         let u = -0.95;
@@ -91,14 +89,12 @@ impl DebugMenu {
 
         for item in debug_menu_data.items() {
             StringRect::write_string(u, y, size, &item.element().to_string(), &mut static_part);
-            dynamic_part.push(Vec::new());
             coord_to_update.push([u + 0.4, y]);
             y -= 4. * size;
         }
         Self {
             rects: static_part.clone(),
             static_part,
-            dynamic_part,
             coord_to_update,
         }
     }
