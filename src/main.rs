@@ -1,22 +1,24 @@
-use crafty::camera::Camera;
 use crafty::game_server::GameServer;
+use crafty::network::single_player_proxy::SinglePlayerProxy;
 use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;
+use crafty::{camera::Camera, world_generation::world_generator::WorldGenerator};
 use std::sync::{Arc, Mutex};
-use crafty::network::single_player_proxy::SinglePlayerProxy;
 
 #[allow(dead_code)]
 enum WorldInitializer {
-    RANDOM, FLAT, DISK
+    RANDOM,
+    FLAT,
+    DISK,
 }
 
 fn main() {
     // Create the initial world
     let init = WorldInitializer::RANDOM;
-    let world = match init  {
-        WorldInitializer::RANDOM => World::create_new_random_world(10),
-        WorldInitializer::FLAT => World::create_new_flat_world(10),
-        WorldInitializer::DISK => World::from_file("map.json").unwrap()
+    let world = match init {
+        WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(10),
+        WorldInitializer::FLAT => WorldGenerator::create_new_flat_world(10),
+        WorldInitializer::DISK => World::from_file("map.json").unwrap(),
     };
 
     // The server holds the 'full' world
@@ -28,11 +30,10 @@ fn main() {
     // The client is initialized with an empty world, as it will be the responsibility of the server
     // to provide it with the chunks.
     // Currently, the client 'owns' the proxy, this is really the part that sucks for now.
-    let mut renderer = WorldRenderer::new(Arc::new(Mutex::new(proxy)), World::empty(), Camera::new());
+    let mut renderer =
+        WorldRenderer::new(Arc::new(Mutex::new(proxy)), World::empty(), Camera::new());
     renderer.login();
     renderer.run();
     /*
      */
 }
-
-
