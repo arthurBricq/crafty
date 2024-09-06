@@ -18,6 +18,8 @@ const JUMP_VELOCITY: f32 = 7.;
 // TODO same problem
 const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
 
+pub const PLAYER_EYES_H: f32 = 3.7;
+
 pub enum MotionState {
     W,
     S,
@@ -94,10 +96,7 @@ impl Camera {
 
     pub fn step(&mut self, elapsed: Duration, world: &World) {
         // Compute the next position
-        let f = self.ground_direction_forward();
-        let l = self.ground_direction_right();
-        let mut next_pos = self.position.clone();
-        let mut dt = elapsed.as_secs_f32();
+        let dt = elapsed.as_secs_f32();
 
         // add gravity
         if self.in_air {
@@ -159,14 +158,13 @@ impl Camera {
 
     fn make_aabb(position: &Position) -> AABB {
         let diameter = 0.5;
-        let height = 1.8;
         let forehead = 0.1;
 
         AABB {
             north: position.z() + diameter / 2.,
             south: position.z() - diameter / 2.,
             top: position.y() + forehead,
-            bottom: position.y() + forehead - height,
+            bottom: position.y() - PLAYER_EYES_H,
             east: position.x() + diameter / 2.,
             west: position.x() - diameter / 2.,
         }

@@ -99,7 +99,6 @@ impl Chunk {
             pos[2] >= self.corner[1] && pos[2] < (self.corner[1] + CHUNK_SIZE as f32)
     }
 
-
     /// Returns true if the position in the chunk is not part of a cube.
     /// The function does not check that the cube is chunk, and will crash if it is not.
     pub fn is_position_free(&self, pos: &Vector3) -> bool {
@@ -179,12 +178,12 @@ impl Chunk {
 
     pub fn cube_at_index(&self, index: CubeIndex) -> Option<&Cube> {
         let (k, i, j) = index;
-        self.cubes[k][i][j].as_ref()
+        self.cubes.get(k)?.get(i)?.get(j)?.as_ref()
     }
 
     pub fn cube_at_index_mut(&mut self, index: CubeIndex) -> Option<&mut Cube> {
         let (k, i, j) = index;
-        self.cubes[k][i][j].as_mut()
+        self.cubes.get_mut(k)?.get_mut(i)?.get_mut(j)?.as_mut()
     }
 
     pub fn cube_at(&self, pos: &Vector3) -> Option<&Cube> {
@@ -402,4 +401,12 @@ mod tests {
         let reconstructed = Chunk::from_json(serialized.as_str()).unwrap();
         assert_eq!(chunk, reconstructed);
     }
+    
+    #[test]
+    fn test_cube_at_in_altitude() {
+        let chunk = Chunk::new_for_demo([0., 0.], 5);
+        let tmp = chunk.cube_at(&Vector3::new(3., 2. * CHUNK_HEIGHT as f32, 3.));
+        assert!(tmp.is_none());
+    }
+    
 }

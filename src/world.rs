@@ -1,3 +1,5 @@
+use std::ops::Index;
+use crate::aabb::AABB;
 use crate::actions::Action;
 use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
@@ -7,15 +9,10 @@ use crate::cubes_to_draw::CubesToDraw;
 use crate::graphics::cube::CubeInstance;
 use crate::primitives::vector::Vector3;
 use crate::world_generation::perlin::PerlinNoise;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use strum::IntoEnumIterator;
-use crate::aabb::AABB;
-use crate::cubes_to_draw::{self, CubesToDraw};
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, VertexBuffer};
-
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
 pub struct World {
@@ -295,7 +292,7 @@ impl World {
     }
     
     fn cube_at_mut(&mut self, pos: Vector3) -> Option<&mut Cube> {
-        for chunk in &mut self.chunks {
+        for chunk in &mut self.chunks { 
             if chunk.is_in(&pos) {
                 return chunk.cube_at_mut(&pos)
             }
