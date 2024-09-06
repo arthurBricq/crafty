@@ -3,7 +3,7 @@ use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
 use crate::cube::Cube;
-use crate::graphics::cube::CubeAttr;
+use crate::graphics::cube::CubeInstance;
 use crate::primitives::vector::Vector3;
 use crate::world_generation::perlin::PerlinNoise;
 use serde::{Deserialize, Serialize};
@@ -80,6 +80,8 @@ impl World {
 
     /// Creates a simple world with hills. A single octave Perlin noise is used,
     /// so don't expect anything fancy.
+    /// TODO this function should not be here.
+    ///      `World` is not responsible for its generation
     pub fn create_new_random_world(n_chunks: i32) -> Self {
 	let mut noise = PerlinNoise::new(42, 32.);
 
@@ -153,11 +155,11 @@ impl World {
     /// Each item on this list will result in a cube drawn in the screen.
     ///
     /// 'selected_cube': the currently selected cube, that will be rendered differently.
-    pub fn set_cubes_to_draw(&mut self, selected_cube: Option<Vector3>) {
+    pub fn set_cubes_to_draw(&mut self) {
         // I know that this function looks bad, but... Trust the optimizer
         // I have tried to optimize this shit using a custom class that does not re-allocate everything
         // but it does not improve anything ... So let's keep the simple solution of always calling `push`
-        let mut positions: Vec<CubeAttr> = Vec::new();
+        let mut positions: Vec<CubeInstance> = Vec::new();
         for chunk in &self.chunks {
             for layer in chunk.cubes() {
                 for row in layer {
@@ -166,8 +168,7 @@ impl World {
                             // TODO is there no other fucking way to check whether this cube is the selected one ? 
                             //      let's think in term of performance...
                             if c.is_visible() {
-                                let is_selected = selected_cube.is_some() && selected_cube.unwrap().to_cube_coordinates().equals(c.position());
-                                positions.push(CubeAttr::new(c));
+                                positions.push(CubeInstance::new(c));
                             }
                         }
                     }
@@ -184,7 +185,7 @@ impl World {
         self.cubes_to_draw.as_mut().unwrap().set_selected_cube(selected_cube)
     }
 
-    pub fn cube_to_draw(&self) -> &Vec<CubeAttr> {
+    pub fn cube_to_draw(&self) -> &Vec<CubeInstance> {
         self.cubes_to_draw.as_ref().unwrap().cubes_to_draw()
     }
 

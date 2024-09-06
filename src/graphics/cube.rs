@@ -92,7 +92,7 @@ pub struct CubeVertex {
 implement_vertex!(CubeVertex, position, tex_coords, face);
 
 pub const VERTICES: [CubeVertex; 36] = [
-    
+
     // Right side
     CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
     CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 },
@@ -140,23 +140,24 @@ pub const VERTICES: [CubeVertex; 36] = [
 
 /// An OpenGL type that contains the information for OpenGL's instancing
 #[derive(Copy, Clone)]
-pub struct CubeAttr {
+pub struct CubeInstance {
     world_matrix: [[f32; 4]; 4],
     block_id: u8,
     /// We use an integer, since booleans are not supported
     is_selected: u8,
-    position: Vector3,  
+    position: Vector3,
 }
 
-implement_vertex!(CubeAttr, world_matrix, block_id, is_selected);
+implement_vertex!(CubeInstance, world_matrix, block_id, is_selected);
 
-impl CubeAttr {
+impl CubeInstance {
     pub fn new(cube: &Cube) -> Self {
-        Self { 
-            world_matrix: Self::model_matrix(cube.position()), 
-            block_id: cube.block_id(), 
-            is_selected: false as u8, 
-            position: cube.position().clone() }
+        Self {
+            world_matrix: Self::model_matrix(cube.position()),
+            block_id: cube.block_id(),
+            is_selected: false as u8,
+            position: cube.position().clone(),
+        }
     }
 
     pub fn empty() -> Self {
@@ -164,14 +165,14 @@ impl CubeAttr {
             world_matrix: [[0.; 4]; 4],
             block_id: 0,
             is_selected: 0,
-            position: Vector3::empty()
+            position: Vector3::empty(),
         }
     }
-    
-    pub fn position(&self) -> [f32;3] {
+
+    pub fn position(&self) -> [f32; 3] {
         self.position.as_array()
     }
-    
+
     pub fn set_is_selected(&mut self, is_selected: bool) {
         self.is_selected = is_selected as u8;
     }
@@ -195,27 +196,27 @@ const CONTAINER_SIZE: usize = 100000;
 /// The purpose of this class is to not have to re-allocate all the time
 pub struct CubeContainer {
     // data: [CubeAttr; CONTAINER_SIZE],
-    data: Vec<CubeAttr>,
-    current_size: usize
+    data: Vec<CubeInstance>,
+    current_size: usize,
 }
 
 impl CubeContainer {
     pub fn new() -> Self {
-        Self { 
-            data: vec![CubeAttr::empty(); CONTAINER_SIZE], 
-            current_size: 0 
+        Self {
+            data: vec![CubeInstance::empty(); CONTAINER_SIZE],
+            current_size: 0,
         }
     }
-    
-    pub fn as_slice(&self) -> &[CubeAttr] {
+
+    pub fn as_slice(&self) -> &[CubeInstance] {
         &self.data[..self.current_size]
     }
-    
+
     pub fn reset(&mut self) {
         self.current_size = 0;
     }
-    
-    pub fn push(&mut self, cube: CubeAttr) {
+
+    pub fn push(&mut self, cube: CubeInstance) {
         self.data[self.current_size] = cube;
         self.current_size += 1;
     }
@@ -223,17 +224,17 @@ impl CubeContainer {
 
 #[cfg(test)]
 mod tests {
-    use crate::graphics::cube::{CubeAttr, CubeContainer};
+    use crate::graphics::cube::{CubeInstance, CubeContainer};
 
     #[test]
     fn test_cube_container() {
         let mut container = CubeContainer::new();
         assert_eq!(container.as_slice().len(), 0);
-        
-        container.push(CubeAttr::empty());
-        container.push(CubeAttr::empty());
+
+        container.push(CubeInstance::empty());
+        container.push(CubeInstance::empty());
         assert_eq!(container.as_slice().len(), 2);
-        
+
         container.reset();
         assert_eq!(container.as_slice().len(), 0);
     }

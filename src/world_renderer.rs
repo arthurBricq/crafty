@@ -139,7 +139,7 @@ impl WorldRenderer {
         self.handle_server_updates();
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
-        self.world.set_cubes_to_draw(self.cam.touched_cube());
+        self.world.set_cubes_to_draw();
 
         // Uniform for rect computed before the loop
         let rect_uniforms = uniform! {
