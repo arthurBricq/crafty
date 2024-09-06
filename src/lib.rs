@@ -18,3 +18,4 @@ pub mod world_serializer;
 pub mod network;
 pub mod entity;
 mod primitives;
+pub mod texture;
