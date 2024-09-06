@@ -10,7 +10,6 @@ use std::net::TcpStream;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
 use std::{io, thread};
-use std::task::Context;
 
 /// Function that handles the thread that
 /// - sends messages to server
@@ -88,7 +87,10 @@ impl TcpProxy {
 
 impl Proxy for TcpProxy {
     fn login(&mut self) {
-        self.updates_transmitter.send(MessageToServer::Login).unwrap();
+        match self.updates_transmitter.send(MessageToServer::Login) {
+            Ok(_) => {}
+            Err(err) => panic!("Error while logging in: {err}")
+        }
     }
 
     fn send_position_update(&mut self, position: Position) {
