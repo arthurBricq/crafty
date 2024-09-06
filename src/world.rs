@@ -3,14 +3,15 @@ use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
 use crate::cube::Cube;
+use crate::cubes_to_draw::CubesToDraw;
 use crate::graphics::cube::CubeInstance;
 use crate::primitives::vector::Vector3;
 use crate::world_generation::perlin::PerlinNoise;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use strum::IntoEnumIterator;
-use crate::cubes_to_draw::{self, CubesToDraw};
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
+use glium::glutin::surface::WindowSurface;
+use glium::{Display, VertexBuffer};
+use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
 
 pub struct World {
     /// The list of the chunks currently being displayed
@@ -165,8 +166,6 @@ impl World {
                 for row in layer {
                     for cube in row {
                         if let Some(c) = cube {
-                            // TODO is there no other fucking way to check whether this cube is the selected one ? 
-                            //      let's think in term of performance...
                             if c.is_visible() {
                                 positions.push(CubeInstance::new(c));
                             }
@@ -181,12 +180,14 @@ impl World {
         self.cubes_to_draw.as_mut().unwrap().set_cube_to_draw(positions);
     }
 
-    pub fn set_selected_cube(&mut self, selected_cube: Option<Vector3>) {
-        self.cubes_to_draw.as_mut().unwrap().set_selected_cube(selected_cube)
+    pub fn cube_to_draw(&self) -> &[CubeInstance] {
+        self.cubes_to_draw.as_ref().unwrap().cubes_to_draw()
     }
 
-    pub fn cube_to_draw(&self) -> &Vec<CubeInstance> {
-        self.cubes_to_draw.as_ref().unwrap().cubes_to_draw()
+    /// Returns the OpenGL buffer with cubes to be drawn
+    /// If you want to have one cube drawn as 'selected', pass it in the argument `selected`
+    pub fn get_cubes_buffer(&mut self, display: &Display<WindowSurface>, selected: Option<Cube>) -> VertexBuffer<CubeInstance> {
+        self.cubes_to_draw.as_mut().unwrap().get_cubes_buffer(display, selected)
     }
 
     pub fn number_cubes_rendered(&self) -> usize{
@@ -261,6 +262,15 @@ impl World {
         for chunk in &mut self.chunks {
             if chunk.is_in(&pos) {
                 return chunk.cube_at_mut(&pos)
+            }
+        }
+        None
+    }
+
+    pub fn cube_at(&self, pos: Vector3) -> Option<&Cube> {
+        for chunk in &self.chunks {
+            if chunk.is_in(&pos) {
+                return chunk.cube_at(&pos)
             }
         }
         None

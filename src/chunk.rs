@@ -41,7 +41,6 @@ impl Chunk {
         self.corner
     }
 
-
     /// Returns an iterator over all the positions of the chunk
     pub fn flattened_iter(&self) -> impl Iterator<Item = &Option<Cube>> {
         self.cubes.iter()

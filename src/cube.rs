@@ -2,6 +2,7 @@ use crate::block_kind::Block;
 use crate::primitives::vector::Vector3;
 
 /// Model of a cube in the 3D world.
+/// TODO why the fuck is there Copy here ?
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Cube {
     position: Vector3,
@@ -63,5 +64,9 @@ impl Cube {
 
     pub fn n_neighbors(&self) -> u8 {
         self.n_neighbors
+    }
+
+    pub fn to_cube_coordinates(&self) -> Vector3 {
+        self.position.to_cube_coordinates()
     }
 }

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::block_kind::Block;
+use crate::cube::Cube;
 use crate::primitives::vector::Vector3;
 
 /// An action is something that will alter the world
@@ -18,11 +19,13 @@ pub enum Action {
 }
 
 impl Action {
-    /// Returns the position where to add a new cube, given the position of the cube that is touched.
-    pub fn position_to_generate_cube(touched_cube: &Vector3) -> Vector3 {
+    /// Returns the position where to add a new cube, given 
+    /// `touched_cube`    : ref to the cube being touched
+    /// `touched_position`: position on this cube that is being touched
+    pub fn position_to_generate_cube(touched_cube: &Cube, touched_position: &Vector3) -> Vector3 {
         let cube = touched_cube.to_cube_coordinates();
         let cube_center = cube + Vector3::new(0.5, 0.5, 0.5);
-        let diff = touched_cube - &cube_center;
+        let diff = touched_position - &cube_center;
         
         // Find the coordinates with maximal absolute value 
         // This corresponds to the dot product with the face's normal that is the most aligned with the 

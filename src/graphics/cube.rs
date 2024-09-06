@@ -159,6 +159,19 @@ impl CubeInstance {
             position: cube.position().clone(),
         }
     }
+    
+    /// Creates a new selected cube
+    /// This cube will be slightly inflated, which is a hack to greatly optimize performances
+    /// Using this trick allows us to not have to update the existing `CubeInstance` selection property, 
+    /// but instead we just insert one extra cube that is inflated.
+    pub fn new_selected(cube: &Cube) -> Self {
+        Self {
+            world_matrix: Self::model_matrix_inflated(&(cube.position())),
+            block_id: cube.block_id(),
+            is_selected: true as u8,
+            position: cube.position().clone(),
+        }
+    }
 
     pub fn empty() -> Self {
         Self {
@@ -185,6 +198,15 @@ impl CubeInstance {
             [1.00, 0.0, 0.0, 0.0],
             [0.0, 1.00, 0.0, 0.0],
             [0.0, 0.0, 1.00, 0.0],
+            [position[0] + 0.5, position[1] + 0.5, position[2] + 0.5, 1.0f32]
+        ]
+    }
+    
+    pub fn model_matrix_inflated(position: &Vector3) -> [[f32; 4]; 4] {
+        [
+            [1.01, 0.0, 0.0, 0.0],
+            [0.0, 1.01, 0.0, 0.0],
+            [0.0, 0.0, 1.01, 0.0],
             [position[0] + 0.5, position[1] + 0.5, position[2] + 0.5, 1.0f32]
         ]
     }

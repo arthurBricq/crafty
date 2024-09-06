@@ -1,7 +1,9 @@
+use crate::chunk::Chunk;
 use crate::cube::Cube;
 use crate::graphics::cube::CubeInstance;
 use crate::primitives::vector::Vector3;
-use crate::chunk::Chunk;
+use glium::glutin::surface::WindowSurface;
+use glium::{Display, VertexBuffer};
 
 /// Control the cubes to be drawn
 pub struct CubesToDraw {
@@ -16,7 +18,10 @@ pub struct CubesToDraw {
 
 impl CubesToDraw {
     pub fn new() -> Self {
-        Self { cubes_to_draw: Vec::new(), selected_cube_index: None }
+        Self {
+            cubes_to_draw: Vec::new(),
+            selected_cube_index: None
+        }
     }
 
     /// Set the vector of CubeAttr from parameter
@@ -29,6 +34,19 @@ impl CubesToDraw {
         self.cubes_to_draw.push(CubeInstance::new(c));
     }
 
+    /// Returns the OpenGL buffer with cubes to be drawn
+    /// If you want to have one cube drawn as 'selected', pass it in the argument `selected`
+    pub fn get_cubes_buffer(&mut self, display: &Display<WindowSurface>, selected_cube: Option<Cube>) -> VertexBuffer<CubeInstance>{
+        if let Some(selected) = selected_cube {
+            self.cubes_to_draw.push(CubeInstance::new_selected(&selected));
+        }
+        let buffer = VertexBuffer::immutable(display, &self.cubes_to_draw);
+        if selected_cube.is_some() {
+            self.cubes_to_draw.pop();
+        }
+        buffer.unwrap()
+    }
+    
     /// Try to remove a cube at at position, 
     /// Will not panic if a cubeAttr is not present in the Vec
     pub fn remove_cube(&mut self, position: &Vector3) {
@@ -44,25 +62,7 @@ impl CubesToDraw {
         }
     }
 
-    pub fn set_selected_cube(&mut self, selected_cube: Option<Vector3>) {
-        return;
-        // Unselect last cube
-        if let Some(index) = self.selected_cube_index {
-            self.cubes_to_draw[index].set_is_selected(false);
-        }
-        if selected_cube.is_none() { return; }
-        // Select new cube
-        // TODO could we just add a cube over the others that for the selected one ?
-        for (i, cube) in self.cubes_to_draw.iter_mut().enumerate() {
-            if cube.position() == selected_cube.unwrap().to_cube_coordinates().as_array() {
-                self.selected_cube_index = Some(i);
-                cube.set_is_selected(true);
-                return;
-            }
-        }
-    }
-
-    pub fn cubes_to_draw(&self) -> &Vec<CubeInstance> {
+    pub fn cubes_to_draw(&self) -> &[CubeInstance] {
         &self.cubes_to_draw
     }
 

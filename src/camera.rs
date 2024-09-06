@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 use std::time::Duration;
 
 use crate::chunk::CHUNK_FLOOR;
+use crate::cube::Cube;
 use crate::gravity::GravityHandler;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
@@ -36,9 +37,10 @@ pub struct Camera {
     /// For handling free-fall
     gravity_handler: GravityHandler,
 
+    /// Tuple with (Cube, touched_position)
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
-    touched_cube: Option<Vector3>,
+    touched_cube: Option<(Cube, Vector3)>,
 }
 
 impl Camera {
@@ -113,8 +115,8 @@ impl Camera {
         for i in 1..(REACH_DISTANCE / STEP) as usize {
             let query = self.position.pos() + unit_direction * i as f32 * STEP;
             // If the query position is not free, it means that we have found the selected cube
-            if !world.is_position_free(&query) {
-                self.touched_cube = Some(query);
+            if let Some(cube) = world.cube_at(query) {
+                self.touched_cube = Some((cube.clone(), query));
                 return
             }
         }
@@ -208,7 +210,7 @@ impl Camera {
     }
 
     /// Returns the optional position of the cube that the player is looking at.
-    pub fn touched_cube(&self) -> Option<Vector3> {
+    pub fn touched_cube(&self) -> Option<(Cube, Vector3)> {
         self.touched_cube
     }
 
