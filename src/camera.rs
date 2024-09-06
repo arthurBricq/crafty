@@ -160,7 +160,7 @@ impl Camera {
     }
 
     fn ground_direction_right(&self) -> Vector3 {
-        Vector3::new(self.position.yaw().sin(), 0., self.position.yaw().cos())
+        Vector3::new(self.position.yaw().sin(), 0., -self.position.yaw().cos())
     }
 
     pub fn perspective_matrix(&self, dim: (u32, u32)) -> [[f32; 4]; 4] {
