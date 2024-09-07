@@ -90,6 +90,7 @@ impl WorldRenderer {
 
         // Add some damn items
         for _ in 0..50 {
+            self.items.collect(COBBELSTONE);
             self.items.collect(OAKLEAVES);
         }
 
@@ -304,7 +305,15 @@ impl WorldRenderer {
             match event.physical_key {
                 PhysicalKey::Code(key) => {
                     match key {
-                        KeyCode::Digit0 => {}
+                        KeyCode::Digit1 => self.items.set_current_item(0),
+                        KeyCode::Digit2 => self.items.set_current_item(1),
+                        KeyCode::Digit3 => self.items.set_current_item(2),
+                        KeyCode::Digit4 => self.items.set_current_item(3),
+                        KeyCode::Digit5 => self.items.set_current_item(4),
+                        KeyCode::Digit6 => self.items.set_current_item(5),
+                        KeyCode::Digit7 => self.items.set_current_item(6),
+                        KeyCode::Digit8 => self.items.set_current_item(7),
+                        KeyCode::Digit9 => self.items.set_current_item(8),
                         KeyCode::KeyP => {
                             println!("=================");
                             println!("Debug Information");

@@ -21,6 +21,7 @@ impl PlayerItems {
         }
     }
     
+    
     pub fn get_current_items(&self) -> Items {
         self.current_items.iter()
             .filter(|item| item.is_some())
@@ -85,6 +86,10 @@ impl PlayerItems {
         for i in 0..CURRENT_ITEMS_SIZE {
             println!("{:?}", self.current_items[i])
         }
+    }
+
+    pub fn set_current_item(&mut self, current_item: usize) {
+        self.current_item = current_item;
     }
 }
 
