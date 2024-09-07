@@ -35,7 +35,11 @@ use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{CursorGrabMode, Fullscreen, Window, WindowBuilder};
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
+
+/// 16ms => 60 FPS roughly
 const TARGET_FRAME_DURATION: Duration = Duration::from_millis(16);
+/// If the frame is `MIN_SLEEP_TIME` shorter than the target duration or less,
+/// does not sleep, because of granularity of time in `std::thread::sleep`
 const MIN_SLEEP_TIME: Duration = Duration::from_millis(2);
 
 /// The struct in charge of drawing the world

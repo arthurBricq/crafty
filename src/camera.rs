@@ -172,8 +172,7 @@ impl Camera {
             position.y() - PLAYER_HEIGHT + FOREHEAD,
             position.x() + DIAMETER / 2.,
             position.x() - DIAMETER / 2.,
-        )
-        .unwrap()
+        ).unwrap()
     }
 
     /// Set the attribute `selected` to the cube currently being selected
@@ -189,7 +188,7 @@ impl Camera {
             // If the query position is not free, it means that we have found the selected cube
             if let Some(cube) = world.cube_at(query) {
                 self.touched_cube = Some((cube.clone(), query));
-                return;
+                return
             }
         }
         self.touched_cube = None
@@ -208,8 +207,6 @@ impl Camera {
     pub fn jump(&mut self) {
         if !self.in_air {
             self.velocity[1] = JUMP_VELOCITY;
-        } else {
-            println!("Position: {}; {}; {}", self.position.x(), self.position.y(), self.position.z());
         }
     }
 
