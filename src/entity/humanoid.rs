@@ -1,7 +1,7 @@
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::Display;
-use crate::camera::PLAYER_HEIGHT;
+use crate::player::PLAYER_HEIGHT;
 use crate::graphics::entity::EntityCube;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;

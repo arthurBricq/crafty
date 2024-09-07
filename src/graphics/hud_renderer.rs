@@ -28,7 +28,6 @@ pub struct HUDRenderer {
     help_menu: HelpMenu,
     show_help: bool,
 
-
     debug_menu: DebugMenu,
     show_debug: bool,
 

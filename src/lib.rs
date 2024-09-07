@@ -1,5 +1,5 @@
 pub mod cube;
-pub mod camera;
+pub mod player;
 pub mod world_renderer;
 pub mod world;
 pub mod world_generation;

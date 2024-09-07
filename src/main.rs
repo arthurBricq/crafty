@@ -2,7 +2,7 @@ use crafty::game_server::GameServer;
 use crafty::network::single_player_proxy::SinglePlayerProxy;
 use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;
-use crafty::{camera::Camera, world_generation::world_generator::WorldGenerator};
+use crafty::{player::Player, world_generation::world_generator::WorldGenerator};
 use std::sync::{Arc, Mutex};
 
 #[allow(dead_code)]
@@ -31,7 +31,7 @@ fn main() {
     // to provide it with the chunks.
     // Currently, the client 'owns' the proxy, this is really the part that sucks for now.
     let mut renderer =
-        WorldRenderer::new(Arc::new(Mutex::new(proxy)), World::empty(), Camera::new());
+        WorldRenderer::new(Arc::new(Mutex::new(proxy)), World::empty(), Player::new());
     renderer.login();
     renderer.run();
     /*

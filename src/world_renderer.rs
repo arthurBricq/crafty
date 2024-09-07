@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
 use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG};
-use crate::camera::{Camera, MotionState};
+use crate::player::{Player, MotionState};
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
 use crate::fps::FpsManager;
@@ -44,19 +44,26 @@ const MIN_SLEEP_TIME: Duration = Duration::from_millis(2);
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer {
+    /// Link with the server
     proxy: Arc<Mutex<dyn Proxy>>,
 
     /// Currently displayed world
     world: World,
+    
     /// Position and orientation of the player
-    cam: Camera,
+    player: Player,
+    
     /// Items of the player
     items: PlayerItems,
 
+    /// In charge of rendering of the 2D menus on the screen
     hud_renderer: HUDRenderer,
-    fps_manager: FpsManager,
 
+    /// In charge of renderin all the other entites
     entity_manager: EntityManager,
+    
+    /// Computes the current FPS
+    fps_manager: FpsManager,
 
     // Logic for when the user is clicking
     // TODO encapsulate that in another struct
@@ -68,11 +75,11 @@ pub struct WorldRenderer {
 }
 
 impl WorldRenderer {
-    pub fn new(proxy: Arc<Mutex<dyn Proxy>>, world: World, cam: Camera) -> Self {
+    pub fn new(proxy: Arc<Mutex<dyn Proxy>>, world: World, cam: Player) -> Self {
         Self {
             proxy,
             world,
-            cam,
+            player: cam,
             hud_renderer: HUDRenderer::new(),
             fps_manager: FpsManager::new(),
             items: PlayerItems::new(),
@@ -180,7 +187,7 @@ impl WorldRenderer {
         self.proxy
             .lock()
             .unwrap()
-            .send_position_update(self.cam.position().clone());
+            .send_position_update(self.player.position().clone());
         self.handle_server_updates();
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
@@ -223,11 +230,11 @@ impl WorldRenderer {
                         let mut target = display.draw();
                         target.clear_color_and_depth(Color::Sky1.to_tuple(), 1.0);
 
-                        if self.cam.is_selecting_cube() && self.is_left_clicking {
+                        if self.player.is_selecting_cube() && self.is_left_clicking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
                                 // Break the cube
-                                self.apply_action(Destroy { at: self.cam.selected_cube().unwrap().to_cube_coordinates() });
+                                self.apply_action(Destroy { at: self.player.selected_cube().unwrap().to_cube_coordinates() });
                                 self.is_left_clicking = false;
                                 self.click_time = 0.;
                             }
@@ -235,16 +242,16 @@ impl WorldRenderer {
 
                         // Step
                         self.fps_manager.step(dt);
-                        self.cam.step(dt, &self.world);
+                        self.player.step(dt, &self.world);
 
                         // Server updates
-                        self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
+                        self.proxy.lock().unwrap().send_position_update(self.player.position().clone());
                         self.handle_server_updates();
 
                         // HUD updates
                         if self.hud_renderer.show_debug() {
                             self.hud_renderer
-                                .set_debug(DebugData::new(self.fps_manager.fps(), self.cam.position().clone(), self.world.number_cubes_rendered()));
+                                .set_debug(DebugData::new(self.fps_manager.fps(), self.player.position().clone(), self.world.number_cubes_rendered()));
                         }
 
                         // I) Draw the cubes
@@ -263,8 +270,8 @@ impl WorldRenderer {
 
                         // Define our uniforms (same uniforms for all cubes)...
                         let uniforms = uniform! {
-                            view: self.cam.view_matrix(),
-                            perspective: self.cam.perspective_matrix(target.get_dimensions()),
+                            view: self.player.view_matrix(),
+                            perspective: self.player.perspective_matrix(target.get_dimensions()),
                             textures: cubes_texture_sampler,
                             selected_texture: &selected_texture,
                             selected_intensity: if self.is_left_clicking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
@@ -272,7 +279,7 @@ impl WorldRenderer {
 
                         // We use OpenGL's instancing feature which allows us to render huge amounts ot cubes at once.
                         // OpenGL instancing = instead of setting 1000 times different uniforms, you give once 1000 attributes
-                        let position_buffer = self.world.get_cubes_buffer(&display, self.cam.selected_cube());
+                        let position_buffer = self.world.get_cubes_buffer(&display, self.player.selected_cube());
                         target.draw(
                             (&cube_vertex_buffer, position_buffer.per_instance().unwrap()),
                             &indices,
@@ -284,8 +291,8 @@ impl WorldRenderer {
 
                         // Define our uniforms (same uniforms for all cubes)...
                         let entity_uniforms = uniform! {
-                            view: self.cam.view_matrix(),
-                            perspective: self.cam.perspective_matrix(target.get_dimensions()),
+                            view: self.player.view_matrix(),
+                            perspective: self.player.perspective_matrix(target.get_dimensions()),
                             textures: player_texture_sample
                         };
 
@@ -341,13 +348,13 @@ impl WorldRenderer {
         // Handle keys related to motion (toggle is important here)
         match event.physical_key {
             PhysicalKey::Code(key) => match key {
-                KeyCode::KeyW => self.cam.toggle_state(MotionState::W),
-                KeyCode::KeyS => self.cam.toggle_state(MotionState::S),
-                KeyCode::KeyD => self.cam.toggle_state(MotionState::D),
-                KeyCode::KeyA => self.cam.toggle_state(MotionState::A),
-                KeyCode::KeyK => self.cam.up(),
-                KeyCode::KeyJ => self.cam.down(),
-                KeyCode::Space => self.cam.jump(),
+                KeyCode::KeyW => self.player.toggle_state(MotionState::W),
+                KeyCode::KeyS => self.player.toggle_state(MotionState::S),
+                KeyCode::KeyD => self.player.toggle_state(MotionState::D),
+                KeyCode::KeyA => self.player.toggle_state(MotionState::A),
+                KeyCode::KeyK => self.player.up(),
+                KeyCode::KeyJ => self.player.down(),
+                KeyCode::Space => self.player.jump(),
                 _ => {}
             },
             _ => {}
@@ -397,7 +404,7 @@ impl WorldRenderer {
                         println!("=================");
                         println!("Debug Information");
                         println!("=================");
-                        self.cam.debug();
+                        self.player.debug();
                     }
                     KeyCode::F10 => self.world.save_to_file("map.json"),
                     KeyCode::F11 => self.toggle_fullscreen(&window),
@@ -451,7 +458,7 @@ impl WorldRenderer {
         } else if button == 3 && state == Pressed {
             // Right click = add a new cube
             // We know where is the player and we know
-            if let Some((touched_cube, touched_pos)) = self.cam.selection_internals() {
+            if let Some((touched_cube, touched_pos)) = self.player.selection_internals() {
                 if let Some(block) = self.items.get_current_block() {
                     self.apply_action(Action::Add {
                         at: Action::position_to_generate_cube(&touched_cube, &touched_pos),
@@ -464,9 +471,9 @@ impl WorldRenderer {
 
     fn handle_motion_event(&mut self, axis: AxisId, value: f64) {
         if axis == 0 {
-            self.cam.mousemove(value as f32, 0.0, 0.005);
+            self.player.mousemove(value as f32, 0.0, 0.005);
         } else {
-            self.cam.mousemove(0.0, -value as f32, 0.005);
+            self.player.mousemove(0.0, -value as f32, 0.005);
         }
     }
 
