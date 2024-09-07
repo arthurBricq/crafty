@@ -72,14 +72,14 @@ impl Cube {
     }
 
     fn aabb(&self) -> AABB {
-        AABB {
-            north: self.position[2] + 1.,
-            south: self.position[2],
-            top: self.position[1] + 1.,
-            bottom: self.position[1],
-            east: self.position[0] + 1.,
-            west: self.position[0],
-        }
+        AABB::new(
+            self.position[2] + 1.,
+            self.position[2],
+            self.position[1] + 1.,
+            self.position[1],
+            self.position[0] + 1.,
+            self.position[0]
+        ).unwrap()
     }
 
     pub fn collides(&self, aabb: &AABB) -> bool {
@@ -102,10 +102,10 @@ impl Cube {
         }
 
         // compute collision time in each direction
-        let mut tx = if velocity[0] > 0. { (cube_aabb.west - aabb.east) / velocity[0] } else { (cube_aabb.east - aabb.west) / velocity[0] };
-        let mut ty = if velocity[1] > 0. { (cube_aabb.bottom - aabb.top) / velocity[1] } else { (cube_aabb.top - aabb.bottom) / velocity[1] };
+        let mut tx = if velocity[0] > 0. { (cube_aabb.west() - aabb.east()) / velocity[0] } else { (cube_aabb.east() - aabb.west()) / velocity[0] };
+        let mut ty = if velocity[1] > 0. { (cube_aabb.bottom() - aabb.top()) / velocity[1] } else { (cube_aabb.top() - aabb.bottom()) / velocity[1] };
 
-        let mut tz = if velocity[2] > 0. { (cube_aabb.south - aabb.north) / velocity[2] } else { (cube_aabb.north - aabb.south) / velocity[2] };
+        let mut tz = if velocity[2] > 0. { (cube_aabb.south() - aabb.north()) / velocity[2] } else { (cube_aabb.north() - aabb.south()) / velocity[2] };
 
         // if negative, means the collision will not happen: put ∞
         if tx <= 0. { tx = f32::MAX }

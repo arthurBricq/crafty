@@ -160,14 +160,14 @@ impl Camera {
         let diameter = 0.5;
         let forehead = 0.1;
 
-        AABB {
-            north: position.z() + diameter / 2.,
-            south: position.z() - diameter / 2.,
-            top: position.y() + forehead,
-            bottom: position.y() - PLAYER_EYES_H,
-            east: position.x() + diameter / 2.,
-            west: position.x() - diameter / 2.,
-        }
+        AABB::new(
+            position.z() + diameter / 2.,
+            position.z() - diameter / 2.,
+            position.y() + forehead,
+            position.y() - PLAYER_EYES_H,
+            position.x() + diameter / 2.,
+            position.x() - diameter / 2.
+        ).unwrap()
     }
 
     /// Set the attribute `selected` to the cube currently being selected
