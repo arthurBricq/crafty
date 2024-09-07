@@ -135,13 +135,14 @@ impl Camera {
                 normal: Vector3::empty(),
             });
 
+        // we want to put a margin, to avoid collision even with floats rounding
         let mut dtmargin: f32 = 0.0;
-        if (self.velocity.norm() >= 1e-10) {
+        if self.velocity.norm() >= 1e-10 {
             dtmargin = 1e-5 / self.velocity.norm();
         }
 
-        if (dt <= dtmargin) {
-            panic!("should not be smaller!!!");
+        if dt <= dtmargin {
+            panic!("dtmargin is bigger than dt...");
         }
 
         if collision.time >= dt {
@@ -150,8 +151,6 @@ impl Camera {
 
             dt
         } else {
-            // we want to put a margin, to avoid collision even with floats rounding
-
             self.position += self.velocity * (collision.time - dtmargin);
 
             // remove component of velocity along the normal
