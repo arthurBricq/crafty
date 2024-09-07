@@ -1,4 +1,4 @@
-use crafty::game_server::GameServer;
+use crafty::server::game_server::GameServer;
 use crafty::network::single_player_proxy::SinglePlayerProxy;
 use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;

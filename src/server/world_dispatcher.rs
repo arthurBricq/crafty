@@ -74,7 +74,7 @@ impl WorldDispatcher {
 #[cfg(test)]
 mod tests {
     use crate::chunk::CHUNK_SIZE;
-    use crate::world_dispatcher::{WorldDispatcher, VISIBLE_CHUNKS};
+    use crate::server::world_dispatcher::{WorldDispatcher, VISIBLE_CHUNKS};
 
     #[test]
     fn test_basic_scenario() {

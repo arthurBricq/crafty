@@ -5,7 +5,7 @@ use crate::network::server_update::ServerUpdate::{LoggedIn, RegisterEntity, Send
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
-use crate::world_dispatcher::WorldDispatcher;
+use crate::server::world_dispatcher::WorldDispatcher;
 
 /// The GameServer is the model of the server
 pub struct GameServer {

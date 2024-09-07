@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use crate::game_server::GameServer;
+use crate::server::game_server::GameServer;
 use crate::network::message_to_server::MessageToServer;
 
 use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};

@@ -1,8 +1,9 @@
 use crafty::args::Args;
 use crafty::network::tcp_server::TcpServer;
 use crafty::world::World;
-use crafty::{game_server::GameServer, world_generation::world_generator::WorldGenerator};
+use crafty::world_generation::world_generator::WorldGenerator;
 use std::sync::{Arc, Mutex};
+use crafty::server::game_server::GameServer;
 
 #[allow(dead_code)]
 enum WorldInitializer {
