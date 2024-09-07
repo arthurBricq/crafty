@@ -1,15 +1,15 @@
 use crate::aabb::AABB;
 use crate::chunk::CHUNK_FLOOR;
 use crate::collidable::{Collidable, CollisionData};
+use crate::cube::Cube;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 use std::f32::consts::PI;
 use std::time::Duration;
-use crate::cube::Cube;
 
 /// Travel speed [m/s] or [cube/s]
-const SPEED: f32 = 6.;
+const SPEED: f32 = 5.0;
 // TODO for some obscure reason, actual speed is lower than that. Perhaps the dt
 // is wrong, or yet again the collision ?
 
@@ -18,6 +18,8 @@ const JUMP_VELOCITY: f32 = 7.;
 
 // TODO same problem
 const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
+
+const PLAYER_MARGIN: f32 = 1e-5;
 
 pub const PLAYER_HEIGHT: f32 = 1.8;
 
@@ -51,7 +53,6 @@ pub struct Camera {
 
     in_air: bool,
 }
-
 
 impl Camera {
     /// based on right hand perspective look along the positive z-Axis
@@ -109,16 +110,15 @@ impl Camera {
         }
 
         let mut dt = elapsed.as_secs_f32();
-        dt = dt - self.move_with_collision(dt, world);
-        if dt > 0. {
+        loop {
             dt = dt - self.move_with_collision(dt, world);
+            if dt <= 0. {
+                break;
+            }
         }
-        // TODO we may want to do it a third time, to handle x-y-z diagonal
-        //      movements. However, there are no slopes in the cubes for now, so it
-        //      is not necessary
 
         // update in_air
-        let displacement = Vector3::new(0., -1e-5, 0.);
+        let displacement = Vector3::new(0., -2.0 * PLAYER_MARGIN, 0.);
         self.in_air = !world.collides(&Self::make_aabb(&(&self.position + displacement)));
 
         self.compute_selected_cube(world);
@@ -129,23 +129,30 @@ impl Camera {
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
         let target = Self::make_aabb(&(&self.position + self.velocity * dt));
 
-        let collision =
-            world.collision_time(&Self::make_aabb(&self.position), &target, &self.velocity)
-            .unwrap_or(CollisionData { time: f32::MAX, normal: Vector3::empty() });
+        let collision = world
+            .collision_time(&Self::make_aabb(&self.position), &target, &self.velocity)
+            .unwrap_or(CollisionData {
+                time: f32::MAX,
+                normal: Vector3::empty(),
+            });
 
         if collision.time >= dt {
+            // TO DO : do we also want a margin here ???????????
+
             // can move straight away
             self.position += self.velocity * dt;
 
             dt
         } else {
+            // The margin is between the player and the block we colide with
+            // need the projection of velocity onto the normal
+            let mut dtmargin: f32 = 0.0;
+            if (self.velocity.norm() >= 1e-10) {
+                dtmargin = PLAYER_MARGIN / collision.normal.dot(&self.velocity).abs();
+            }
             // we want to put a margin, to avoid collision even with floats rounding
-
-            // TODO if we are here, we can assume the velocity is nonzero I
-            // think, but I am not sure
-            let dtmargin = 1e-5 / self.velocity.norm();
             self.position += self.velocity * (collision.time - dtmargin);
-
+            
             // remove component of velocity along the normal
             let vnormal = collision.normal * collision.normal.dot(&self.velocity);
             self.velocity = self.velocity - vnormal;
@@ -164,7 +171,7 @@ impl Camera {
             position.y() + FOREHEAD,
             position.y() - PLAYER_HEIGHT + FOREHEAD,
             position.x() + DIAMETER / 2.,
-            position.x() - DIAMETER / 2.
+            position.x() - DIAMETER / 2.,
         ).unwrap()
     }
 
@@ -220,7 +227,9 @@ impl Camera {
     fn direction(&self) -> Vector3 {
         Vector3::new(
             self.position.yaw().cos() * self.position.pitch().cos(),
-            self.position.pitch().sin(), self.position.yaw().sin() * self.position.pitch().cos())
+            self.position.pitch().sin(),
+            self.position.yaw().sin() * self.position.pitch().cos(),
+        )
     }
 
     fn ground_direction_forward(&self) -> Vector3 {
@@ -255,9 +264,11 @@ impl Camera {
         s.normalize();
         let u = forward.cross(&s);
         let position = self.position.pos();
-        let p = [-position[0] * s[0] - position[1] * s[1] - position[2] * s[2],
+        let p = [
+            -position[0] * s[0] - position[1] * s[1] - position[2] * s[2],
             -position[0] * u[0] - position[1] * u[1] - position[2] * u[2],
-            -position[0] * forward[0] - position[1] * forward[1] - position[2] * forward[2]];
+            -position[0] * forward[0] - position[1] * forward[1] - position[2] * forward[2],
+        ];
         [
             [s[0], u[0], forward[0], 0.0],
             [s[1], u[1], forward[1], 0.0],
@@ -279,7 +290,7 @@ impl Camera {
     pub fn selection_internals(&self) -> Option<(Cube, Vector3)> {
         self.touched_cube
     }
-    
+
     pub fn is_selecting_cube(&self) -> bool {
         self.touched_cube.is_some()
     }

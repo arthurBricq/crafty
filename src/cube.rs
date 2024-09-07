@@ -79,7 +79,7 @@ impl Cube {
             self.position[1] + 1.,
             self.position[1],
             self.position[0] + 1.,
-            self.position[0]
+            self.position[0],
         ).unwrap()
     }
 }
@@ -89,13 +89,18 @@ impl Collidable for Cube {
         self.aabb().collides(&aabb)
     }
 
-    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
-                          -> Option<CollisionData> {
+    fn collision_time(
+        &self,
+        aabb: &AABB,
+        target: &AABB,
+        velocity: &Vector3,
+    ) -> Option<CollisionData> {
         let cube_aabb = self.aabb();
 
         if aabb.collides(&cube_aabb) {
             dbg!(&aabb);
             dbg!(&cube_aabb);
+
             panic!("should not collide before !");
         }
 
@@ -105,15 +110,33 @@ impl Collidable for Cube {
         }
 
         // compute collision time in each direction
-        let mut tx = if velocity[0] > 0. { (cube_aabb.west() - aabb.east()) / velocity[0] } else { (cube_aabb.east() - aabb.west()) / velocity[0] };
-        let mut ty = if velocity[1] > 0. { (cube_aabb.bottom() - aabb.top()) / velocity[1] } else { (cube_aabb.top() - aabb.bottom()) / velocity[1] };
+        let mut tx = if velocity[0] > 0. {
+            (cube_aabb.west() - aabb.east()) / velocity[0]
+        } else {
+            (cube_aabb.east() - aabb.west()) / velocity[0]
+        };
+        let mut ty = if velocity[1] > 0. {
+            (cube_aabb.bottom() - aabb.top()) / velocity[1]
+        } else {
+            (cube_aabb.top() - aabb.bottom()) / velocity[1]
+        };
 
-        let mut tz = if velocity[2] > 0. { (cube_aabb.south() - aabb.north()) / velocity[2] } else { (cube_aabb.north() - aabb.south()) / velocity[2] };
+        let mut tz = if velocity[2] > 0. {
+            (cube_aabb.south() - aabb.north()) / velocity[2]
+        } else {
+            (cube_aabb.north() - aabb.south()) / velocity[2]
+        };
 
         // if negative, means the collision will not happen: put ∞
-        if tx <= 0. { tx = f32::MAX }
-        if ty <= 0. { ty = f32::MAX }
-        if tz <= 0. { tz = f32::MAX }
+        if tx <= 0. {
+            tx = f32::MAX
+        }
+        if ty <= 0. {
+            ty = f32::MAX
+        }
+        if tz <= 0. {
+            tz = f32::MAX
+        }
 
         // collision time too big, we can discard it (for some reason, it can be
         // super high, but not ∞)
@@ -124,17 +147,17 @@ impl Collidable for Cube {
         if tx < ty && tx < tz {
             Some(CollisionData {
                 time: tx,
-                normal: Vector3::unit_x() * if velocity[0] > 0. { -1. } else { 1. }
+                normal: Vector3::unit_x() * if velocity[0] > 0. { -1. } else { 1. },
             })
         } else if ty < tx && ty < tz {
             Some(CollisionData {
                 time: ty,
-                normal: Vector3::unit_y() * if velocity[1] > 0. { -1. } else { 1. }
+                normal: Vector3::unit_y() * if velocity[1] > 0. { -1. } else { 1. },
             })
         } else if tz < tx && tz < ty {
             Some(CollisionData {
                 time: tz,
-                normal: Vector3::unit_z() * if velocity[2] > 0. { -1. } else { 1. }
+                normal: Vector3::unit_z() * if velocity[2] > 0. { -1. } else { 1. },
             })
         } else {
             dbg!(tx, ty, tz);
