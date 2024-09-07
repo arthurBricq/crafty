@@ -59,7 +59,7 @@ impl WorldGenerator {
 
                         let cube_height = height.floor() as i32;
 
-                        for y in 0..cube_height - 1 {
+                        for y in 0..cube_height {
                             chunk.add_cube(
                                 Vector3::new(
                                     i as f32 * s + x as f32,
