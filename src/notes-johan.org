@@ -1,4 +1,0 @@
-To tackle now: the collisions.
-
-In particular, here are the bugs that I have to solve
-- we can pass through a 1 block high hole
