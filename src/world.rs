@@ -1,7 +1,10 @@
+use std::ops::Index;
+use crate::aabb::AABB;
 use crate::actions::Action;
 use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
+use crate::collidable::{Collidable, CollisionData};
 use crate::cube::Cube;
 use crate::cubes_to_draw::CubesToDraw;
 use crate::graphics::cube::CubeInstance;
@@ -10,7 +13,7 @@ use crate::world_generation::perlin::PerlinNoise;
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, VertexBuffer};
-
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
 pub struct World {
@@ -34,14 +37,14 @@ impl World {
         self.chunks.push(Chunk::new_for_demo([-s, 0.], 0));
         self.chunks.push(Chunk::new_for_demo([-2. * s, 0.], 0));
     }
-    
+
     pub fn add_chunk(&mut self, chunk: Chunk) {
         if self.cubes_to_draw.is_some() {
             self.cubes_to_draw.as_mut().unwrap().add_chunk(&chunk);
         }
         self.chunks.push(chunk);
     }
-    
+
     pub fn get_chunk(&self, corner: (i32, i32)) -> Option<Chunk> {
         for chunk in &self.chunks {
             let tmp = chunk.corner();
@@ -206,7 +209,6 @@ impl World {
 
         None
     }
-
     /// Returns true if there is a cube at this position
     pub fn is_position_free(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
@@ -259,7 +261,7 @@ impl World {
     }
     
     fn cube_at_mut(&mut self, pos: Vector3) -> Option<&mut Cube> {
-        for chunk in &mut self.chunks {
+        for chunk in &mut self.chunks { 
             if chunk.is_in(&pos) {
                 return chunk.cube_at_mut(&pos)
             }
@@ -277,7 +279,7 @@ impl World {
     }
 
     /// Adds a cube and then recomputes the visibility of the affected cubes (neighbors)
-    /// Return the cube that need to be rendered 
+    /// Return the cube that need to be rendered
     /// and the position of the rendered cube that need to be destroyed
     fn add_cube(&mut self, at: Vector3, block: Block) -> (Vec<Vector3>,Cube) {
         // For all the neighbors positions, increase their internal counter
@@ -298,7 +300,7 @@ impl World {
         self.add_cube_unsafe(at, block, count);
         (to_hide,self.cube_at_mut(at).unwrap().clone())
     }
-    
+
     /// Adds a cube without recomputing the visibility
     fn add_cube_unsafe(&mut self, at: Vector3, block: Block, neighbors: u8) {
         for chunk in &mut self.chunks {
@@ -307,7 +309,7 @@ impl World {
             }
         }
     }
-    
+
     /// Destroy a cube and return the neighboring cubes that need to be rendered
     fn destroy_cube(&mut self, at: Vector3) -> Vec<Cube> {
         // Find the chunk where the cube is located
@@ -429,6 +431,43 @@ impl World {
         world
     }
 
+}
+
+impl Collidable for World {
+    fn collides(&self, aabb: &AABB) -> bool {
+	for chunk in &self.chunks {
+	    if chunk.collides(aabb) {
+		return true
+	    }
+	}
+
+	false
+    }
+
+    // now returns collision time; f32::MAX if no collision
+    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+			  -> Option<CollisionData> {
+	// find with which chunks it is colliding
+	let mut acc_time = f32::MAX;
+	let mut acc_normal = Vector3::empty();
+
+	// TODO be smarter
+	for chunk in &self.chunks {
+            if let Some(CollisionData { time, normal })
+                = chunk.collision_time(aabb, target, velocity) {
+                    if time < acc_time {
+		        acc_time = time;
+		        acc_normal = normal;
+	            }
+                }
+        }
+
+        if acc_time > 1e10 {
+            None
+        } else {
+            Some(CollisionData{ time: acc_time, normal: acc_normal })
+        }
+    }
 }
 
 #[cfg(test)]

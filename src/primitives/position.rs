@@ -1,4 +1,4 @@
-use std::ops::AddAssign;
+use std::ops::{Add, AddAssign};
 use std::str::from_utf8;
 use crate::primitives::vector::Vector3;
 
@@ -82,5 +82,17 @@ impl Position {
 impl AddAssign<Vector3> for Position {
     fn add_assign(&mut self, rhs: Vector3) {
         self.pos += rhs
+    }
+}
+
+impl Add<Vector3> for &Position {
+    type Output = Position;
+
+    fn add(self, rhs: Vector3) -> Self::Output {
+        Position {
+            pos: self.pos + rhs,
+            yaw: self.yaw,
+            pitch: self.pitch
+        }
     }
 }
