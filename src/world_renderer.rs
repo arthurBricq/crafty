@@ -8,12 +8,13 @@ use std::time::{Duration, Instant};
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
 use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG};
-use crate::player::{Player, MotionState};
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
+use crate::player::{MotionState, Player};
 
+use crate::camera::perspective_matrix;
 use crate::graphics::color::Color;
 use crate::graphics::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER};
 use crate::graphics::font::GLChar;
@@ -25,14 +26,12 @@ use crate::network::server_update::ServerUpdate;
 use crate::player_items::PlayerItems;
 use crate::texture;
 use crate::world::World;
-use glium::backend::Facade;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Surface};
 use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
-use winit::event_loop::ControlFlow;
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{CursorGrabMode, Fullscreen, Window, WindowBuilder};
+use winit::window::{CursorGrabMode, Fullscreen, Window};
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
@@ -271,7 +270,7 @@ impl WorldRenderer {
                         // Define our uniforms (same uniforms for all cubes)...
                         let uniforms = uniform! {
                             view: self.player.view_matrix(),
-                            perspective: self.player.perspective_matrix(target.get_dimensions()),
+                            perspective: perspective_matrix(target.get_dimensions()),
                             textures: cubes_texture_sampler,
                             selected_texture: &selected_texture,
                             selected_intensity: if self.is_left_clicking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
