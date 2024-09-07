@@ -1,5 +1,6 @@
 use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
+use crate::collidable::{Collidable, CollisionData};
 use crate::cube::Cube;
 use crate::primitives::vector::Vector3;
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
@@ -247,9 +248,10 @@ impl Chunk {
         }
         Ok(chunk)
     }
+}
 
-
-    pub fn collides(&self, aabb: &AABB) -> bool {
+impl Collidable for Chunk {
+    fn collides(&self, aabb: &AABB) -> bool {
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
@@ -265,29 +267,33 @@ impl Chunk {
         false
     }
 
-    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
-                          -> (f32, Vector3) {
+    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+                          -> Option<CollisionData> {
         // TODO do it the dumb way for now, i.e. loop on all the cubes
-        let mut collision_time = f32::MAX;
-        let mut normal = Vector3::empty();
+        let mut acc_time = f32::MAX;
+        let mut acc_normal = Vector3::empty();
 
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if let Some(cube) = self.cubes[k][i][j] {
-                        let (cube_collision_time, cube_normal) =
-                            cube.collision_time(aabb, target, velocity);
-
-                        if cube_collision_time < collision_time {
-                            collision_time = cube_collision_time;
-                            normal = cube_normal;
-                        }
+                        if let Some(CollisionData { time, normal })
+                            = cube.collision_time(aabb, target, velocity) {
+                                if time < acc_time {
+                                    acc_time = time;
+                                    acc_normal = normal;
+                                }
+                            }
                     }
                 }
             }
         }
 
-        (collision_time, normal)
+        if acc_time > 1e10 {
+            None
+        } else {
+            Some(CollisionData{ time: acc_time, normal: acc_normal })
+        }
     }
 }
 

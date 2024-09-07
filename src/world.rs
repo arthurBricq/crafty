@@ -4,6 +4,7 @@ use crate::actions::Action;
 use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
+use crate::collidable::{Collidable, CollisionData};
 use crate::cube::Cube;
 use crate::cubes_to_draw::CubesToDraw;
 use crate::graphics::cube::CubeInstance;
@@ -208,38 +209,6 @@ impl World {
 
         None
     }
-
-    pub fn collides(&self, aabb: &AABB) -> bool {
-	for chunk in &self.chunks {
-	    if chunk.collides(aabb) {
-		return true
-	    }
-	}
-
-	false
-    }
-
-    // now returns collision time; f32::MAX if no collision
-    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
-			  -> (f32, Vector3) {
-	// find with which chunks it is colliding
-	let mut collision_time = f32::MAX;
-	let mut normal = Vector3::empty();
-
-	// TODO be smarter
-	for chunk in &self.chunks {
-	    let (chunk_collision_time, chunk_normal) =
-		chunk.collision_time(aabb, target, velocity);
-
-	    if chunk_collision_time < collision_time {
-		collision_time = chunk_collision_time;
-		normal = chunk_normal;
-	    }
-        }
-
-	(collision_time, normal)
-    }
-
     /// Returns true if there is a cube at this position
     pub fn is_position_free(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
@@ -462,6 +431,43 @@ impl World {
         world
     }
 
+}
+
+impl Collidable for World {
+    fn collides(&self, aabb: &AABB) -> bool {
+	for chunk in &self.chunks {
+	    if chunk.collides(aabb) {
+		return true
+	    }
+	}
+
+	false
+    }
+
+    // now returns collision time; f32::MAX if no collision
+    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+			  -> Option<CollisionData> {
+	// find with which chunks it is colliding
+	let mut acc_time = f32::MAX;
+	let mut acc_normal = Vector3::empty();
+
+	// TODO be smarter
+	for chunk in &self.chunks {
+            if let Some(CollisionData { time, normal })
+                = chunk.collision_time(aabb, target, velocity) {
+                    if time < acc_time {
+		        acc_time = time;
+		        acc_normal = normal;
+	            }
+                }
+        }
+
+        if acc_time > 1e10 {
+            None
+        } else {
+            Some(CollisionData{ time: acc_time, normal: acc_normal })
+        }
+    }
 }
 
 #[cfg(test)]

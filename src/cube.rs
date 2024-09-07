@@ -1,5 +1,6 @@
 use crate::aabb::AABB;
 use crate::block_kind::Block;
+use crate::collidable::{Collidable, CollisionData};
 use crate::primitives::vector::Vector3;
 
 /// Model of a cube in the 3D world.
@@ -81,13 +82,15 @@ impl Cube {
             self.position[0]
         ).unwrap()
     }
+}
 
-    pub fn collides(&self, aabb: &AABB) -> bool {
+impl Collidable for Cube {
+    fn collides(&self, aabb: &AABB) -> bool {
         self.aabb().collides(&aabb)
     }
 
-    pub fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
-                          -> (f32, Vector3) {
+    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+                          -> Option<CollisionData> {
         let cube_aabb = self.aabb();
 
         if aabb.collides(&cube_aabb) {
@@ -98,7 +101,7 @@ impl Cube {
 
         // if no collision, no need to bother
         if !target.collides(&cube_aabb) {
-            return (f32::MAX, Vector3::empty());
+            return None;
         }
 
         // compute collision time in each direction
@@ -115,18 +118,24 @@ impl Cube {
         // collision time too big, we can discard it (for some reason, it can be
         // super high, but not ∞)
         if tx.min(ty.min(tz)) > 1e10 {
-            return (f32::MAX, Vector3::empty());
+            return None;
         }
 
         if tx < ty && tx < tz {
-            (tx, Vector3::unit_x() *
-                if velocity[0] > 0. { -1. } else { 1. })
+            Some(CollisionData {
+                time: tx,
+                normal: Vector3::unit_x() * if velocity[0] > 0. { -1. } else { 1. }
+            })
         } else if ty < tx && ty < tz {
-            (ty, Vector3::unit_y() *
-                if velocity[1] > 0. { -1. } else { 1. })
+            Some(CollisionData {
+                time: ty,
+                normal: Vector3::unit_y() * if velocity[1] > 0. { -1. } else { 1. }
+            })
         } else if tz < tx && tz < ty {
-            (tz, Vector3::unit_z() *
-                if velocity[2] > 0. { -1. } else { 1. })
+            Some(CollisionData {
+                time: tz,
+                normal: Vector3::unit_z() * if velocity[2] > 0. { -1. } else { 1. }
+            })
         } else {
             dbg!(tx, ty, tz);
             panic!("should not be here:");

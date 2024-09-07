@@ -1,5 +1,6 @@
 use crate::aabb::AABB;
 use crate::chunk::CHUNK_FLOOR;
+use crate::collidable::{Collidable, CollisionData};
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
@@ -37,9 +38,6 @@ pub struct Camera {
     /// Speed of the player
     velocity: Vector3,
 
-    /// Orientation of the camera Yaw, Pitch
-    rotation: [f32; 2],
-
     // TODO Maybe we can build a better encapsulation of this logic
     w_pressed: bool,
     s_pressed: bool,
@@ -61,7 +59,6 @@ impl Camera {
         Self {
             position: Position::new(Vector3::new(4.0, CHUNK_FLOOR as f32 + 24., 3.0), PI, 0.),
             velocity: Vector3::new(0., 0., 0.),
-            rotation: [PI, 0.0],
             w_pressed: false,
             s_pressed: false,
             a_pressed: false,
@@ -132,10 +129,11 @@ impl Camera {
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
         let target = Self::make_aabb(&(&self.position + self.velocity * dt));
 
-        let (collision_time, normal) =
-            world.collision_time(&Self::make_aabb(&self.position), &target, &self.velocity);
+        let collision =
+            world.collision_time(&Self::make_aabb(&self.position), &target, &self.velocity)
+            .unwrap_or(CollisionData { time: f32::MAX, normal: Vector3::empty() });
 
-        if collision_time >= dt {
+        if collision.time >= dt {
             // can move straight away
             self.position += self.velocity * dt;
 
@@ -146,13 +144,13 @@ impl Camera {
             // TODO if we are here, we can assume the velocity is nonzero I
             // think, but I am not sure
             let dtmargin = 1e-5 / self.velocity.norm();
-            self.position += self.velocity * (collision_time - dtmargin);
+            self.position += self.velocity * (collision.time - dtmargin);
 
             // remove component of velocity along the normal
-            let vnormal = normal * normal.dot(&self.velocity);
+            let vnormal = collision.normal * collision.normal.dot(&self.velocity);
             self.velocity = self.velocity - vnormal;
 
-            collision_time
+            collision.time
         }
     }
 
