@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
-use crate::block_kind::Block::{COBBELSTONE, OAKLEAVES};
+use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG};
 use crate::camera::{Camera, MotionState};
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
@@ -29,6 +29,7 @@ use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{CursorGrabMode, Fullscreen, Window};
+use crate::graphics::color::Color;
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
@@ -92,6 +93,9 @@ impl WorldRenderer {
         for _ in 0..50 {
             self.items.collect(COBBELSTONE);
             self.items.collect(OAKLEAVES);
+            self.items.collect(DIRT);
+            self.items.collect(GRASS);
+            self.items.collect(OAKLOG);
         }
 
         // Try to lock the mouse to the window, this doen't work for all OS
@@ -129,7 +133,7 @@ impl WorldRenderer {
         target.finish().unwrap();
 
         // Last details before running
-        self.hud_renderer.set_player_items(self.items.get_current_items());
+        self.update_items();
 
         // Initially, ask for server updates
         self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
@@ -168,7 +172,7 @@ impl WorldRenderer {
                     }
                     winit::event::WindowEvent::RedrawRequested => {
                         let mut target = display.draw();
-                        target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
+                        target.clear_color_and_depth(Color::Sky1.to_tuple(), 1.0);
 
                         // Step the camera with the elapsed time
                         let dt = t.elapsed();
@@ -305,15 +309,42 @@ impl WorldRenderer {
             match event.physical_key {
                 PhysicalKey::Code(key) => {
                     match key {
-                        KeyCode::Digit1 => self.items.set_current_item(0),
-                        KeyCode::Digit2 => self.items.set_current_item(1),
-                        KeyCode::Digit3 => self.items.set_current_item(2),
-                        KeyCode::Digit4 => self.items.set_current_item(3),
-                        KeyCode::Digit5 => self.items.set_current_item(4),
-                        KeyCode::Digit6 => self.items.set_current_item(5),
-                        KeyCode::Digit7 => self.items.set_current_item(6),
-                        KeyCode::Digit8 => self.items.set_current_item(7),
-                        KeyCode::Digit9 => self.items.set_current_item(8),
+                        KeyCode::Digit1 => {
+                            self.items.set_current_item(0);
+                            self.update_items();
+                        },
+                        KeyCode::Digit2 => {
+                            self.items.set_current_item(1);
+                            self.update_items();
+                        },
+                        KeyCode::Digit3 => {
+                            self.items.set_current_item(2);
+                            self.update_items();
+                        },
+                        KeyCode::Digit4 => {
+                            self.items.set_current_item(3);
+                            self.update_items();
+                        },
+                        KeyCode::Digit5 => {
+                            self.items.set_current_item(4);
+                            self.update_items();
+                        },
+                        KeyCode::Digit6 => {
+                            self.items.set_current_item(5);
+                            self.update_items();
+                        },
+                        KeyCode::Digit7 => {
+                            self.items.set_current_item(6);
+                            self.update_items();
+                        },
+                        KeyCode::Digit8 => {
+                            self.items.set_current_item(7);
+                            self.update_items();
+                        },
+                        KeyCode::Digit9 => {
+                            self.items.set_current_item(8);
+                            self.update_items();
+                        },
                         KeyCode::KeyP => {
                             println!("=================");
                             println!("Debug Information");
@@ -345,13 +376,19 @@ impl WorldRenderer {
                 self.items.consume(block);
             }
         }
-        self.hud_renderer.set_player_items(self.items.get_current_items());
+
+        // Currently, all actions end up editing the items.
+        self.update_items();
 
         // Handle cubes
         self.world.apply_action(&action);
 
         // Forward to server
         self.proxy.lock().unwrap().on_new_action(action);
+    }
+
+    fn update_items(&mut self) {
+        self.hud_renderer.set_player_items(self.items.get_current_items(), self.items.current_item());
     }
 
     fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {

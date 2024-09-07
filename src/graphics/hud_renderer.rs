@@ -126,8 +126,8 @@ impl HUDRenderer {
         self.update();
     }
 
-    pub fn set_player_items(&mut self, items: Items) {
-        self.items_bar.set_items(items);
+    pub fn set_player_items(&mut self, items: Items, selected: usize) {
+        self.items_bar.set_items(items, selected);
         self.update();
     }
 }

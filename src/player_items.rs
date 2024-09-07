@@ -28,6 +28,8 @@ impl PlayerItems {
             .map(|item| item.unwrap()).collect()
     }
 
+
+
     pub fn get_current_block(&self) -> Option<Block> {
         if let Some((_, Some((block, _)))) = self.current_items.iter()
             .filter(|item| item.is_some())
@@ -90,6 +92,10 @@ impl PlayerItems {
 
     pub fn set_current_item(&mut self, current_item: usize) {
         self.current_item = current_item;
+    }
+
+    pub fn current_item(&self) -> usize {
+        self.current_item
     }
 }
 
