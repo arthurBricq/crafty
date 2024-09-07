@@ -8,11 +8,11 @@ use std::time::{Duration, Instant};
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
 use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG};
+use crate::player::Player;
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
-use crate::player::{MotionState, Player};
 
 use crate::camera::perspective_matrix;
 use crate::graphics::color::Color;
@@ -29,11 +29,13 @@ use crate::world::World;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Surface};
 use winit::event::ElementState::{Pressed, Released};
-use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
+use winit::event_loop::ControlFlow;
+use crate::input::MotionState;
+use winit::event::{AxisId, ElementState, KeyEvent, MouseButton};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{CursorGrabMode, Fullscreen, Window};
+use winit::window::{CursorGrabMode, Fullscreen, Window, WindowBuilder};
+use crate::player::CLICK_TIME_TO_BREAK;
 
-const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
 /// 16ms => 60 FPS roughly
 const TARGET_FRAME_DURATION: Duration = Duration::from_millis(16);
@@ -64,26 +66,20 @@ pub struct WorldRenderer {
     /// Computes the current FPS
     fps_manager: FpsManager,
 
-    // Logic for when the user is clicking
-    // TODO encapsulate that in another struct
-    is_left_clicking: bool,
-    click_time: f32,
-
     /// Is the window displayed in fullscreen ?
     fullscreen: bool,
 }
 
 impl WorldRenderer {
-    pub fn new(proxy: Arc<Mutex<dyn Proxy>>, world: World, cam: Player) -> Self {
+    pub fn new(proxy: Arc<Mutex<dyn Proxy>>, world: World, player: Player) -> Self {
         Self {
             proxy,
             world,
-            player: cam,
+            player: player,
             hud_renderer: HUDRenderer::new(),
             fps_manager: FpsManager::new(),
             items: PlayerItems::empty(),
-            is_left_clicking: false,
-            click_time: 0.0,
+
             fullscreen: false,
             entity_manager: EntityManager::new(),
         }
@@ -229,16 +225,12 @@ impl WorldRenderer {
                         let mut target = display.draw();
                         target.clear_color_and_depth(Color::Sky1.to_tuple(), 1.0);
 
-                        if self.player.is_selecting_cube() && self.is_left_clicking {
-                            self.click_time += dt.as_secs_f32();
-                            if self.click_time >= CLICK_TIME_TO_BREAK {
-                                // Break the cube
-                                self.apply_action(Destroy { at: self.player.selected_cube().unwrap().to_cube_coordinates() });
-                                self.is_left_clicking = false;
-                                self.click_time = 0.;
-                            }
+                        // Step the camera with the elapsed time
+                        // Try to break the selected cube
+                        if self.player.is_time_to_break_over(dt.as_secs_f32()) {
+                            self.apply_action(Destroy { at: self.player.selected_cube().unwrap().to_cube_coordinates() });
                         }
-
+     
                         // Step
                         self.fps_manager.step(dt);
                         self.player.step(dt, &self.world);
@@ -273,7 +265,7 @@ impl WorldRenderer {
                             perspective: perspective_matrix(target.get_dimensions()),
                             textures: cubes_texture_sampler,
                             selected_texture: &selected_texture,
-                            selected_intensity: if self.is_left_clicking {self.click_time / CLICK_TIME_TO_BREAK} else {0.2},
+                            selected_intensity: if self.player.left_click() {self.player.left_click_time() / CLICK_TIME_TO_BREAK} else {0.2},
                         };
 
                         // We use OpenGL's instancing feature which allows us to render huge amounts ot cubes at once.
@@ -322,6 +314,8 @@ impl WorldRenderer {
                             &draw_parameters).unwrap();
                         target.finish().unwrap();
                     }
+                    winit::event::WindowEvent::MouseInput { device_id: _, state, button } => self.handle_button_event(button, state),
+                    winit::event::WindowEvent::KeyboardInput { device_id: _, event, is_synthetic: _} => self.handle_key_event(event, &window),
                     _ => (),
                 },
                 winit::event::Event::AboutToWait => {
@@ -333,53 +327,55 @@ impl WorldRenderer {
                   window.request_redraw()
                 },
                 winit::event::Event::DeviceEvent { event, .. } => match event {
-                    winit::event::DeviceEvent::Key(key) => self.handle_key_event(key, &window),
-                    winit::event::DeviceEvent::Motion { axis, value } => self.handle_motion_event(axis, value),
-                    winit::event::DeviceEvent::Button { button, state } => self.handle_button_event(button, state),
-                    _ => {}
-                }
+                    winit::event::DeviceEvent::Motion { axis, value } => { self.handle_motion_event(axis, value) },
+                     _ => {}
+                 }
                 _ => (),
             };
         }).unwrap();
     }
 
-    fn handle_key_event(&mut self, event: RawKeyEvent, window: &Window) {
-	if self.hud_renderer.is_inventory_open() {
-	    self.handle_inventory_key_event(event, window)
-	} else {
-	    self.handle_game_key_event(event, window)
-	}
+    fn handle_key_event(&mut self, event: KeyEvent, window: &Window) {
+        if self.hud_renderer.is_inventory_open() {
+            self.handle_inventory_key_event(event, window)
+        } else {
+            self.handle_game_key_event(event, window)
+        }
+        }
+    
+    fn handle_inventory_key_event(&mut self, event: KeyEvent, window: &Window) {
+	    if event.state == Pressed {
+	        match event.physical_key {
+		        PhysicalKey::Code(key) => {
+		            match key {
+			            KeyCode::KeyE => self.hud_renderer.toggle_inventory(),
+			            _ => {}
+		            }
+		        },
+		        PhysicalKey::Unidentified(_) => {}
+	        }
+	    }
     }
 
-    fn handle_inventory_key_event(&mut self, event: RawKeyEvent, window: &Window) {
-	if event.state == Pressed {
-	    match event.physical_key {
-		PhysicalKey::Code(key) => {
-		    match key {
-			KeyCode::KeyE => {
-			    self.hud_renderer.toggle_inventory();
-			},
-			_ => {}
-		    }
-		},
-		PhysicalKey::Unidentified(_) => {}
-	    }
-	}
-    }
-    
-    fn handle_game_key_event(&mut self, event: RawKeyEvent, window: &Window) {
+    fn handle_game_key_event(&mut self, event: KeyEvent, window: &Window) {
         // Handle keys related to motion (toggle is important here)
+        if event.repeat {
+            return;
+        }
+        let pressed = event.state.is_pressed();
         match event.physical_key {
-            PhysicalKey::Code(key) => match key {
-                KeyCode::KeyW => self.player.toggle_state(MotionState::W),
-                KeyCode::KeyS => self.player.toggle_state(MotionState::S),
-                KeyCode::KeyD => self.player.toggle_state(MotionState::D),
-                KeyCode::KeyA => self.player.toggle_state(MotionState::A),
-                KeyCode::KeyK => self.player.up(),
-                KeyCode::KeyJ => self.player.down(),
-                KeyCode::Space => self.player.jump(),
-                _ => {}
-            },
+            PhysicalKey::Code(key) => {
+                match key {
+                    KeyCode::KeyW => self.player.toggle_state(MotionState::Up, pressed),
+                    KeyCode::KeyS => self.player.toggle_state(MotionState::Down, pressed),
+                    KeyCode::KeyD => self.player.toggle_state(MotionState::Right, pressed),
+                    KeyCode::KeyA => self.player.toggle_state(MotionState::Left, pressed),
+                    KeyCode::KeyK => self.player.up(),
+                    KeyCode::KeyJ => self.player.down(),
+                    KeyCode::Space => self.player.toggle_state(MotionState::Jump, pressed),
+                    _ => {}
+                }
+            }
             _ => {}
         }
 
@@ -477,26 +473,26 @@ impl WorldRenderer {
             .set_player_items(self.items.get_bar_items(), self.items.current_item());
     }
 
-    fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
-        if button == 1 {
-            // Left click
-            if !self.is_left_clicking && state == Pressed {
-                self.is_left_clicking = true;
-            } else if self.is_left_clicking && state == Released {
-                self.is_left_clicking = false;
-                self.click_time = 0.;
-            }
-        } else if button == 3 && state == Pressed {
-            // Right click = add a new cube
-            // We know where is the player and we know
-            if let Some((touched_cube, touched_pos)) = self.player.selection_internals() {
-                if let Some(block) = self.items.get_current_block() {
-                    self.apply_action(Action::Add {
-                        at: Action::position_to_generate_cube(&touched_cube, &touched_pos),
-                        block,
-                    });
+    fn handle_button_event(&mut self, button: MouseButton, state: ElementState) { 
+        match button {
+            winit::event::MouseButton::Left => {
+                self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
+            },
+            winit::event::MouseButton::Right => { 
+                if state == Pressed {
+                    // Right click = add a new cube
+                    // We know where is the player and we know 
+                    if let Some((touched_cube, touched_pos)) = self.player.selection_internals() {
+                        if let Some(block) = self.items.get_current_block() {
+                            self.apply_action(Action::Add {
+                            at: Action::position_to_generate_cube(&touched_cube, &touched_pos),
+                            block,
+                        });
+                        }
+                    }
                 }
-            }
+            },
+            _ => ()
         }
     }
 

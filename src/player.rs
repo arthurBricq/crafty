@@ -7,6 +7,10 @@ use crate::primitives::vector::Vector3;
 use crate::world::World;
 use std::f32::consts::PI;
 use std::time::Duration;
+use crate::input::PlayerInputStatus;
+use crate::input::MotionState;
+
+pub const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
 /// Travel speed [m/s] or [cube/s]
 const SPEED: f32 = 5.0;
@@ -23,13 +27,6 @@ const PLAYER_MARGIN: f32 = 1e-5;
 
 pub const PLAYER_HEIGHT: f32 = 1.8;
 
-pub enum MotionState {
-    W,
-    S,
-    A,
-    D,
-    None,
-}
 
 /// Represents the physical state of a player, on the client side.
 /// This means:
@@ -47,11 +44,8 @@ pub struct Player {
     /// Speed of the player
     velocity: Vector3,
 
-    // TODO Maybe we can build a better encapsulation of this logic
-    w_pressed: bool,
-    s_pressed: bool,
-    a_pressed: bool,
-    d_pressed: bool,
+    /// Currently logical inputs pressed
+    input_status: PlayerInputStatus,
 
     /// Tuple with (Cube, touched_position)
     /// Position that the camera is currently pointing to
@@ -67,10 +61,7 @@ impl Player {
         Self {
             position: Position::new(Vector3::new(4.0, CHUNK_FLOOR as f32 + 24., 3.0), PI, 0.),
             velocity: Vector3::new(0., 0., 0.),
-            w_pressed: false,
-            s_pressed: false,
-            a_pressed: false,
-            d_pressed: false,
+            input_status: PlayerInputStatus::new(),
             touched_cube: None,
             in_air: true, // will be updated every frame anyway
         }
@@ -93,6 +84,10 @@ impl Player {
             self.velocity[2] = controls_vel[2];
         }
 
+        if self.input_status.jump() {
+            self.jump();
+        }
+
         let mut dt = elapsed.as_secs_f32();
         loop {
             dt = dt - self.move_with_collision(dt, world);
@@ -108,14 +103,25 @@ impl Player {
         self.compute_selected_cube(world);
     }
 
-    pub fn toggle_state(&mut self, state: MotionState) {
-        match state {
-            MotionState::W => self.w_pressed = !self.w_pressed,
-            MotionState::S => self.s_pressed = !self.s_pressed,
-            MotionState::A => self.a_pressed = !self.a_pressed,
-            MotionState::D => self.d_pressed = !self.d_pressed,
-            MotionState::None => {}
-        }
+
+    pub fn toggle_state(&mut self, element: MotionState, pressed: bool ) {
+        self.input_status.set_input(element, pressed);
+    }
+
+    pub fn left_click(&self) -> bool {
+        self.input_status.left_click()
+    }
+
+    pub fn left_click_time(&self) -> f32 {
+        self.input_status.click_time()
+    }
+
+    pub fn reset_click_time(&mut self) {
+        self.input_status.reset_click_time()
+    }
+
+    pub fn add_click_time(&mut self, click_time: f32 ) {
+        self.input_status.add_click_time(click_time)
     }
 
     pub fn jump(&mut self) {
@@ -180,10 +186,6 @@ impl Player {
     pub fn position(&self) -> &Position {
         &self.position
     }
-
-    pub fn is_moving(&self) -> bool {
-        self.d_pressed || self.a_pressed || self.w_pressed || self.s_pressed
-    }
     
     pub fn debug(&mut self) {
         println!("* Camera - position   : {:?}", self.position);
@@ -197,16 +199,16 @@ impl Player {
         let l = self.ground_direction_right();
 
         let mut displacement = Vector3::empty();
-        if self.w_pressed {
+        if self.input_status.forward() {
             displacement += f * SPEED;
         }
-        if self.s_pressed {
+        if self.input_status.backward() {
             displacement -= f * SPEED;
         }
-        if self.d_pressed {
+        if self.input_status.right() {
             displacement += l * SPEED;
         }
-        if self.a_pressed {
+        if self.input_status.left() {
             displacement -= l * SPEED;
         }
 
@@ -247,7 +249,7 @@ impl Player {
         self.touched_cube = None
     }
     
-    /// Integrate the velocity to move the camera, with collision. Returns the
+        /// Integrate the velocity to move the camera, with collision. Returns the
     /// dt (in seconds), which can be smaller than `dt` if there is a collision.
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
         let target = Self::make_aabb(&(&self.position + self.velocity * dt));
@@ -275,7 +277,7 @@ impl Player {
             }
             // we want to put a margin, to avoid collision even with floats rounding
             self.position += self.velocity * (collision.time - dtmargin);
-
+            
             // remove component of velocity along the normal
             let vnormal = collision.normal * collision.normal.dot(&self.velocity);
             self.velocity = self.velocity - vnormal;
@@ -301,4 +303,14 @@ impl Player {
         Vector3::new(self.position.yaw().sin(), 0., -self.position.yaw().cos())
     }
 
+    pub fn is_time_to_break_over(&mut self, dt: f32) -> bool {
+        if self.is_selecting_cube() && self.left_click() {
+            self.add_click_time(dt);
+            if self.left_click_time() >= CLICK_TIME_TO_BREAK {
+                self.reset_click_time();
+                return true;
+            }
+        }
+        false
+    }
 }
