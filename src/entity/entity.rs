@@ -7,7 +7,8 @@ use crate::primitives::position::Position;
 #[derive(Debug, PartialEq)]
 /// Enum for the different types of entity
 pub enum EntityKind {
-    Player
+    Player,
+    Monster1
 }
 
 /// Contain the data of an entity
@@ -45,7 +46,8 @@ impl Entity {
     /// Draw the entity and return a Vec of EntityCube
     pub fn get_opengl_entities(&self) -> Vec<EntityCube> {
         match self.entity_type {
-            EntityKind::Player => humanoid::get_opengl_entities(self.position.clone())
+            EntityKind::Player => humanoid::get_opengl_entities(self.position.clone()),
+            EntityKind::Monster1 => humanoid::get_opengl_entities(self.position.clone()),
         }
     }
 

@@ -1,16 +1,29 @@
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use crate::actions::Action;
 use crate::chunk::CHUNK_FLOOR;
 use crate::network::server_update::ServerUpdate;
 use crate::network::server_update::ServerUpdate::{LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
+use crate::server::monster_manager::MonsterManager;
 use crate::world::World;
 use crate::server::world_dispatcher::WorldDispatcher;
+
+/// Main function of the thread in charge of entities
+pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
+    let sleep_time = Duration::from_millis(20);
+
+    loop {
+        server.lock().unwrap().entity_server.step(sleep_time);
+        std::thread::sleep(sleep_time)
+    }
+}
 
 /// The GameServer is the model of the server
 pub struct GameServer {
     /// The full world
-    world: World,
+    world: Arc<Mutex<World>>,
 
     /// number of players
     n_players: usize,
@@ -20,15 +33,20 @@ pub struct GameServer {
 
     /// Buffer of updates to be sent to each player
     server_updates_buffer: Vec<Vec<ServerUpdate>>,
+
+    /// In charge of handling the entities
+    entity_server: MonsterManager
 }
 
 impl GameServer {
     pub fn new(world: World) -> Self {
+        let ref_to_world = Arc::new(Mutex::new(world));
         Self {
-            world,
+            world: Arc::clone(&ref_to_world),
             n_players: 0,
             world_dispatcher: WorldDispatcher::new(),
             server_updates_buffer: Vec::new(),
+            entity_server: MonsterManager::new(ref_to_world),
         }
     }
 
@@ -70,7 +88,7 @@ impl GameServer {
             let buffer = &mut self.server_updates_buffer[player_id];
             for corner in chunks_to_send {
                 // Find the correct chunk
-                if let Some(to_send) = self.world.get_chunk(corner) {
+                if let Some(to_send) = self.world.lock().unwrap().get_chunk(corner) {
                     buffer.push(ServerUpdate::LoadChunk(to_send))
                 } else {
                     // TODO generate chunk !!!
@@ -89,7 +107,7 @@ impl GameServer {
 
     pub fn on_new_action(&mut self, player_id: usize, action: Action) {
         // Edit the world of the server
-        self.world.apply_action(&action);
+        self.world.lock().unwrap().apply_action(&action);
         // Forward the action to all OTHER clients
         for i in 0..self.n_players {
             if i != player_id {

@@ -3,7 +3,7 @@ use crafty::network::tcp_server::TcpServer;
 use crafty::world::World;
 use crafty::world_generation::world_generator::WorldGenerator;
 use std::sync::{Arc, Mutex};
-use crafty::server::game_server::GameServer;
+use crafty::server::game_server::{handle_entity_thread, GameServer};
 
 #[allow(dead_code)]
 enum WorldInitializer {
@@ -30,6 +30,11 @@ fn main() {
     // It holds the 'full' world
     // It is put inside an ARC to be shared across each thread, and inside a Mute to have interior mutability.
     let game = Arc::new(Mutex::new(GameServer::new(world)));
-
+    
+    // Spawn the entity thead
+    let ref1 = game.clone();
+    std::thread::spawn(move || handle_entity_thread(ref1));
+    
+    // Starts the TCP server
     TcpServer::start(&url, game)
 }
