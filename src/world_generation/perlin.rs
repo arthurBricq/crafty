@@ -174,7 +174,7 @@ mod tests {
             let mut noise = PerlinNoise::new(
                 42,
                 PerlinNoiseConfig {
-                    scale: 64.,
+                    scale: 1.,
                     amplitude: 1.0,
                 },
             );
@@ -184,7 +184,7 @@ mod tests {
             let mut noise = PerlinNoise::new(
                 42,
                 PerlinNoiseConfig {
-                    scale: 64.,
+                    scale: 8.,
                     amplitude: 1.0,
                 },
             );
@@ -201,7 +201,7 @@ mod tests {
             let mut noise = PerlinNoise::new(
                 42,
                 PerlinNoiseConfig {
-                    scale: 64.,
+                    scale: 1.,
                     amplitude: 1.0,
                 },
             );
@@ -211,7 +211,7 @@ mod tests {
             let mut noise = PerlinNoise::new(
                 42,
                 PerlinNoiseConfig {
-                    scale: 64.,
+                    scale: 4.,
                     amplitude: 1.0,
                 },
             );
