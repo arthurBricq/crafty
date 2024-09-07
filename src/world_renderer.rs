@@ -291,7 +291,7 @@ impl WorldRenderer {
                         // Define our uniforms (same uniforms for all cubes)...
                         let entity_uniforms = uniform! {
                             view: self.player.view_matrix(),
-                            perspective: self.player.perspective_matrix(target.get_dimensions()),
+                            perspective: perspective_matrix(target.get_dimensions()),
                             textures: player_texture_sample
                         };
 
