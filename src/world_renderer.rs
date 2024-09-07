@@ -1,6 +1,7 @@
 extern crate glium;
 extern crate winit;
 
+// use std::ops::ControlFlow;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -13,6 +14,7 @@ use crate::entity::humanoid;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 
+use crate::graphics::color::Color;
 use crate::graphics::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER};
 use crate::graphics::font::GLChar;
 use crate::graphics::hud_renderer::HUDRenderer;
@@ -23,15 +25,18 @@ use crate::network::server_update::ServerUpdate;
 use crate::player_items::PlayerItems;
 use crate::texture;
 use crate::world::World;
+use glium::backend::Facade;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Surface};
 use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
+use winit::event_loop::ControlFlow;
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{CursorGrabMode, Fullscreen, Window};
-use crate::graphics::color::Color;
+use winit::window::{CursorGrabMode, Fullscreen, Window, WindowBuilder};
 
 const CLICK_TIME_TO_BREAK: f32 = 2.0;
+const TARGET_FRAME_DURATION: Duration = Duration::from_millis(16);
+const MIN_SLEEP_TIME: Duration = Duration::from_millis(2);
 
 /// The struct in charge of drawing the world
 pub struct WorldRenderer {
@@ -81,8 +86,10 @@ impl WorldRenderer {
     pub fn run(&mut self) {
         // We start by creating the EventLoop, this can only be done once per process.
         // This also needs to happen on the main thread to make the program portable.
-        let event_loop = winit::event_loop::EventLoopBuilder::new().build()
+        let event_loop = winit::event_loop::EventLoopBuilder::new()
+            .build()
             .expect("event loop building");
+
         let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
             .with_title("Crafty")
             .build(&event_loop);
@@ -99,7 +106,8 @@ impl WorldRenderer {
         }
 
         // Try to lock the mouse to the window, this doen't work for all OS
-        let lock_mouse = window.set_cursor_grab(CursorGrabMode::Confined)
+        let lock_mouse = window
+            .set_cursor_grab(CursorGrabMode::Confined)
             .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
         if lock_mouse.is_err() {
             println!("Can't lock")
@@ -112,20 +120,49 @@ impl WorldRenderer {
 
         // Build the texture library, and change the sampler to use the proper filters
         let textures = texture::build_textures_array(&display);
-        let cubes_texture_sampler = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
+        let cubes_texture_sampler = textures
+            .sampled()
+            .magnify_filter(MagnifySamplerFilter::Nearest)
+            .minify_filter(MinifySamplerFilter::Nearest);
 
         // Load other textures that are used
-        let selected_texture = texture::load_texture(std::fs::read("./resources/selected.png").unwrap().as_slice(), &display);
-        let font_atlas = texture::load_texture(std::fs::read("./resources/fonts.png").unwrap().as_slice(), &display);
+        let selected_texture = texture::load_texture(
+            std::fs::read("./resources/selected.png")
+                .unwrap()
+                .as_slice(),
+            &display,
+        );
+        let font_atlas = texture::load_texture(
+            std::fs::read("./resources/fonts.png").unwrap().as_slice(),
+            &display,
+        );
 
         // Textures for the player
-        let player_texture = humanoid::load_humanoid_textures(std::fs::read("./resources/entity/player.png").unwrap().as_slice(), &display);
-        let player_texture_sample = player_texture.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
+        let player_texture = humanoid::load_humanoid_textures(
+            std::fs::read("./resources/entity/player.png")
+                .unwrap()
+                .as_slice(),
+            &display,
+        );
+        let player_texture_sample = player_texture
+            .sampled()
+            .magnify_filter(MagnifySamplerFilter::Nearest)
+            .minify_filter(MinifySamplerFilter::Nearest);
 
         // Build the shader programs
-        let cube_program = glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None).unwrap();
-        let rect_program = glium::Program::from_source(&display, RECT_VERTEX_SHADER, RECT_FRAGMENT_SHADER, None).unwrap();
-        let entity_program = glium::Program::from_source(&display, ENTITY_VERTEX_SHADER, ENTITY_FRAGMENT_SHADER, None).unwrap();
+        let cube_program =
+            glium::Program::from_source(&display, CUBE_VERTEX_SHADER, CUBE_FRAGMENT_SHADER, None)
+                .unwrap();
+        let rect_program =
+            glium::Program::from_source(&display, RECT_VERTEX_SHADER, RECT_FRAGMENT_SHADER, None)
+                .unwrap();
+        let entity_program = glium::Program::from_source(
+            &display,
+            ENTITY_VERTEX_SHADER,
+            ENTITY_FRAGMENT_SHADER,
+            None,
+        )
+        .unwrap();
 
         // Start rendering by creating a new frame
         let mut target = display.draw();
@@ -136,7 +173,10 @@ impl WorldRenderer {
         self.update_items();
 
         // Initially, ask for server updates
-        self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
+        self.proxy
+            .lock()
+            .unwrap()
+            .send_position_update(self.cam.position().clone());
         self.handle_server_updates();
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
@@ -151,7 +191,8 @@ impl WorldRenderer {
 
         // Event loop
         let mut t = Instant::now();
-        let initial_waiting_delay = Duration::from_millis(self.proxy.lock().unwrap().loading_delay());
+        let initial_waiting_delay =
+            Duration::from_millis(self.proxy.lock().unwrap().loading_delay());
         let mut is_initializing = true;
         event_loop.run(move |event, window_target| {
 
@@ -171,11 +212,13 @@ impl WorldRenderer {
                         self.hud_renderer.set_dimension(display.get_framebuffer_dimensions());
                     }
                     winit::event::WindowEvent::RedrawRequested => {
+                        // Step the camera with the elapsed time
+                        let dt = t.elapsed();
+                        t = Instant::now();
+
                         let mut target = display.draw();
                         target.clear_color_and_depth(Color::Sky1.to_tuple(), 1.0);
 
-                        // Step the camera with the elapsed time
-                        let dt = t.elapsed();
                         if self.cam.is_selecting_cube() && self.is_left_clicking {
                             self.click_time += dt.as_secs_f32();
                             if self.click_time >= CLICK_TIME_TO_BREAK {
@@ -189,7 +232,6 @@ impl WorldRenderer {
                         // Step
                         self.fps_manager.step(dt);
                         self.cam.step(dt, &self.world);
-                        t = Instant::now();
 
                         // Server updates
                         self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
@@ -272,7 +314,14 @@ impl WorldRenderer {
                     }
                     _ => (),
                 },
-                winit::event::Event::AboutToWait => window.request_redraw(),
+                winit::event::Event::AboutToWait => {
+                  let opt_time_to_sleep = (t + TARGET_FRAME_DURATION - MIN_SLEEP_TIME).checked_duration_since(Instant::now());
+
+                  if let Some(time_to_sleep) = opt_time_to_sleep {
+                    std::thread::sleep(time_to_sleep + MIN_SLEEP_TIME);
+                  }
+                  window.request_redraw()
+                },
                 winit::event::Event::DeviceEvent { event, .. } => match event {
                     winit::event::DeviceEvent::Key(key) => self.handle_key_event(key, &window),
                     winit::event::DeviceEvent::Motion { axis, value } => self.handle_motion_event(axis, value),
@@ -287,76 +336,72 @@ impl WorldRenderer {
     fn handle_key_event(&mut self, event: RawKeyEvent, window: &Window) {
         // Handle keys related to motion (toggle is important here)
         match event.physical_key {
-            PhysicalKey::Code(key) => {
-                match key {
-                    KeyCode::KeyW => self.cam.toggle_state(MotionState::W),
-                    KeyCode::KeyS => self.cam.toggle_state(MotionState::S),
-                    KeyCode::KeyD => self.cam.toggle_state(MotionState::D),
-                    KeyCode::KeyA => self.cam.toggle_state(MotionState::A),
-                    KeyCode::KeyK => self.cam.up(),
-                    KeyCode::KeyJ => self.cam.down(),
-                    KeyCode::Space => self.cam.jump(),
-                    _ => {}
-                }
-            }
+            PhysicalKey::Code(key) => match key {
+                KeyCode::KeyW => self.cam.toggle_state(MotionState::W),
+                KeyCode::KeyS => self.cam.toggle_state(MotionState::S),
+                KeyCode::KeyD => self.cam.toggle_state(MotionState::D),
+                KeyCode::KeyA => self.cam.toggle_state(MotionState::A),
+                KeyCode::KeyK => self.cam.up(),
+                KeyCode::KeyJ => self.cam.down(),
+                KeyCode::Space => self.cam.jump(),
+                _ => {}
+            },
             _ => {}
         }
 
         // Second match is for other stuff that only needs to be detected when pressed
         if event.state == Pressed {
             match event.physical_key {
-                PhysicalKey::Code(key) => {
-                    match key {
-                        KeyCode::Digit1 => {
-                            self.items.set_current_item(0);
-                            self.update_items();
-                        },
-                        KeyCode::Digit2 => {
-                            self.items.set_current_item(1);
-                            self.update_items();
-                        },
-                        KeyCode::Digit3 => {
-                            self.items.set_current_item(2);
-                            self.update_items();
-                        },
-                        KeyCode::Digit4 => {
-                            self.items.set_current_item(3);
-                            self.update_items();
-                        },
-                        KeyCode::Digit5 => {
-                            self.items.set_current_item(4);
-                            self.update_items();
-                        },
-                        KeyCode::Digit6 => {
-                            self.items.set_current_item(5);
-                            self.update_items();
-                        },
-                        KeyCode::Digit7 => {
-                            self.items.set_current_item(6);
-                            self.update_items();
-                        },
-                        KeyCode::Digit8 => {
-                            self.items.set_current_item(7);
-                            self.update_items();
-                        },
-                        KeyCode::Digit9 => {
-                            self.items.set_current_item(8);
-                            self.update_items();
-                        },
-                        KeyCode::KeyP => {
-                            println!("=================");
-                            println!("Debug Information");
-                            println!("=================");
-                            self.cam.debug();
-                        }
-                        KeyCode::F10 => self.world.save_to_file("map.json"),
-                        KeyCode::F11 => self.toggle_fullscreen(&window),
-                        KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
-                        KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
-                        KeyCode::Escape => std::process::exit(1),
-                        _ => {}
+                PhysicalKey::Code(key) => match key {
+                    KeyCode::Digit1 => {
+                        self.items.set_current_item(0);
+                        self.update_items();
                     }
-                }
+                    KeyCode::Digit2 => {
+                        self.items.set_current_item(1);
+                        self.update_items();
+                    }
+                    KeyCode::Digit3 => {
+                        self.items.set_current_item(2);
+                        self.update_items();
+                    }
+                    KeyCode::Digit4 => {
+                        self.items.set_current_item(3);
+                        self.update_items();
+                    }
+                    KeyCode::Digit5 => {
+                        self.items.set_current_item(4);
+                        self.update_items();
+                    }
+                    KeyCode::Digit6 => {
+                        self.items.set_current_item(5);
+                        self.update_items();
+                    }
+                    KeyCode::Digit7 => {
+                        self.items.set_current_item(6);
+                        self.update_items();
+                    }
+                    KeyCode::Digit8 => {
+                        self.items.set_current_item(7);
+                        self.update_items();
+                    }
+                    KeyCode::Digit9 => {
+                        self.items.set_current_item(8);
+                        self.update_items();
+                    }
+                    KeyCode::KeyP => {
+                        println!("=================");
+                        println!("Debug Information");
+                        println!("=================");
+                        self.cam.debug();
+                    }
+                    KeyCode::F10 => self.world.save_to_file("map.json"),
+                    KeyCode::F11 => self.toggle_fullscreen(&window),
+                    KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
+                    KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
+                    KeyCode::Escape => std::process::exit(1),
+                    _ => {}
+                },
                 PhysicalKey::Unidentified(_) => {}
             }
         }
@@ -386,7 +431,8 @@ impl WorldRenderer {
     }
 
     fn update_items(&mut self) {
-        self.hud_renderer.set_player_items(self.items.get_current_items(), self.items.current_item());
+        self.hud_renderer
+            .set_player_items(self.items.get_current_items(), self.items.current_item());
     }
 
     fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
@@ -400,7 +446,7 @@ impl WorldRenderer {
             }
         } else if button == 3 && state == Pressed {
             // Right click = add a new cube
-            // We know where is the player and we know 
+            // We know where is the player and we know
             if let Some((touched_cube, touched_pos)) = self.cam.selection_internals() {
                 if let Some(block) = self.items.get_current_block() {
                     self.apply_action(Action::Add {
@@ -441,7 +487,9 @@ impl WorldRenderer {
                     // TODO if needed, here is the ID of the player
                 }
                 ServerUpdate::SendAction(action) => self.world.apply_action(&action),
-                ServerUpdate::RegisterEntity(id, pos) => self.entity_manager.register_new_player(id, pos),
+                ServerUpdate::RegisterEntity(id, pos) => {
+                    self.entity_manager.register_new_player(id, pos)
+                }
                 ServerUpdate::UpdatePosition(id, pos) => self.entity_manager.set_position(id, pos),
             }
         }
