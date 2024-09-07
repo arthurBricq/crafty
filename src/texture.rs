@@ -57,7 +57,6 @@ pub fn load_texture_cut(bytes: &[u8], display: &Display<WindowSurface>, cut: &[I
     }
     // Load image, rescale it and create a glium texture
     for cut_pos in cut {
-        println!("{} {} {} {}", (dim_x * cut_pos[0]) as u32, (dim_y * cut_pos[1]) as u32, (dim_x * cut_pos[2]) as u32, (dim_y * cut_pos[3]) as u32);
         let sub_image = image.view((dim_x * cut_pos[0]) as u32, (dim_y * cut_pos[1]) as u32, (dim_x * cut_pos[2]) as u32, (dim_y * cut_pos[3]) as u32).to_image();
         let sub_image = image::imageops::resize(&sub_image, lcm_x, lcm_y, image::imageops::FilterType::Nearest);
         source.push(glium::texture::RawImage2d::from_raw_rgba_reversed(&sub_image.into_raw(), (lcm_x, lcm_y)));

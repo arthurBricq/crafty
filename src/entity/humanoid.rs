@@ -34,42 +34,42 @@ const PLAYER_BODY_SCALE: [f32; 3] = [PLAYER_BODY_LENGTH, PLAYER_BODY_HEIGHT, PLA
 const PLAYER_ARM_SCALE: [f32; 3] = [PLAYER_ARM_LENGTH, PLAYER_ARM_HEIGHT, PLAYER_ARM_WIDTH];
 const PLAYER_LEG_SCALE: [f32; 3] = [PLAYER_LEG_LENGTH, PLAYER_LEG_HEIGHT, PLAYER_LEG_WIDTH];
 
-// Define how to cut the image of the player to generate the textures for the player
-// Values are in (u,v) coord, in fraction of the image dimension
-const PATRON_PLAYER_CUT: [ImageCut; 24] = [
-// Head
-[ 0.       , 3. / 4., 1. / 6., 1. / 4.],
-[ 1. / 6.  , 3. / 4., 1. / 6., 1. / 4.],
-[ 2. / 6.  , 3. / 4., 1. / 6., 1. / 4.],
-[ 3. / 6.  , 3. / 4., 1. / 6., 1. / 4.],
-[ 4. / 6.  , 3. / 4., 1. / 6., 1. / 4.],
-[ 5. / 6.  , 3. / 4., 1. / 6., 1. / 4.],
-// Leg
-[ 0.      , 3. / 8., 1. / 12., 3. / 8.],
-[ 1. / 12., 3. / 8., 1. / 12., 3. / 8.],
-[ 2. / 12. , 3. / 8., 1. / 12., 3. / 8.],
-[ 3. / 12. , 3. / 8., 1. / 12., 3. / 8.],
-[ 4. / 12. , 5. / 8., 1. / 12., 1. / 8.],
-[ 5. / 12., 5. / 8., 1. / 12., 1. / 8.],
-// Body
-[ 0.      , 0., 1. / 12., 3. / 8.],
-[ 1. / 12., 0., 1. / 6. , 3. / 8.],
-[ 5. / 12., 0., 1. / 12., 3. / 8.],
-[ 3. / 12. , 0., 1. / 6. , 3. / 8.],
-[ 6. / 12. , 0., 1. / 6. , 1. / 8.],
-[ 8. / 12. , 0., 1. / 6. , 1. / 8.],
-// Arm
-[ 6. / 12., 3. / 8., 1. / 12., 3. / 8.],
-[ 7. / 12., 3. / 8., 1. / 12., 3. / 8.],
-[ 8. / 12., 3. / 8., 1. / 12., 3. / 8.],
-[ 9. / 12., 3. / 8., 1. / 12., 3. / 8.],
-[ 7. / 12., 1. / 4., 1. / 12., 1. / 8.],
-[ 8. / 12., 1. / 4., 1. / 12., 1. / 8.],
+/// Define how to cut the image of the player to generate the textures for the player
+/// Values are in (u,v) coord, in fraction of the image dimension
+const PLAYER_CUT_TEMPLATE: [ImageCut; 24] = [
+    // Head
+    [ 0.,      3. / 4., 1. / 6., 1. / 4.],
+    [ 1. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    [ 2. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    [ 3. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    [ 4. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    [ 5. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    // Leg
+    [ 0.,       3. / 8., 1. / 12., 3. / 8.],
+    [ 1. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 2. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 3. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 4. / 12., 5. / 8., 1. / 12., 1. / 8.],
+    [ 5. / 12., 5. / 8., 1. / 12., 1. / 8.],
+    // Body
+    [ 0.,       0., 1. / 12., 3. / 8.],
+    [ 1. / 12., 0., 1. / 6.,  3. / 8.],
+    [ 5. / 12., 0., 1. / 12., 3. / 8.],
+    [ 3. / 12., 0., 1. / 6.,  3. / 8.],
+    [ 6. / 12., 0., 1. / 6.,  1. / 8.],
+    [ 8. / 12., 0., 1. / 6.,  1. / 8.],
+    // Arm
+    [ 6. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 7. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 8. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 9. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 7. / 12., 1. / 4., 1. / 12., 1. / 8.],
+    [ 8. / 12., 1. / 4., 1. / 12., 1. / 8.],
 ];
 
 /// Load the texture for a humanoid entity
-pub fn load_texture_humanoid(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2dArray {
-    texture::load_texture_cut(bytes, display, &PATRON_PLAYER_CUT)
+pub fn load_humanoid_textures(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2dArray {
+    texture::load_texture_cut(bytes, display, &PLAYER_CUT_TEMPLATE)
 }
 
 /// Return a vector of EntityCube forming a humanoid
