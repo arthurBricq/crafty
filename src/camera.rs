@@ -18,7 +18,7 @@ const JUMP_VELOCITY: f32 = 7.;
 // TODO same problem
 const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
 
-pub const PLAYER_EYES_H: f32 = 3.7;
+pub const PLAYER_EYES_H: f32 = 1.7;
 
 pub enum MotionState {
     W,
