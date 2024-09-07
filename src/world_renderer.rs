@@ -46,6 +46,7 @@ const MIN_SLEEP_TIME: Duration = Duration::from_millis(2);
 /// The struct in charge of drawing the world
 pub struct WorldRenderer {
     /// Link with the server
+    /// The proxy needs to be already logged-in
     proxy: Arc<Mutex<dyn Proxy>>,
 
     /// Currently displayed world
@@ -83,10 +84,6 @@ impl WorldRenderer {
             fullscreen: false,
             entity_manager: EntityManager::new(),
         }
-    }
-
-    pub fn login(&mut self) {
-        self.proxy.lock().unwrap().login();
     }
 
     pub fn run(&mut self) {

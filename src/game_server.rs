@@ -34,7 +34,7 @@ impl GameServer {
 
     /// Logins a new player into the server
     /// Returns the ID of the registered player
-    pub fn login(&mut self, name: &str) -> usize {
+    pub fn login(&mut self, name: String) -> usize {
         // Create the new ID
         let id = self.n_players;
         self.n_players += 1;

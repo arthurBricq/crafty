@@ -19,6 +19,9 @@ pub struct Args {
     /// Number of times to greet
     #[arg(short, long, default_value_t = String::from("3333"))]
     pub port: String,
+
+    #[arg(short, long, default_value_t = String::new())]
+    pub name: String
 }
 
 impl Args {

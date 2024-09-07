@@ -23,6 +23,7 @@ pub struct HUDRenderer {
     aspect_ratio: f32,
     /// List of the tiles to be presented on the screen
     rects: Vec<RectInstance>,
+    
     /// The rects that are always present on the screen
     base: Vec<RectInstance>,
 

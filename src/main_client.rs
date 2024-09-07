@@ -1,4 +1,5 @@
 use crafty::args::Args;
+use crafty::network::proxy::Proxy;
 use crafty::player::Player;
 use crafty::network::tcp_proxy::TcpProxy;
 use crafty::world::World;
@@ -10,12 +11,12 @@ pub fn main() {
 
     // The proxy currently holds the server,
     let proxy = TcpProxy::new(&url);
+    proxy.lock().unwrap().login(args.name);
 
     // The client is initialized with an empty world, as it will be the responsibility of the server
     // to provide it with the chunks.
     // Currently, the client 'owns' the proxy, this is really the part that sucks for now.
     let mut client = WorldRenderer::new(proxy, World::empty(), Player::new());
-    client.login();
 
     // This is blocking so we can't really do it...
     client.run();

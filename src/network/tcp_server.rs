@@ -66,8 +66,8 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                 // For each message, create a response and send it to the client.
                 for message in messages {
                     match message {
-                        MessageToServer::Login => {
-                            let id = game.lock().unwrap().login("player") as u8;
+                        MessageToServer::Login(name) => {
+                            let id = game.lock().unwrap().login(name) as u8;
                             // The thread memorizes 
                             client_id = Some(id as usize);
                         }
@@ -107,10 +107,6 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                     }
                     stream.flush().unwrap();
 
-                    // TODO When we send the data too fast, the client is not able to load it properéy
-                    //      This is obviously really bad...
-                    //      It seems that the most likely solution will be to use `tokio.rs` but I am
-                    //      not sure to do this now. In the meanwhile we will just be patient
                     if update.is_heavy() {
                         thread::sleep(Duration::from_millis(20));
                     }

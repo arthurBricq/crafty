@@ -21,8 +21,8 @@ impl SinglePlayerProxy {
 
 impl Proxy for SinglePlayerProxy {
 
-    fn login(&mut self) {
-        self.client_id = self.server.login("client");
+    fn login(&mut self, name: String) {
+        self.client_id = self.server.login(name);
     }
 
     fn send_position_update(&mut self, position: Position) {

@@ -86,8 +86,8 @@ impl TcpProxy {
 }
 
 impl Proxy for TcpProxy {
-    fn login(&mut self) {
-        match self.updates_transmitter.send(MessageToServer::Login) {
+    fn login(&mut self, name: String) {
+        match self.updates_transmitter.send(MessageToServer::Login(name)) {
             Ok(_) => {}
             Err(err) => panic!("Error while logging in: {err}")
         }
