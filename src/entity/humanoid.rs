@@ -1,7 +1,7 @@
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::Display;
-
+use crate::camera::PLAYER_HEIGHT;
 use crate::graphics::entity::EntityCube;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
@@ -10,13 +10,12 @@ use crate::texture::ImageCut;
 
 // Define some constants to draw a player
 // Height taken from human proportion in drawing
-const PLAYER_HEIGHT: f32 = 1.0;
-const PLAYER_HEAD_SIZE: f32 = 0.170 * PLAYER_HEIGHT;
-const PLAYER_BODY_HEIGHT: f32 = 0.370 * PLAYER_HEIGHT;
-const PLAYER_LEG_HEIGHT: f32 = 0.460 * PLAYER_HEIGHT;
-const PLAYER_ARM_HEIGHT: f32 = 0.370 * PLAYER_HEIGHT;
+const PLAYER_HEAD_SIZE: f32 = 0.190 * PLAYER_HEIGHT;
+const PLAYER_BODY_HEIGHT: f32 = 0.360 * PLAYER_HEIGHT;
+const PLAYER_LEG_HEIGHT: f32 = 0.450 * PLAYER_HEIGHT;
+const PLAYER_ARM_HEIGHT: f32 = 0.360 * PLAYER_HEIGHT;
 
-const PLAYER_BODY_SHIFT: f32 = -0.5 * (PLAYER_HEAD_SIZE + PLAYER_BODY_HEIGHT);
+const PLAYER_BODY_SHIFT: f32 = -0.5 * PLAYER_BODY_HEIGHT;
 const PLAYER_LEG_SHIFT: f32 = -0.5 * (PLAYER_BODY_HEIGHT + PLAYER_LEG_HEIGHT);
 
 const PLAYER_BODY_WIDTH: f32 = 0.3 * PLAYER_HEIGHT;
@@ -33,6 +32,11 @@ const PLAYER_ARM_WIDTH_SHIFT: f32 = 1.01 * (PLAYER_BODY_WIDTH + PLAYER_ARM_WIDTH
 const PLAYER_BODY_SCALE: [f32; 3] = [PLAYER_BODY_LENGTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH];
 const PLAYER_ARM_SCALE: [f32; 3] = [PLAYER_ARM_LENGTH, PLAYER_ARM_HEIGHT, PLAYER_ARM_WIDTH];
 const PLAYER_LEG_SCALE: [f32; 3] = [PLAYER_LEG_LENGTH, PLAYER_LEG_HEIGHT, PLAYER_LEG_WIDTH];
+
+const PLAYER_HEAD_OFFSET: [f32; 3] = [0., PLAYER_HEAD_SIZE / 2., 0.];
+const PLAYER_BODY_OFFSET: [f32; 3] = [0., PLAYER_BODY_SHIFT, 0.];
+const PLAYER_ARM_OFFSET: [f32; 3] = [0., 0., PLAYER_ARM_WIDTH_SHIFT];
+const PLAYER_LEG_OFSET: [f32; 3] = [0., PLAYER_LEG_SHIFT, PLAYER_LEG_WIDTH_SHIFT];
 
 /// Define how to cut the image of the player to generate the textures for the player
 /// Values are in (u,v) coord, in fraction of the image dimension
@@ -77,21 +81,24 @@ pub fn get_opengl_entities(mut position: Position) -> Vec<EntityCube> {
     let mut ent = Vec::new();
 
     // Head
+    position += Vector3::newf(PLAYER_HEAD_OFFSET).opposite();
+    position += Vector3::newf(PLAYER_HEAD_OFFSET).rotation_z(-position.pitch()).rotation_y(position.yaw());
     ent.push(EntityCube::new(&position, 0, [PLAYER_HEAD_SIZE; 3]));
+    position += Vector3::newf(PLAYER_HEAD_OFFSET).rotation_z(-position.pitch()).rotation_y(position.yaw()).opposite();
 
     // Body
-    position += Vector3::new(0., PLAYER_BODY_SHIFT, 0.);
+    position += Vector3::newf(PLAYER_BODY_OFFSET);
     ent.push(EntityCube::new_only_yaw(&position, 2, PLAYER_BODY_SCALE));
 
     // Arm
-    position += Vector3::new(0., 0., PLAYER_ARM_WIDTH_SHIFT).rotation_y(position.yaw());
+    position += Vector3::newf(PLAYER_ARM_OFFSET).rotation_y(position.yaw());
     ent.push(EntityCube::new_only_yaw(&position, 3, PLAYER_ARM_SCALE));
-    position += Vector3::new(0., 0., -2. * PLAYER_ARM_WIDTH_SHIFT).rotation_y(position.yaw());
+    position += Vector3::newf(PLAYER_ARM_OFFSET).rotation_y(position.yaw()) * -2.;
     ent.push(EntityCube::new_only_yaw(&position, 3, PLAYER_ARM_SCALE));
-    position += Vector3::new(0., 0., PLAYER_ARM_WIDTH_SHIFT).rotation_y(position.yaw());
+    position += Vector3::newf(PLAYER_ARM_OFFSET).rotation_y(position.yaw());
 
     // Legs
-    position += Vector3::new(0., PLAYER_LEG_SHIFT, PLAYER_LEG_WIDTH_SHIFT).rotation_y(position.yaw());
+    position += Vector3::newf(PLAYER_LEG_OFSET).rotation_y(position.yaw());
     ent.push(EntityCube::new_only_yaw(&position, 1, PLAYER_LEG_SCALE));
     position += Vector3::new(0., 0., -2. * PLAYER_LEG_WIDTH_SHIFT).rotation_y(position.yaw());
     ent.push(EntityCube::new_only_yaw(&position, 1, PLAYER_LEG_SCALE));

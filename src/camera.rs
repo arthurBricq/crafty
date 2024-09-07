@@ -19,6 +19,8 @@ const JUMP_VELOCITY: f32 = 7.;
 // TODO same problem
 const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
 
+pub const PLAYER_HEIGHT: f32 = 1.8;
+
 pub enum MotionState {
     W,
     S,
@@ -155,13 +157,12 @@ impl Camera {
     fn make_aabb(position: &Position) -> AABB {
         const DIAMETER: f32 = 0.5;
         const FOREHEAD: f32 = 0.1;
-        const HEIGHT: f32 = 1.8;
 
         AABB::new(
             position.z() + DIAMETER / 2.,
             position.z() - DIAMETER / 2.,
             position.y() + FOREHEAD,
-            position.y() - HEIGHT + FOREHEAD,
+            position.y() - PLAYER_HEIGHT + FOREHEAD,
             position.x() + DIAMETER / 2.,
             position.x() - DIAMETER / 2.
         ).unwrap()
