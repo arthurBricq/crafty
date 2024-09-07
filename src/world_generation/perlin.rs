@@ -13,35 +13,29 @@ use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::iter::zip;
 
-/// Number of scales to use in the Perlin Noise
-const SCALE_LEVEL_PERLIN: usize = 5;
+/// A Perlin noise is determined by its scaling factor and by the amplitude of outputed values.
+#[derive(Clone)]
+pub struct PerlinNoiseConfig {
+    pub scale: f32,
+    pub amplitude: f32,
+}
 
 /// Class containing the different scales of Perlin noise,
 /// combines them to return a single value for each querried coord.
 pub struct MultiscalePerlinNoise {
     perlin_noises: Vec<PerlinNoise>,
-    amplitudes: [f32; SCALE_LEVEL_PERLIN],
 }
 
 impl MultiscalePerlinNoise {
     /// Create a new MultiscalePerlinNoise, requires the level of scales and amplitudes associated.
     /// These values will change the world aspect.
-    pub fn new(
-        seed: u32,
-        scales: [f32; SCALE_LEVEL_PERLIN],
-        amplitudes: [f32; SCALE_LEVEL_PERLIN],
-    ) -> Self {
-        let mut temp_perlin_noises: Vec<PerlinNoise> = Vec::new();
-
-        for i in 0..SCALE_LEVEL_PERLIN {
-            let complete_seed = (seed as u64) + (i as u64);
-
-            temp_perlin_noises.push(PerlinNoise::new(complete_seed, scales[i]))
-        }
-
+    pub fn new(seed: u64, perlin_conf: Vec<PerlinNoiseConfig>) -> Self {
         Self {
-            perlin_noises: temp_perlin_noises,
-            amplitudes,
+            perlin_noises: perlin_conf
+                .into_iter()
+                .enumerate()
+                .map(|(i, conf)| PerlinNoise::new(seed + (i as u64), conf))
+                .collect(),
         }
     }
 
@@ -49,8 +43,8 @@ impl MultiscalePerlinNoise {
     pub fn at(&mut self, coord: [f32; 2]) -> f32 {
         let mut value: f32 = 0.0;
 
-        for i in 0..SCALE_LEVEL_PERLIN {
-            value += self.amplitudes[i] * self.perlin_noises[i].at(coord);
+        for noise in &mut self.perlin_noises {
+            value += noise.at(coord);
         }
 
         value
@@ -61,15 +55,15 @@ impl MultiscalePerlinNoise {
 pub struct PerlinNoise {
     seed: u64,
     gradients: HashMap<[i64; 2], [f32; 2]>,
-    scale: f32,
+    config: PerlinNoiseConfig,
 }
 
 impl PerlinNoise {
-    pub fn new(seed: u64, scale: f32) -> Self {
+    pub fn new(seed: u64, config: PerlinNoiseConfig) -> Self {
         Self {
             seed,
             gradients: HashMap::new(),
-            scale,
+            config,
         }
     }
 
@@ -87,17 +81,18 @@ impl PerlinNoise {
             .map(|([xc2, yc2], gradient)| dot(&[xf - xc2 as f32, yf - yc2 as f32], &gradient))
             .collect();
 
-        lerp(
-            fade(yr),
-            lerp(fade(xr), values[0], values[1]),
-            lerp(fade(xr), values[2], values[3]),
-        )
+        self.config.amplitude
+            * lerp(
+                fade(yr),
+                lerp(fade(xr), values[0], values[1]),
+                lerp(fade(xr), values[2], values[3]),
+            )
     }
 
     /// Change the coordinates to the noise-specific coordinate system, e.g. 0.5
     /// for noise.scale / 2
     fn coord_to_fractional_space(&self, coord: [f32; 2]) -> [f32; 2] {
-        [coord[0] / self.scale, coord[1] / self.scale]
+        [coord[0] / self.config.scale, coord[1] / self.config.scale]
     }
 
     fn closest_corner(&self, coord: [f32; 2]) -> [i64; 2] {
@@ -176,11 +171,23 @@ mod tests {
     #[test]
     fn test_fractional_space() {
         {
-            let mut noise = PerlinNoise::new(42, 1.);
+            let mut noise = PerlinNoise::new(
+                42,
+                PerlinNoiseConfig {
+                    scale: 64.,
+                    amplitude: 1.0,
+                },
+            );
             assert_eq!(noise.coord_to_fractional_space([1.5, 2.5]), [1.5, 2.5])
         }
         {
-            let mut noise = PerlinNoise::new(42, 8.);
+            let mut noise = PerlinNoise::new(
+                42,
+                PerlinNoiseConfig {
+                    scale: 64.,
+                    amplitude: 1.0,
+                },
+            );
             assert_eq!(
                 noise.coord_to_fractional_space([1.5, 2.5]),
                 [1.5 / 8., 2.5 / 8.]
@@ -191,11 +198,23 @@ mod tests {
     #[test]
     fn test_closest_corner() {
         {
-            let mut noise = PerlinNoise::new(42, 1.);
+            let mut noise = PerlinNoise::new(
+                42,
+                PerlinNoiseConfig {
+                    scale: 64.,
+                    amplitude: 1.0,
+                },
+            );
             assert_eq!(noise.closest_corner([1.5, 2.1]), [1, 2])
         }
         {
-            let mut noise = PerlinNoise::new(42, 4.);
+            let mut noise = PerlinNoise::new(
+                42,
+                PerlinNoiseConfig {
+                    scale: 64.,
+                    amplitude: 1.0,
+                },
+            );
             assert_eq!(noise.closest_corner([1.5, 6.1]), [0, 1])
         }
     }
@@ -204,8 +223,28 @@ mod tests {
     fn test_determinism_multiscale() {
         let mut noise = MultiscalePerlinNoise::new(
             42,
-            [64.0, 40.0, 32.0, 24.0, 8.0],
-            [1.0, 0.7, 0.3, 0.1, 0.7],
+            vec![
+                PerlinNoiseConfig {
+                    scale: 64.,
+                    amplitude: 1.0,
+                },
+                PerlinNoiseConfig {
+                    scale: 40.,
+                    amplitude: 0.7,
+                },
+                PerlinNoiseConfig {
+                    scale: 32.,
+                    amplitude: 0.3,
+                },
+                PerlinNoiseConfig {
+                    scale: 24.,
+                    amplitude: 0.1,
+                },
+                PerlinNoiseConfig {
+                    scale: 8.,
+                    amplitude: 0.7,
+                },
+            ],
         );
 
         let test_coords: [f32; 2] = [0.0, 1.0];

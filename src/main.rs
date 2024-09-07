@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 #[allow(dead_code)]
 enum WorldInitializer {
-    RANDOM,
+    RANDOM, 
     FLAT,
     DISK,
 }

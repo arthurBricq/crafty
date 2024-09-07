@@ -1,4 +1,5 @@
 use super::perlin::MultiscalePerlinNoise;
+use super::perlin::PerlinNoiseConfig;
 use crate::block_kind::Block::DIRT;
 use crate::block_kind::Block::GRASS;
 use crate::chunk::Chunk;
@@ -7,6 +8,29 @@ use crate::chunk::CHUNK_SIZE;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 
+const BASIC_WORLD_CONF: [PerlinNoiseConfig; 5] = [
+    PerlinNoiseConfig {
+        scale: 50.,
+        amplitude: 1.0,
+    },
+    PerlinNoiseConfig {
+        scale: 25.,
+        amplitude: 0.5,
+    },
+    PerlinNoiseConfig {
+        scale: 12.5,
+        amplitude: 0.25,
+    },
+    PerlinNoiseConfig {
+        scale: 6.25,
+        amplitude: 0.125,
+    },
+    PerlinNoiseConfig {
+        scale: 3.125,
+        amplitude: 0.0625,
+    },
+];
+
 pub struct WorldGenerator {}
 
 /// Class which manages the generation of a new world
@@ -14,11 +38,7 @@ impl WorldGenerator {
     /// Creates a simple world with hills
     pub fn create_new_random_world(n_chunks: i32) -> World {
         //let mut noise = PerlinNoise::new(121, 32.);
-        let mut noise = MultiscalePerlinNoise::new(
-            42,
-            [50.0, 25.0, 12.5, 6.25, 3.125],
-            [1.0, 0.5, 0.25, 0.125, 0.0625],
-        );
+        let mut noise = MultiscalePerlinNoise::new(42, BASIC_WORLD_CONF.to_vec());
 
         let s = CHUNK_SIZE as f32;
         let mut chunks = vec![];
