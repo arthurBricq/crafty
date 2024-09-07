@@ -12,6 +12,8 @@ use super::menu_debug::DebugData;
 use super::menu_debug::DebugMenu;
 use super::menu_debug::DebugMenuData;
 
+use super::inventory_menu::InventoryMenu;
+
 use crate::graphics::items_bar::ItemBar;
 use crate::player_items::ItemStack;
 
@@ -30,7 +32,10 @@ pub struct HUDRenderer {
     debug_menu: DebugMenu,
     show_debug: bool,
 
-    items_bar: ItemBar
+    items_bar: ItemBar,
+
+    inventory_menu: InventoryMenu,
+    show_inventory: bool,
 }
 
 impl HUDRenderer {
@@ -49,6 +54,8 @@ impl HUDRenderer {
             show_help: false,
             show_debug: false,
             items_bar: ItemBar::new(),
+            inventory_menu: InventoryMenu::new(),
+            show_inventory: false,
         };
 
         hud.add_cross();
@@ -95,12 +102,19 @@ impl HUDRenderer {
         // and then do it again here, maybe we can only do it here ?
         // rects() would return a Vec of ref to append
         self.rects=self.base.clone();
-        self.rects.append(&mut self.items_bar.rects());
+
+        if !self.show_inventory {
+            self.rects.append(&mut self.items_bar.rects());
+        }
+        
         if self.show_help {
             self.rects.append(&mut self.help_menu.rects().clone());
         }
         if self.show_debug {
             self.rects.append(&mut self.debug_menu.rects().clone());
+        }
+        if self.show_inventory {
+            self.rects.append(&mut self.inventory_menu.rects().clone());
         }
     }
 
@@ -127,5 +141,15 @@ impl HUDRenderer {
     pub fn set_player_items(&mut self, items: Vec<ItemStack>, selected: usize) {
         self.items_bar.set_items(items, selected);
         self.update();
+    }
+
+    pub fn is_inventory_open(&self) -> bool {
+        self.show_inventory
+    }
+
+    pub fn toggle_inventory(&mut self) {
+        self.show_inventory = !self.show_inventory;
+        self.update();
+        println!("inventory toggled to: {}", self.is_inventory_open());
     }
 }
