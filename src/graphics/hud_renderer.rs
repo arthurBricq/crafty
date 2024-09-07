@@ -13,8 +13,7 @@ use super::menu_debug::DebugMenu;
 use super::menu_debug::DebugMenuData;
 
 use crate::graphics::items_bar::ItemBar;
-use crate::player_items::Items;
-
+use crate::player_items::ItemStack;
 
 /// Has the responsability to provide all the HUD to be drawn by OpenGL.
 pub struct HUDRenderer {
@@ -125,7 +124,7 @@ impl HUDRenderer {
         self.update();
     }
 
-    pub fn set_player_items(&mut self, items: Items, selected: usize) {
+    pub fn set_player_items(&mut self, items: Vec<ItemStack>, selected: usize) {
         self.items_bar.set_items(items, selected);
         self.update();
     }

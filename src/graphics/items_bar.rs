@@ -1,10 +1,10 @@
 use crate::graphics::color::Color::{LightGray, LightYellow, Red};
 use crate::graphics::rectangle::RectInstance;
 use crate::graphics::string_rect::StringRect;
-use crate::player_items::Items;
+use crate::player_items::ItemStack;
 
 pub struct ItemBar {
-    items: Items,
+    items: Vec<ItemStack>,
     selected_item: usize,
     rects: Vec<RectInstance>,
     aspect_ratio: f32,
@@ -22,7 +22,7 @@ impl ItemBar {
     }
 
     /// Sets the items currently showed on the bar
-    pub fn set_items(&mut self, items: Items, selected: usize) {
+    pub fn set_items(&mut self, items: Vec<ItemStack>, selected: usize) {
         self.items = items;
         self.selected_item = selected;
 

@@ -1,37 +1,46 @@
 use crate::block_kind::Block;
 
-
-pub type Items = Vec<(Block, usize)>;
+pub type ItemStack = (Block, usize);
 
 const CURRENT_ITEMS_SIZE: usize = 8;
-
+const MAX_ITEMS_IN_SLOT: usize = 64;
 
 
 /// Holds the items of a player.
 pub struct PlayerItems {
-    current_items: [Option<(Block, usize)>; CURRENT_ITEMS_SIZE],
+    /// The items always displayed on the item bars
+    bar_items: [Option<ItemStack>; CURRENT_ITEMS_SIZE],
+    /// The items only visible when crafting
+    inventory_items: [Option<ItemStack>; CURRENT_ITEMS_SIZE * 3],
     current_item: usize
 }
 
 impl PlayerItems {
-    pub fn new() -> Self {
+    pub fn empty() -> Self {
         Self {
-            current_items: [None; CURRENT_ITEMS_SIZE],
+            bar_items: [None; CURRENT_ITEMS_SIZE],
+            inventory_items: [None; CURRENT_ITEMS_SIZE * 3],
             current_item: 0,
         }
     }
-    
-    
-    pub fn get_current_items(&self) -> Items {
-        self.current_items.iter()
-            .filter(|item| item.is_some())
-            .map(|item| item.unwrap()).collect()
+
+    pub fn new(inventory_items: [Option<(Block, usize)>; CURRENT_ITEMS_SIZE * 3], current_items: [Option<(Block, usize)>; CURRENT_ITEMS_SIZE]) -> Self {
+        Self {
+            bar_items: current_items,
+            inventory_items,
+            current_item: 0
+        }
     }
 
-
+    pub fn get_bar_items(&self) -> Vec<ItemStack> {
+        self.bar_items.iter()
+            .filter(|item| item.is_some())
+            .map(|item| item.unwrap())
+            .collect()
+    }
 
     pub fn get_current_block(&self) -> Option<Block> {
-        if let Some((_, Some((block, _)))) = self.current_items.iter()
+        if let Some((_, Some((block, _)))) = self.bar_items.iter()
             .filter(|item| item.is_some())
             .enumerate()
             .find(|(i, _)| *i == self.current_item) {
@@ -42,35 +51,44 @@ impl PlayerItems {
     }
 
     pub fn collect(&mut self, block: Block) {
-        // Try to place the item in one of the containers
-        for i in 0..CURRENT_ITEMS_SIZE {
-            if let Some((b,c)) = self.current_items[i] {
-                if b == block {
-                    self.current_items[i] = Some((b, c + 1));
-                    return;
+
+        fn place_in_collection(list: &mut [Option<ItemStack>], block: Block) -> bool {
+            // First check if the item already exists in the list
+            // If so, simply increase the counter
+            for i in 0..list.len() {
+                if let Some((b, count)) = list[i] {
+                    if b == block && count < MAX_ITEMS_IN_SLOT {
+                        list[i] = Some((b, count + 1));
+                        return true;
+                    }
                 }
             }
+
+            // Second, try to place the item in the first remaining slot
+            for i in 0..list.len() {
+                if list[i].is_none() {
+                    list[i] = Some((block, 1));
+                    return true;
+                }
+            }
+
+            false
         }
 
-        // If we reach this place, it means that the player didn't have any item of this type.
-        // So we try to place it in one of the empty containers
-        for i in 0..CURRENT_ITEMS_SIZE {
-            if self.current_items[i].is_none() {
-                self.current_items[i] = Some((block, 1));
-                return;
-            }
+        if !place_in_collection(&mut self.bar_items, block) {
+            place_in_collection(&mut self.inventory_items, block);
         }
-        // If we reach this place, it means the player can't collect this item...
+
     }
 
     pub fn consume(&mut self, block: Block) {
         for i in 0..CURRENT_ITEMS_SIZE {
-            if let Some((b,c)) = self.current_items[i] {
+            if let Some((b,c)) = self.bar_items[i] {
                 if b == block {
                     if c == 1 {
-                        self.current_items[i] = None
+                        self.bar_items[i] = None
                     } else {
-                        self.current_items[i] = Some((b, c-1))
+                        self.bar_items[i] = Some((b, c-1))
                     }
                     return;
                 }
@@ -79,14 +97,14 @@ impl PlayerItems {
     }
 
     pub fn has_block(&self, block: Block) -> bool {
-        self.current_items.iter()
+        self.bar_items.iter()
             .any(|item| item.is_some_and(|(b, _)| b == block))
     }
 
     pub fn debug(&self) {
         println!("Debugging items...");
         for i in 0..CURRENT_ITEMS_SIZE {
-            println!("{:?}", self.current_items[i])
+            println!("{:?}", self.bar_items[i])
         }
     }
 
@@ -97,6 +115,8 @@ impl PlayerItems {
     pub fn current_item(&self) -> usize {
         self.current_item
     }
+
+
 }
 
 #[cfg(test)]
@@ -106,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_basic_operations() {
-        let mut items = PlayerItems::new();
+        let mut items = PlayerItems::empty();
 
         // At first, there is simply no block to add
         assert_eq!(items.get_current_block(), None);

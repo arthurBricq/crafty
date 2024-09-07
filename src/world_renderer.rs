@@ -81,7 +81,7 @@ impl WorldRenderer {
             player: cam,
             hud_renderer: HUDRenderer::new(),
             fps_manager: FpsManager::new(),
-            items: PlayerItems::new(),
+            items: PlayerItems::empty(),
             is_left_clicking: false,
             click_time: 0.0,
             fullscreen: false,
@@ -180,7 +180,7 @@ impl WorldRenderer {
         target.finish().unwrap();
 
         // Last details before running
-        self.update_items();
+        self.update_items_bar();
 
         // Initially, ask for server updates
         self.proxy
@@ -365,45 +365,46 @@ impl WorldRenderer {
                 PhysicalKey::Code(key) => match key {
                     KeyCode::Digit1 => {
                         self.items.set_current_item(0);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::Digit2 => {
                         self.items.set_current_item(1);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::Digit3 => {
                         self.items.set_current_item(2);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::Digit4 => {
                         self.items.set_current_item(3);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::Digit5 => {
                         self.items.set_current_item(4);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::Digit6 => {
                         self.items.set_current_item(5);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::Digit7 => {
                         self.items.set_current_item(6);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::Digit8 => {
                         self.items.set_current_item(7);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::Digit9 => {
                         self.items.set_current_item(8);
-                        self.update_items();
+                        self.update_items_bar();
                     }
                     KeyCode::KeyP => {
                         println!("=================");
                         println!("Debug Information");
                         println!("=================");
                         self.player.debug();
+                        self.items.debug()
                     }
                     KeyCode::F10 => self.world.save_to_file("map.json"),
                     KeyCode::F11 => self.toggle_fullscreen(&window),
@@ -431,7 +432,7 @@ impl WorldRenderer {
         }
 
         // Currently, all actions end up editing the items.
-        self.update_items();
+        self.update_items_bar();
 
         // Handle cubes
         self.world.apply_action(&action);
@@ -440,9 +441,9 @@ impl WorldRenderer {
         self.proxy.lock().unwrap().on_new_action(action);
     }
 
-    fn update_items(&mut self) {
+    fn update_items_bar(&mut self) {
         self.hud_renderer
-            .set_player_items(self.items.get_current_items(), self.items.current_item());
+            .set_player_items(self.items.get_bar_items(), self.items.current_item());
     }
 
     fn handle_button_event(&mut self, button: ButtonId, state: ElementState) {
