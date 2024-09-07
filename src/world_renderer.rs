@@ -344,6 +344,30 @@ impl WorldRenderer {
     }
 
     fn handle_key_event(&mut self, event: RawKeyEvent, window: &Window) {
+	if self.hud_renderer.is_inventory_open() {
+	    self.handle_inventory_key_event(event, window)
+	} else {
+	    self.handle_game_key_event(event, window)
+	}
+    }
+
+    fn handle_inventory_key_event(&mut self, event: RawKeyEvent, window: &Window) {
+	if event.state == Pressed {
+	    match event.physical_key {
+		PhysicalKey::Code(key) => {
+		    match key {
+			KeyCode::KeyE => {
+			    self.hud_renderer.toggle_inventory();
+			},
+			_ => {}
+		    }
+		},
+		PhysicalKey::Unidentified(_) => {}
+	    }
+	}
+    }
+    
+    fn handle_game_key_event(&mut self, event: RawKeyEvent, window: &Window) {
         // Handle keys related to motion (toggle is important here)
         match event.physical_key {
             PhysicalKey::Code(key) => match key {
@@ -362,56 +386,63 @@ impl WorldRenderer {
         // Second match is for other stuff that only needs to be detected when pressed
         if event.state == Pressed {
             match event.physical_key {
-                PhysicalKey::Code(key) => match key {
-                    KeyCode::Digit1 => {
-                        self.items.set_current_item(0);
-                        self.update_items_bar();
-                    }
-                    KeyCode::Digit2 => {
-                        self.items.set_current_item(1);
-                        self.update_items_bar();
-                    }
-                    KeyCode::Digit3 => {
-                        self.items.set_current_item(2);
-                        self.update_items_bar();
-                    }
-                    KeyCode::Digit4 => {
-                        self.items.set_current_item(3);
-                        self.update_items_bar();
-                    }
-                    KeyCode::Digit5 => {
-                        self.items.set_current_item(4);
-                        self.update_items_bar();
-                    }
-                    KeyCode::Digit6 => {
-                        self.items.set_current_item(5);
-                        self.update_items_bar();
-                    }
-                    KeyCode::Digit7 => {
-                        self.items.set_current_item(6);
-                        self.update_items_bar();
-                    }
-                    KeyCode::Digit8 => {
-                        self.items.set_current_item(7);
-                        self.update_items_bar();
-                    }
-                    KeyCode::Digit9 => {
-                        self.items.set_current_item(8);
-                        self.update_items_bar();
-                    }
-                    KeyCode::KeyP => {
-                        println!("=================");
-                        println!("Debug Information");
-                        println!("=================");
-                        self.player.debug();
-                        self.items.debug()
-                    }
-                    KeyCode::F10 => self.world.save_to_file("map.json"),
-                    KeyCode::F11 => self.toggle_fullscreen(&window),
-                    KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
-                    KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
-                    KeyCode::Escape => std::process::exit(1),
-                    _ => {}
+                PhysicalKey::Code(key) => {
+                    match key {
+			// Inventory
+			KeyCode::KeyE => {
+			    self.hud_renderer.toggle_inventory();
+			}
+			
+			// Item bar shortcuts
+                        KeyCode::Digit1 => {
+                            self.items.set_current_item(0);
+                            self.update_items_bar();
+                        },
+                        KeyCode::Digit2 => {
+                            self.items.set_current_item(1);
+                            self.update_items_bar();
+                        },
+                        KeyCode::Digit3 => {
+                            self.items.set_current_item(2);
+                            self.update_items_bar();
+                        },
+                        KeyCode::Digit4 => {
+                            self.items.set_current_item(3);
+                            self.update_items_bar();
+                        },
+                        KeyCode::Digit5 => {
+                            self.items.set_current_item(4);
+                            self.update_items_bar();
+                        },
+                        KeyCode::Digit6 => {
+                            self.items.set_current_item(5);
+                            self.update_items_bar();
+                        },
+                        KeyCode::Digit7 => {
+                            self.items.set_current_item(6);
+                            self.update_items_bar();
+                        },
+                        KeyCode::Digit8 => {
+                            self.items.set_current_item(7);
+                            self.update_items_bar();
+                        },
+                        KeyCode::Digit9 => {
+                            self.items.set_current_item(8);
+                            self.update_items_bar();
+                        },
+                        KeyCode::KeyP => {
+                            println!("=================");
+                            println!("Debug Information");
+                            println!("=================");
+                            self.player.debug();
+                        }
+                        KeyCode::F10 => self.world.save_to_file("map.json"),
+                        KeyCode::F11 => self.toggle_fullscreen(&window),
+                        KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
+                        KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
+                        KeyCode::Escape => std::process::exit(1),
+                        _ => {}
+		    }
                 },
                 PhysicalKey::Unidentified(_) => {}
             }

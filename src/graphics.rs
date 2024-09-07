@@ -12,3 +12,4 @@ pub mod menu_debug;
 pub mod string_rect;
 pub mod entity;
 pub mod items_bar;
+pub mod inventory_menu;
