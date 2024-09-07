@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use crate::entity::entity::{Entity, EntityKind};
+use crate::network::server_update::ServerUpdate;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
@@ -31,5 +32,9 @@ impl MonsterManager {
 
     pub fn step(&mut self, dt: Duration) {
         // println!("info from world ? {}", self.world.lock().unwrap().)
+    }
+    
+    pub fn get_server_updates(&mut self, from: Position) -> Vec<ServerUpdate> {
+        vec![]
     }
 }

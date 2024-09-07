@@ -119,9 +119,11 @@ impl GameServer {
     /// Returns the list of updates that the server sends to the client.
     pub fn consume_updates(&mut self, player_id: usize) -> Vec<ServerUpdate> {
         // if player_id < self.n_players {return vec![]}
-        let updates = self.server_updates_buffer[player_id].clone();
+        let mut updates_for_player = self.server_updates_buffer[player_id].clone();
         self.server_updates_buffer[player_id] = Vec::new();
-        updates
+        // TODO use the position of the player in the server state
+        updates_for_player.extend_from_slice(&self.entity_server.get_server_updates(Position::empty()));
+        updates_for_player
     }
 }
 
