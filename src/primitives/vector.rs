@@ -204,6 +204,10 @@ impl Vector3 {
         self.y = self.y.clamp(min, max);
         self.z = self.z.clamp(min, max);
     }
+    
+    pub fn distance_to(&self, to: &Vector3) -> f32 {
+        (self - to).norm()
+    }
 }
 
 impl Add for Vector3 {

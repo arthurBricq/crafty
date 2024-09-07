@@ -8,7 +8,7 @@ use crafty::network::proxy::Proxy;
 
 #[allow(dead_code)]
 enum WorldInitializer {
-    RANDOM, 
+    RANDOM,
     FLAT,
     DISK,
 }

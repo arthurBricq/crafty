@@ -20,7 +20,7 @@ pub fn get_serialize_container() -> HashMap<Block, Vec<[i32; 4]>> {
 }
 
 pub fn serialize_one_chunk(all_cubes: &mut HashMap<Block, Vec<[i32; 4]>>, chunk: &Chunk) {
-    for cube in chunk.flattened_iter() {
+    for cube in chunk.cubes_iter() {
         if let Some(cube) = cube {
             // we can trust that the block has a container.
             let container = all_cubes.get_mut(cube.block()).unwrap();

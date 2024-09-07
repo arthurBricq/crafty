@@ -51,7 +51,7 @@ pub struct Player {
     /// Tuple with (Cube, touched_position)
     /// Position that the camera is currently pointing to
     /// If there is no cube, it is set to none
-    touched_cube: Option<(Cube, Vector3)>,
+    touched_cube: Option<Cube>,
 
     in_air: bool,
 }
@@ -172,18 +172,13 @@ impl Player {
         }
     }
 
-    /// Returns the optional (cube, position on the cube) of the cube that the player is looking at.
-    pub fn selection_internals(&self) -> Option<(Cube, Vector3)> {
+    /// Returns the optional position of the cube that the player is looking at.
+    pub fn selected_cube(&self) -> Option<Cube> {
         self.touched_cube
     }
 
     pub fn is_selecting_cube(&self) -> bool {
         self.touched_cube.is_some()
-    }
-
-    /// Returns the optional position of the cube that the player is looking at.
-    pub fn selected_cube(&self) -> Option<Cube> {
-        self.touched_cube.map(|(cube, _)| cube)
     }
 
     pub fn position(&self) -> &Position {
@@ -243,21 +238,27 @@ impl Player {
 
     /// Set the attribute `selected` to the cube currently being selected
     fn compute_selected_cube(&mut self, world: &World) {
-        // TODO dichotomy should be much better in terms of performance
-        const STEP: f32 = 0.1;
-        const REACH_DISTANCE: f32 = 5.0;
-        let unit_direction = self.direction();
-        for i in 1..(REACH_DISTANCE / STEP) as usize {
-            // If the query position is not free, it means that we have found
-            // the selected cube
-            let query = self.position.pos() + unit_direction * i as f32 * STEP;
-            // If the query position is not free, it means that we have found the selected cube
-            if let Some(cube) = world.cube_at(query) {
-                self.touched_cube = Some((cube.clone(), query));
-                return
+        let position = self.position.pos();
+        let direction = self.direction();
+
+        // How to find which cube is selected by the camera ?
+        // 1. loop through all the visible cubes near the player
+        // 2. compute the intersection between the player's ray and the cube
+        // 3. keep the intersection with the shortest distance
+            
+        let mut current_best: Option<(f32, Cube)> = None;
+        for cube in world.cubes_near_player(position)
+            .filter_map(|c| *c)
+            .filter(|c| c.is_visible())
+            .filter(|c| c.position().distance_to(&position) < 6.) {
+            if let Some(result) = cube.intersection_with(position, direction) {
+                if current_best.is_none() || result < current_best.unwrap().0 {
+                    current_best = Some((result, cube.clone()));
+                }
             }
         }
-        self.touched_cube = None
+        
+        self.touched_cube = current_best.map(|(_, cube)| cube)
     }
     
         /// Integrate the velocity to move the camera, with collision. Returns the
@@ -298,7 +299,7 @@ impl Player {
     }
 
     /// Returns the normalized direction vector
-    fn direction(&self) -> Vector3 {
+    pub fn direction(&self) -> Vector3 {
         Vector3::new(
             self.position.yaw().cos() * self.position.pitch().cos(),
             self.position.pitch().sin(),

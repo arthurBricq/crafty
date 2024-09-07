@@ -51,10 +51,10 @@ pub struct WorldRenderer {
 
     /// Currently displayed world
     world: World,
-    
+
     /// Position and orientation of the player
     player: Player,
-    
+
     /// Items of the player
     items: PlayerItems,
 
@@ -63,7 +63,7 @@ pub struct WorldRenderer {
 
     /// In charge of renderin all the other entites
     entity_manager: EntityManager,
-    
+
     /// Computes the current FPS
     fps_manager: FpsManager,
 
@@ -165,7 +165,7 @@ impl WorldRenderer {
             ENTITY_FRAGMENT_SHADER,
             None,
         )
-        .unwrap();
+            .unwrap();
 
         // Start rendering by creating a new frame
         let mut target = display.draw();
@@ -227,7 +227,7 @@ impl WorldRenderer {
                         if self.player.is_time_to_break_over(dt.as_secs_f32()) {
                             self.apply_action(Destroy { at: self.player.selected_cube().unwrap().to_cube_coordinates() });
                         }
-     
+
                         // Step
                         self.fps_manager.step(dt);
                         self.player.step(dt, &self.world);
@@ -312,21 +312,21 @@ impl WorldRenderer {
                         target.finish().unwrap();
                     }
                     winit::event::WindowEvent::MouseInput { device_id: _, state, button } => self.handle_button_event(button, state),
-                    winit::event::WindowEvent::KeyboardInput { device_id: _, event, is_synthetic: _} => self.handle_key_event(event, &window),
+                    winit::event::WindowEvent::KeyboardInput { device_id: _, event, is_synthetic: _ } => self.handle_key_event(event, &window),
                     _ => (),
                 },
                 winit::event::Event::AboutToWait => {
-                  let opt_time_to_sleep = (t + TARGET_FRAME_DURATION - MIN_SLEEP_TIME).checked_duration_since(Instant::now());
+                    let opt_time_to_sleep = (t + TARGET_FRAME_DURATION - MIN_SLEEP_TIME).checked_duration_since(Instant::now());
 
-                  if let Some(time_to_sleep) = opt_time_to_sleep {
-                    std::thread::sleep(time_to_sleep + MIN_SLEEP_TIME);
-                  }
-                  window.request_redraw()
-                },
+                    if let Some(time_to_sleep) = opt_time_to_sleep {
+                        std::thread::sleep(time_to_sleep + MIN_SLEEP_TIME);
+                    }
+                    window.request_redraw()
+                }
                 winit::event::Event::DeviceEvent { event, .. } => match event {
-                    winit::event::DeviceEvent::Motion { axis, value } => { self.handle_motion_event(axis, value) },
-                     _ => {}
-                 }
+                    winit::event::DeviceEvent::Motion { axis, value } => { self.handle_motion_event(axis, value) }
+                    _ => {}
+                }
                 _ => (),
             };
         }).unwrap();
@@ -338,20 +338,20 @@ impl WorldRenderer {
         } else {
             self.handle_game_key_event(event, window)
         }
-        }
-    
+    }
+
     fn handle_inventory_key_event(&mut self, event: KeyEvent, window: &Window) {
-	    if event.state == Pressed {
-	        match event.physical_key {
-		        PhysicalKey::Code(key) => {
-		            match key {
-			            KeyCode::KeyE => self.hud_renderer.toggle_inventory(),
-			            _ => {}
-		            }
-		        },
-		        PhysicalKey::Unidentified(_) => {}
-	        }
-	    }
+        if event.state == Pressed {
+            match event.physical_key {
+                PhysicalKey::Code(key) => {
+                    match key {
+                        KeyCode::KeyE => self.hud_renderer.toggle_inventory(),
+                        _ => {}
+                    }
+                }
+                PhysicalKey::Unidentified(_) => {}
+            }
+        }
     }
 
     fn handle_game_key_event(&mut self, event: KeyEvent, window: &Window) {
@@ -381,48 +381,48 @@ impl WorldRenderer {
             match event.physical_key {
                 PhysicalKey::Code(key) => {
                     match key {
-			// Inventory
-			KeyCode::KeyE => {
-			    self.hud_renderer.toggle_inventory();
-			}
-			
-			// Item bar shortcuts
+                        // Inventory
+                        KeyCode::KeyE => {
+                            self.hud_renderer.toggle_inventory();
+                        }
+
+                        // Item bar shortcuts
                         KeyCode::Digit1 => {
                             self.items.set_current_item(0);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::Digit2 => {
                             self.items.set_current_item(1);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::Digit3 => {
                             self.items.set_current_item(2);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::Digit4 => {
                             self.items.set_current_item(3);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::Digit5 => {
                             self.items.set_current_item(4);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::Digit6 => {
                             self.items.set_current_item(5);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::Digit7 => {
                             self.items.set_current_item(6);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::Digit8 => {
                             self.items.set_current_item(7);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::Digit9 => {
                             self.items.set_current_item(8);
                             self.update_items_bar();
-                        },
+                        }
                         KeyCode::KeyP => {
                             println!("=================");
                             println!("Debug Information");
@@ -435,8 +435,8 @@ impl WorldRenderer {
                         KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
                         KeyCode::Escape => std::process::exit(1),
                         _ => {}
-		    }
-                },
+                    }
+                }
                 PhysicalKey::Unidentified(_) => {}
             }
         }
@@ -474,25 +474,27 @@ impl WorldRenderer {
             .set_player_items(self.items.get_bar_items(), self.items.current_item());
     }
 
-    fn handle_button_event(&mut self, button: MouseButton, state: ElementState) { 
+    fn handle_button_event(&mut self, button: MouseButton, state: ElementState) {
         match button {
-            winit::event::MouseButton::Left => {
+            MouseButton::Left => {
                 self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
-            },
-            winit::event::MouseButton::Right => { 
+            }
+            MouseButton::Right => {
                 if state == Pressed {
                     // Right click = add a new cube
-                    // We know where is the player and we know 
-                    if let Some((touched_cube, touched_pos)) = self.player.selection_internals() {
+                    // We know where is the player and we know
+                    if let Some(touched_cube) = self.player.selected_cube() {
                         if let Some(block) = self.items.get_current_block() {
                             self.apply_action(Action::Add {
-                            at: Action::position_to_generate_cube(&touched_cube, &touched_pos),
-                            block,
-                        });
+                                at: touched_cube.position_to_add_new_cube(
+                                    self.player.position().pos(), 
+                                    self.player.direction()),
+                                block,
+                            });
                         }
                     }
                 }
-            },
+            }
             _ => ()
         }
     }

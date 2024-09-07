@@ -51,6 +51,13 @@ impl World {
         self.chunks.push(Chunk::new_for_demo([-2. * s, 0.], 0));
     }
 
+    pub fn cubes_near_player(&self, pos: Vector3) -> impl Iterator<Item = &Option<Cube>> {
+        self.chunks
+            .iter()
+            .filter(move |chunk| chunk.is_near_player(pos))
+            .flat_map(|chunk| chunk.cubes_iter())
+    }
+
     pub fn add_chunk(&mut self, chunk: Chunk) {
         if self.cubes_to_draw.is_some() {
             self.cubes_to_draw.as_mut().unwrap().add_chunk(&chunk);
@@ -612,5 +619,16 @@ mod tests {
         let serialized = world.to_json();
         let reconstructed = World::from_json(serialized);
         assert_eq!(world.chunks, reconstructed.chunks);
+    }
+
+    #[test]
+    fn test_cube_iter() {
+        let mut world = World::empty();
+        let mut chunk = Chunk::new([0., 0.]);
+        chunk.fill_layer(0, GRASS);
+        world.chunks.push(chunk);
+
+        let count = world.cubes_near_player(Vector3::empty()).filter(|c| c.is_some()).count();
+        assert_eq!(count, CHUNK_SIZE * CHUNK_SIZE)
     }
 }

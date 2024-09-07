@@ -1,6 +1,7 @@
 use crate::aabb::AABB;
 use crate::block_kind::Block;
 use crate::collidable::{Collidable, CollisionData};
+use crate::primitives::face::Plane3;
 use crate::primitives::vector::Vector3;
 
 /// Model of a cube in the 3D world.
@@ -71,6 +72,52 @@ impl Cube {
     pub fn to_cube_coordinates(&self) -> Vector3 {
         self.position.to_cube_coordinates()
     }
+
+    /// Returns the faces of this cube.
+    /// Note that each face points to a neighbor cube using the `to_adjacent_cube`
+    pub fn faces(&self) -> [Plane3; 6] {
+        [
+            Plane3::new(self.position, Vector3::unit_x(), Vector3::unit_y(), Vector3::unit_z().opposite()),
+            Plane3::new(self.position, Vector3::unit_y(), Vector3::unit_z(), Vector3::unit_x().opposite()),
+            Plane3::new(self.position, Vector3::unit_z(), Vector3::unit_x(), Vector3::unit_y().opposite()),
+            Plane3::new(self.position + Vector3::unit_z(), Vector3::unit_x(), Vector3::unit_y(), Vector3::empty()),
+            Plane3::new(self.position + Vector3::unit_x(), Vector3::unit_z(), Vector3::unit_y(), Vector3::empty()),
+            Plane3::new(self.position + Vector3::unit_y(), Vector3::unit_x(), Vector3::unit_z(), Vector3::empty()),
+        ]
+    }
+
+    /// Returns the distance between this cube and the the player, computed from ray-tracing
+    pub fn intersection_with(&self, pos: Vector3, dir: Vector3) -> Option<f32> {
+        let faces = self.faces();
+        let mut best_result = None;
+        for i in 0..faces.len() {
+            if let Some(t) = faces[i].face_intersection(pos, dir) {
+                if best_result.is_none() || t < best_result.unwrap()  {
+                    best_result = Some(t);
+                }
+            }
+        }
+        best_result
+    }
+    
+    /// Returns the position where to add a new cube, given 
+    /// `touched_cube`    : ref to the cube being touched
+    /// `camera_pos`      : position of the player
+    /// `camera_dir`      : direction of the player
+    pub fn position_to_add_new_cube(&self, camera_pos: Vector3, camera_dir: Vector3) -> Vector3 {
+        let faces = self.faces();
+        let mut best_result = (f32::MAX, 0);
+        for i in 0..faces.len() {
+            if let Some(t) = faces[i].face_intersection(camera_pos, camera_dir) {
+                if t < best_result.0 {
+                    best_result = (t, i)
+                }
+            }
+        }
+        faces[best_result.1].adjacent_cube()
+    }
+    
+    
 
     pub fn cube_aabb(pos: Vector3) -> AABB {
         AABB::new(

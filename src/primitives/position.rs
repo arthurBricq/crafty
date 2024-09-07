@@ -83,6 +83,10 @@ impl Position {
     pub fn z(&self) -> f32 {
         self.pos.z()
     }
+    
+    pub fn distance_to(&self, to: &Vector3) -> f32{
+        self.pos.distance_to(to)
+    }
 
     pub fn set_position(&mut self, pos: Vector3) {
         self.pos = pos;

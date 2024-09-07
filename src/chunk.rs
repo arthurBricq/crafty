@@ -44,10 +44,16 @@ impl Chunk {
     }
 
     /// Returns an iterator over all the positions of the chunk
-    pub fn flattened_iter(&self) -> impl Iterator<Item=&Option<Cube>> {
+    pub fn cubes_iter(&self) -> impl Iterator<Item=&Option<Cube>> {
         self.cubes.iter()
             .flat_map(|matrix_2d| matrix_2d.iter())
             .flat_map(|row| row.iter())
+    }
+
+    /// Returns true if this chunk is considered near the player
+    pub fn is_near_player(&self, pos: Vector3) -> bool {
+        let dist2 = (self.corner[0] - pos[0]).powi(2) + (self.corner[1] - pos[2]).powi(2);
+        dist2 < (2. * CHUNK_SIZE as f32).powi(2)
     }
 
     /// Fills the chunk with a bluit-in world
