@@ -2,3 +2,4 @@
 /// terrain.
 pub mod perlin;
 pub mod world_generator;
+pub mod biome;

@@ -31,9 +31,9 @@ const BASIC_WORLD_CONF: [PerlinNoiseConfig; 5] = [
     },
 ];
 
+/// Class which manages the generation of a new world
 pub struct WorldGenerator {}
 
-/// Class which manages the generation of a new world
 impl WorldGenerator {
     /// Creates a simple world with hills
     pub fn create_new_random_world(n_chunks: i32) -> World {

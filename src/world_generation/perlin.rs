@@ -11,6 +11,7 @@ use rand::distributions::Open01;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::iter::zip;
 
 /// A Perlin noise is determined by its scaling factor and by the amplitude of outputed values.
@@ -112,17 +113,16 @@ impl PerlinNoise {
 
 /// Returns a deterministic random gradient for a given coord and seed
 fn random_gradient(coord: &[i64; 2], seed: u64) -> [f32; 2] {
-    let mut specific_seed = [0u8; 32];
-    specific_seed[..8].copy_from_slice(&seed.to_be_bytes());
-    specific_seed[8..16].copy_from_slice(&coord[0].to_be_bytes());
-    specific_seed[16..24].copy_from_slice(&coord[1].to_be_bytes());
+    // Generate a seed for deterministic PRNG
+    let mut hasher = std::hash::DefaultHasher::new();
+    // Hash the seed
+    seed.hash(&mut hasher);
+    // Hash the chunk coordinates
+    coord.hash(&mut hasher);
+    // Combine the hashes into a final value
+    let specific_seed_hash = hasher.finish();  
 
-    // TODO currently, the world generation is nondeterministic
-    let mut rng = SmallRng::from_seed(specific_seed);
-
-    // Need to discard the first value because it is too similar to the seed
-    // i.e. not random
-    rng.sample::<f32, Open01>(Open01);
+    let mut rng: SmallRng = SmallRng::seed_from_u64(specific_seed_hash);
 
     // TODO uniform distributions do not yield uniform normalized vectors !
     // Should use either gaussians, or a polar representation
