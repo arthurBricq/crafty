@@ -22,43 +22,17 @@ impl Action {
     /// Returns the position where to add a new cube, given 
     /// `touched_cube`    : ref to the cube being touched
     /// `touched_position`: position on this cube that is being touched
-    pub fn position_to_generate_cube(touched_cube: &Cube, touched_position: &Vector3) -> Vector3 {
-        let cube = touched_cube.to_cube_coordinates();
-        let cube_center = cube + Vector3::new(0.5, 0.5, 0.5);
-        let diff = touched_position - &cube_center;
-        
-        // Find the coordinates with maximal absolute value 
-        // This corresponds to the dot product with the face's normal that is the most aligned with the 
-        // touched position.
-        // And the sign then provides us with the face where to put the new cube
-        
-        match (diff[0], diff[1], diff[2]) {
-            (x,y,z) if x.abs() >= y.abs() && x.abs() >= z.abs() => {
-                if x > 0. {
-                    // front
-                    cube + Vector3::unit_x()
-                } else {
-                    cube - Vector3::unit_x()
+    pub fn position_to_generate_cube(touched_cube: &Cube, camera_pos: Vector3, camera_dir: Vector3) -> Vector3 {
+        let faces = touched_cube.faces();
+        let mut best_result = (f32::MAX, 0);
+        for i in 0..faces.len() {
+            if let Some(t) = faces[i].face_intersection(camera_pos, camera_dir) {
+                if t < best_result.0 {
+                    best_result = (t, i)
                 }
             }
-            (x,y,z) if y.abs() >= x.abs() && y.abs() >= z.abs() => {
-                if y > 0. {
-                    // top
-                    cube + Vector3::unit_y()
-                } else {
-                    cube - Vector3::unit_y()
-                }
-            }
-            (x,y,z) if z.abs() >= x.abs() && z.abs() >= y.abs() => {
-                if z > 0. {
-                    // top
-                    cube + Vector3::unit_z()
-                } else {
-                    cube - Vector3::unit_z()
-                }
-            }
-            _ => panic!("Not sure why you have arrived here... diff = {diff:?}"),
         }
+        faces[best_result.1].adjacent_cube()
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
@@ -68,5 +42,30 @@ impl Action {
 
     pub fn from_str(text: &str) -> Self {
         serde_json::from_str(text).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::actions::Action;
+    use crate::block_kind::Block;
+    use crate::cube::Cube;
+    use crate::primitives::vector::Vector3;
+
+    #[test] 
+    fn test_computation_of_new_cube_position() {
+        let cube = Cube::new([0., 0., 0.], Block::COBBELSTONE, 0);
+        
+        assert_eq!(Vector3::new(1., 0., 0.), 
+                   Action::position_to_generate_cube(&cube, Vector3::new(3., 0.5, 0.5), Vector3::unit_x().opposite()));
+        
+        assert_eq!(Vector3::new(0., 0., 1.),
+                   Action::position_to_generate_cube(&cube, Vector3::new(0.5, 0.5, 3.5), Vector3::unit_z().opposite()));
+        
+        
+        
+        
+        
+        
     }
 }

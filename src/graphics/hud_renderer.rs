@@ -1,4 +1,4 @@
-use crate::graphics::color::Color::LightGray;
+use crate::graphics::color::Color::{LightGray, Red};
 
 use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::RectInstance;
@@ -62,9 +62,9 @@ impl HUDRenderer {
     /// Adds a cross in the center of the screen
     pub fn add_cross(&mut self) {
         let w = 0.05;
-        let s = 0.01;
-        self.base.push(RectInstance::new(0., 0., w / 1.5, s, LightGray));
-        self.base.push(RectInstance::new(0., 0., s / 2.5, w, LightGray));
+        let s = 0.003;
+        self.base.push(RectInstance::new(0., 0., w / 1.5, s, Red));
+        self.base.push(RectInstance::new(0., 0., s / 2.5, w, Red));
     }
     
     pub fn add_crafty_label(&mut self) {

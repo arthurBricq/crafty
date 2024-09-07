@@ -171,7 +171,7 @@ impl Camera {
     /// Set the attribute `selected` to the cube currently being selected
     fn compute_selected_cube(&mut self, world: &World) {
         // TODO dichotomy should be much better in terms of performance
-        const STEP: f32 = 0.1;
+        const STEP: f32 = 0.05;
         const REACH_DISTANCE: f32 = 5.0;
         let unit_direction = self.direction();
         for i in 1..(REACH_DISTANCE / STEP) as usize {
@@ -217,7 +217,7 @@ impl Camera {
     }
 
     /// Returns the normalized direction vector
-    fn direction(&self) -> Vector3 {
+    pub fn direction(&self) -> Vector3 {
         Vector3::new(
             self.position.yaw().cos() * self.position.pitch().cos(),
             self.position.pitch().sin(), self.position.yaw().sin() * self.position.pitch().cos())

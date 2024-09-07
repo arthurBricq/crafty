@@ -1,6 +1,7 @@
 use crate::aabb::AABB;
 use crate::block_kind::Block;
 use crate::collidable::{Collidable, CollisionData};
+use crate::primitives::face::Plane3;
 use crate::primitives::vector::Vector3;
 
 /// Model of a cube in the 3D world.
@@ -81,6 +82,19 @@ impl Cube {
             self.position[0] + 1.,
             self.position[0]
         ).unwrap()
+    }
+    
+    /// Returns the faces of this cube.
+    /// Note that each face points to a neighbor cube using the `to_adjacent_cube`
+    pub fn faces(&self) -> [Plane3; 6] {
+        [
+            Plane3::new(self.position, Vector3::unit_x(), Vector3::unit_y(), Vector3::unit_z().opposite()),
+            Plane3::new(self.position, Vector3::unit_y(), Vector3::unit_z(), Vector3::unit_x().opposite()),
+            Plane3::new(self.position, Vector3::unit_z(), Vector3::unit_x(), Vector3::unit_y().opposite()),
+            Plane3::new(self.position + Vector3::unit_z(), Vector3::unit_x(), Vector3::unit_y(), Vector3::empty()),
+            Plane3::new(self.position + Vector3::unit_x(), Vector3::unit_z(), Vector3::unit_y(), Vector3::empty()),
+            Plane3::new(self.position + Vector3::unit_y(), Vector3::unit_x(), Vector3::unit_z(), Vector3::empty()),
+        ]
     }
 }
 

@@ -404,7 +404,7 @@ impl WorldRenderer {
             if let Some((touched_cube, touched_pos)) = self.cam.selection_internals() {
                 if let Some(block) = self.items.get_current_block() {
                     self.apply_action(Action::Add {
-                        at: Action::position_to_generate_cube(&touched_cube, &touched_pos),
+                        at: Action::position_to_generate_cube(&touched_cube, self.cam.position().pos(), self.cam.direction()),
                         block,
                     });
                 }
