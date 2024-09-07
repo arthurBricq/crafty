@@ -10,15 +10,17 @@ pub enum Block {
     DIRT,
     COBBELSTONE,
     OAKLOG,
+    OAKLEAVES
 }
 
 impl Block {
     fn file_name(&self) -> String {
         match self {
-            Block::GRASS => "grass_block".to_string(),
+            Block::GRASS => "grass".to_string(),
             Block::DIRT => "dirt".to_string(),
             Block::COBBELSTONE => "cobblestone".to_string(),
             Block::OAKLOG => "oak_log".to_string(),
+            Block::OAKLEAVES => "oak_leaves".to_string(),
         }
     }
 

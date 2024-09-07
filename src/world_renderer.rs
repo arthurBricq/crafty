@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
-use crate::block_kind::Block::COBBELSTONE;
+use crate::block_kind::Block::{COBBELSTONE, OAKLEAVES};
 use crate::camera::{Camera, MotionState};
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
@@ -90,7 +90,7 @@ impl WorldRenderer {
 
         // Add some damn items
         for _ in 0..50 {
-            self.items.collect(COBBELSTONE);
+            self.items.collect(OAKLEAVES);
         }
 
         // Try to lock the mouse to the window, this doen't work for all OS
@@ -203,10 +203,12 @@ impl WorldRenderer {
                         // Configure the GPU to do Depth testing (with a depth buffer)
                         let params = glium::DrawParameters {
                             depth: glium::Depth {
-                                test: glium::draw_parameters::DepthTest::IfLess,
+                                test: glium::draw_parameters::DepthTest::IfLessOrEqual,
                                 write: true,
                                 ..Default::default()
                             },
+                            blend: glium::draw_parameters::Blend::alpha_blending(),
+                            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullingDisabled,
                             ..Default::default()
                         };
 
