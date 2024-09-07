@@ -19,6 +19,8 @@ const JUMP_VELOCITY: f32 = 7.;
 // TODO same problem
 const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
 
+const PLAYER_MARGIN: f32 = 1e-5;
+
 pub const PLAYER_HEIGHT: f32 = 1.8;
 
 pub enum MotionState {
@@ -108,16 +110,15 @@ impl Camera {
         }
 
         let mut dt = elapsed.as_secs_f32();
-        dt = dt - self.move_with_collision(dt, world);
-        if dt > 0. {
+        loop {
             dt = dt - self.move_with_collision(dt, world);
+            if dt <= 0. {
+                break;
+            }
         }
-        // TODO we may want to do it a third time, to handle x-y-z diagonal
-        //      movements. However, there are no slopes in the cubes for now, so it
-        //      is not necessary
 
         // update in_air
-        let displacement = Vector3::new(0., -1e-5, 0.);
+        let displacement = Vector3::new(0., -2.0 * PLAYER_MARGIN, 0.);
         self.in_air = !world.collides(&Self::make_aabb(&(&self.position + displacement)));
 
         self.compute_selected_cube(world);
@@ -135,25 +136,23 @@ impl Camera {
                 normal: Vector3::empty(),
             });
 
-        let mut dtmargin: f32 = 0.0;
-        if (self.velocity.norm() >= 1e-10) {
-            dtmargin = 1e-5 / self.velocity.norm();
-        }
-
-        if (dt <= dtmargin) {
-            panic!("should not be smaller!!!");
-        }
-
         if collision.time >= dt {
+            // TO DO : do we also want a margin here ???????????
+
             // can move straight away
-            self.position += self.velocity * (dt - dtmargin);
+            self.position += self.velocity * dt;
 
             dt
         } else {
+            // The margin is between the player and the block we colide with
+            // need the projection of velocity onto the normal
+            let mut dtmargin: f32 = 0.0;
+            if (self.velocity.norm() >= 1e-10) {
+                dtmargin = PLAYER_MARGIN / collision.normal.dot(&self.velocity).abs();
+            }
             // we want to put a margin, to avoid collision even with floats rounding
-
             self.position += self.velocity * (collision.time - dtmargin);
-
+            
             // remove component of velocity along the normal
             let vnormal = collision.normal * collision.normal.dot(&self.velocity);
             self.velocity = self.velocity - vnormal;
@@ -209,6 +208,8 @@ impl Camera {
     pub fn jump(&mut self) {
         if !self.in_air {
             self.velocity[1] = JUMP_VELOCITY;
+        } else {
+            println!("Position: {}; {}; {}", self.position.x(), self.position.y(), self.position.z());
         }
     }
 
