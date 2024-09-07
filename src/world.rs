@@ -1,4 +1,3 @@
-use std::ops::Index;
 use crate::aabb::AABB;
 use crate::actions::Action;
 use crate::block_kind::Block;
@@ -9,11 +8,12 @@ use crate::cube::Cube;
 use crate::cubes_to_draw::CubesToDraw;
 use crate::graphics::cube::CubeInstance;
 use crate::primitives::vector::Vector3;
-use crate::world_generation::perlin::PerlinNoise;
+use crate::world_generation::perlin::{MultiscalePerlinNoise, PerlinNoise};
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, VertexBuffer};
 use serde::{Deserialize, Serialize};
+use std::ops::Index;
 use strum::IntoEnumIterator;
 
 pub struct World {
@@ -25,7 +25,20 @@ pub struct World {
 impl World {
     pub fn empty() -> Self {
         let chunks = Vec::new();
-        Self { chunks, cubes_to_draw: None }
+        Self {
+            chunks,
+            cubes_to_draw: None,
+        }
+    }
+
+    pub fn new(chunks: Vec<Chunk>) -> Self {
+        let mut w = Self {
+            chunks,
+            cubes_to_draw: None,
+        };
+
+        w.compute_visible_cubes();
+        w
     }
 
     pub fn fill_for_demo(&mut self) {
@@ -49,88 +62,12 @@ impl World {
         for chunk in &self.chunks {
             let tmp = chunk.corner();
             if tmp[0] == corner.0 as f32 && tmp[1] == corner.1 as f32 {
-                return Some(chunk.clone())
+                return Some(chunk.clone());
             }
         }
         None
     }
 
-    /// Creates a basic, flat world. For now this is a simple, flat
-    /// grassland, extending `nchunks` in each direction.
-    ///
-    /// 'n_chunks': number of chunks the flat lands extends in any
-    /// direction; i.e., (2nchunks + 1) x (2nchunks + 1) chunks will
-    /// be created
-    pub fn create_new_flat_world(n_chunks: i32) -> Self {
-        let s = CHUNK_SIZE as f32;
-        let mut chunks = vec![];
-
-        // Yes this is slow, but it will be fine for now
-        for i in -n_chunks..n_chunks + 1 {
-            for j in -n_chunks..n_chunks + 1 {
-                let mut chunk = Chunk::new([i as f32 * s, j as f32 * s]);
-                for k in 0..CHUNK_FLOOR {
-                    chunk.fill_layer(k, DIRT);
-                }
-                chunk.fill_layer(CHUNK_FLOOR, GRASS);
-                chunks.push(chunk);
-            }
-        }
-
-        let mut world = Self { chunks, cubes_to_draw: None };
-        world.compute_visible_cubes();
-        world
-    }
-
-    /// Creates a simple world with hills. A single octave Perlin noise is used,
-    /// so don't expect anything fancy.
-    /// TODO this function should not be here.
-    ///      `World` is not responsible for its generation
-    pub fn create_new_random_world(n_chunks: i32) -> Self {
-	let mut noise = PerlinNoise::new(42, 32.);
-
-        let s = CHUNK_SIZE as f32;
-        let mut chunks = vec![];
-	let terrain_scale = 20.;
-	let terrain_offset = CHUNK_FLOOR as f32;
-
-        // Yes this is slow, but it will be fine for now
-        for i in -n_chunks..n_chunks + 1 {
-            for j in -n_chunks..n_chunks + 1 {
-                let mut chunk = Chunk::new([i as f32 * s, j as f32 * s]);
-
-		// get the height from the perlin noise for each block
-		for x in 0..8 {
-		    for z in 0..8 {
-			let height = terrain_offset
-			    + terrain_scale * noise.at([i as f32 * s + x as f32,
-							j as f32 * s + z as f32]);
-
-			let cube_height = height.floor() as i32;
-
-			for y in 0..cube_height - 1 {
-			    chunk.add_cube(Vector3::new(i as f32 * s + x as f32,
-							y as f32,
-							j as f32 * s + z as f32),
-					   DIRT, 0);
-			}
-			chunk.add_cube(Vector3::new(i as f32 * s + x as f32,
-						    cube_height as f32,
-						    j as f32 * s + z as f32),
-				       GRASS, 0);
-		    }
-		}
-		
-                chunks.push(chunk);
-            }
-        }
-
-        let mut world = Self { chunks, cubes_to_draw: None };
-        world.compute_visible_cubes();
-        world
-    }
-
-    
     /// Loads a world from a file.
     pub fn from_file(name: &str) -> Option<Self> {
         match std::fs::read_to_string(name) {
@@ -178,9 +115,12 @@ impl World {
             }
         }
         if self.cubes_to_draw.is_none() {
-            self.cubes_to_draw= Some(CubesToDraw::new());
+            self.cubes_to_draw = Some(CubesToDraw::new());
         }
-        self.cubes_to_draw.as_mut().unwrap().set_cube_to_draw(positions);
+        self.cubes_to_draw
+            .as_mut()
+            .unwrap()
+            .set_cube_to_draw(positions);
     }
 
     pub fn cube_to_draw(&self) -> &[CubeInstance] {
@@ -189,11 +129,18 @@ impl World {
 
     /// Returns the OpenGL buffer with cubes to be drawn
     /// If you want to have one cube drawn as 'selected', pass it in the argument `selected`
-    pub fn get_cubes_buffer(&mut self, display: &Display<WindowSurface>, selected: Option<Cube>) -> VertexBuffer<CubeInstance> {
-        self.cubes_to_draw.as_mut().unwrap().get_cubes_buffer(display, selected)
+    pub fn get_cubes_buffer(
+        &mut self,
+        display: &Display<WindowSurface>,
+        selected: Option<Cube>,
+    ) -> VertexBuffer<CubeInstance> {
+        self.cubes_to_draw
+            .as_mut()
+            .unwrap()
+            .get_cubes_buffer(display, selected)
     }
 
-    pub fn number_cubes_rendered(&self) -> usize{
+    pub fn number_cubes_rendered(&self) -> usize {
         self.cubes_to_draw.as_ref().unwrap().number_cubes_rendered()
     }
 
@@ -202,7 +149,7 @@ impl World {
         for chunk in &self.chunks {
             if chunk.is_in(pos) {
                 if let Some(cube) = chunk.cube_at(pos) {
-                    return Some(cube.block().clone())
+                    return Some(cube.block().clone());
                 }
             }
         }
@@ -245,7 +192,7 @@ impl World {
                         self.cubes_to_draw.as_mut().unwrap().add_cube(&cube)
                     }
                 }
-            },
+            }
             Action::Add { at, block } => {
                 let (cubes_to_destroy, cube) = self.add_cube(at.clone(), block.clone());
                 if self.cubes_to_draw.is_some() {
@@ -259,11 +206,11 @@ impl World {
             }
         }
     }
-    
+
     fn cube_at_mut(&mut self, pos: Vector3) -> Option<&mut Cube> {
-        for chunk in &mut self.chunks { 
+        for chunk in &mut self.chunks {
             if chunk.is_in(&pos) {
-                return chunk.cube_at_mut(&pos)
+                return chunk.cube_at_mut(&pos);
             }
         }
         None
@@ -272,7 +219,7 @@ impl World {
     pub fn cube_at(&self, pos: Vector3) -> Option<&Cube> {
         for chunk in &self.chunks {
             if chunk.is_in(&pos) {
-                return chunk.cube_at(&pos)
+                return chunk.cube_at(&pos);
             }
         }
         None
@@ -281,14 +228,13 @@ impl World {
     /// Adds a cube and then recomputes the visibility of the affected cubes (neighbors)
     /// Return the cube that need to be rendered
     /// and the position of the rendered cube that need to be destroyed
-    fn add_cube(&mut self, at: Vector3, block: Block) -> (Vec<Vector3>,Cube) {
+    fn add_cube(&mut self, at: Vector3, block: Block) -> (Vec<Vector3>, Cube) {
         // For all the neighbors positions, increase their internal counter
         let mut count = 0;
         let mut to_hide = Vec::new();
         for pos in Cube::neighbors_positions(at) {
             // Toggle this position
             if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
-
                 // This cube now has a new neighbor
                 cube_to_toggle.add_neighhor();
                 if !cube_to_toggle.is_visible() {
@@ -298,7 +244,7 @@ impl World {
             }
         }
         self.add_cube_unsafe(at, block, count);
-        (to_hide,self.cube_at_mut(at).unwrap().clone())
+        (to_hide, self.cube_at_mut(at).unwrap().clone())
     }
 
     /// Adds a cube without recomputing the visibility
@@ -321,7 +267,7 @@ impl World {
             }
         }
 
-        let mut cubes_to_add= Vec::new();
+        let mut cubes_to_add = Vec::new();
         // Mark all the neighbors cube as visible
         if let Some(_cube) = self.chunks[chunk_index].cube_at(&at) {
             for pos in Cube::neighbors_positions(at) {
@@ -333,8 +279,8 @@ impl World {
                     cube_to_toggle.remove_neighbor();
                 }
             }
-         }
-        
+        }
+
         // Shouldn't this be inside the if let ?
         self.chunks[chunk_index].destroy_cube(at);
         cubes_to_add
@@ -342,7 +288,10 @@ impl World {
 
     #[cfg(test)]
     fn visible_cubes_count(&self) -> usize {
-        self.chunks.iter().map(|chunk| chunk.visible_cube_count()).sum()
+        self.chunks
+            .iter()
+            .map(|chunk| chunk.visible_cube_count())
+            .sum()
     }
 
     /// Goes through all the cubes in the world, and sets whether the cube is touching air.
@@ -359,7 +308,10 @@ impl World {
                 // Count the number of neighbors of this cube
                 let mut count = if let Some(cube_at_border) = self.chunks[i].cube_at_index(index) {
                     let neighbors = Cube::neighbors_positions(cube_at_border.position().clone());
-                    let count = neighbors.iter().filter(|pos| !self.is_position_free(&pos)).count();
+                    let count = neighbors
+                        .iter()
+                        .filter(|pos| !self.is_position_free(&pos))
+                        .count();
                     count as u8
                 } else {
                     0
@@ -381,10 +333,9 @@ impl World {
 }
 
 impl World {
-
     fn to_json(&self) -> String {
         // Provide all the chunks corner
-        let chunk_corners: Vec<[f32;2]> = self.chunks.iter().map(|chunk| chunk.corner()).collect();
+        let chunk_corners: Vec<[f32; 2]> = self.chunks.iter().map(|chunk| chunk.corner()).collect();
 
         // Provide all the cubes, sorted by kind
         let mut all_cubes = get_serialize_container();
@@ -394,7 +345,7 @@ impl World {
 
         let world = SerializedWorld {
             chunk_corners,
-            cubes_by_kind: all_cubes
+            cubes_by_kind: all_cubes,
         };
 
         serde_json::to_string(&world).unwrap()
@@ -413,7 +364,7 @@ impl World {
         // Build the world
         let mut world = Self {
             chunks,
-            cubes_to_draw: None
+            cubes_to_draw: None,
         };
 
         // Fill all the chunks by building all the cubes
@@ -424,48 +375,55 @@ impl World {
                 let y = cube_data[1] as f32;
                 let z = cube_data[2] as f32;
                 let neighbors = cube_data[3] as u8;
-                world.add_cube_unsafe(Vector3::new(x,y,z), block_kind, neighbors);
+                world.add_cube_unsafe(Vector3::new(x, y, z), block_kind, neighbors);
             }
         }
 
         world
     }
-
 }
 
 impl Collidable for World {
     fn collides(&self, aabb: &AABB) -> bool {
-	for chunk in &self.chunks {
-	    if chunk.collides(aabb) {
-		return true
-	    }
-	}
+        for chunk in &self.chunks {
+            if chunk.collides(aabb) {
+                return true;
+            }
+        }
 
-	false
+        false
     }
 
     // now returns collision time; f32::MAX if no collision
-    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
-			  -> Option<CollisionData> {
-	// find with which chunks it is colliding
-	let mut acc_time = f32::MAX;
-	let mut acc_normal = Vector3::empty();
+    fn collision_time(
+        &self,
+        aabb: &AABB,
+        target: &AABB,
+        velocity: &Vector3,
+    ) -> Option<CollisionData> {
+        // find with which chunks it is colliding
+        let mut acc_time = f32::MAX;
+        let mut acc_normal = Vector3::empty();
 
-	// TODO be smarter
-	for chunk in &self.chunks {
-            if let Some(CollisionData { time, normal })
-                = chunk.collision_time(aabb, target, velocity) {
-                    if time < acc_time {
-		        acc_time = time;
-		        acc_normal = normal;
-	            }
+        // TODO be smarter
+        for chunk in &self.chunks {
+            if let Some(CollisionData { time, normal }) =
+                chunk.collision_time(aabb, target, velocity)
+            {
+                if time < acc_time {
+                    acc_time = time;
+                    acc_normal = normal;
                 }
+            }
         }
 
         if acc_time > 1e10 {
             None
         } else {
-            Some(CollisionData{ time: acc_time, normal: acc_normal })
+            Some(CollisionData {
+                time: acc_time,
+                normal: acc_normal,
+            })
         }
     }
 }
@@ -478,6 +436,7 @@ mod tests {
     use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
     use crate::primitives::vector::Vector3;
     use crate::world::World;
+    use crate::world_generation::world_generator::WorldGenerator;
 
     #[test]
     fn test_chunk_collision_1() {
@@ -535,7 +494,7 @@ mod tests {
         chunk1.fill_layer(1, GRASS);
         chunk1.fill_layer(2, GRASS);
 
-        let mut chunk2 = Chunk::new([3.*CHUNK_SIZE as f32, 0.]);
+        let mut chunk2 = Chunk::new([3. * CHUNK_SIZE as f32, 0.]);
         chunk2.fill_layer(0, GRASS);
         chunk2.fill_layer(1, GRASS);
         chunk2.fill_layer(2, GRASS);
@@ -568,11 +527,17 @@ mod tests {
         // Initially, the cube in the middle is not supposed to be visible
         // Note that the bottommost layer is not showed
         assert_eq!(world.chunks[0].cube_at(&top).unwrap().is_visible(), true);
-        assert_eq!(world.chunks[0].cube_at(&middle).unwrap().is_visible(), false);
-        assert_eq!(world.chunks[0].cube_at(&bottom).unwrap().is_visible(), false);
+        assert_eq!(
+            world.chunks[0].cube_at(&middle).unwrap().is_visible(),
+            false
+        );
+        assert_eq!(
+            world.chunks[0].cube_at(&bottom).unwrap().is_visible(),
+            false
+        );
 
         // Now we delete the top cube
-        world.apply_action(&Action::Destroy {at: top});
+        world.apply_action(&Action::Destroy { at: top });
 
         // Assert the cube in the middle is now visible
         assert_eq!(world.chunks[0].cube_at(&middle).unwrap().is_visible(), true);
@@ -580,13 +545,25 @@ mod tests {
         // But so far, the sides of `bottom` should not be visible yet
         let one_side = middle + Vector3::unit_x();
         let another_side = middle + Vector3::unit_z();
-        assert_eq!(world.chunks[0].cube_at(&one_side).unwrap().is_visible(), false);
-        assert_eq!(world.chunks[0].cube_at(&another_side).unwrap().is_visible(), false);
+        assert_eq!(
+            world.chunks[0].cube_at(&one_side).unwrap().is_visible(),
+            false
+        );
+        assert_eq!(
+            world.chunks[0].cube_at(&another_side).unwrap().is_visible(),
+            false
+        );
 
         // But we if delete the middle block, the sides get in contact with air, so they are supposed to be visible.
-        world.apply_action(&Action::Destroy {at: middle});
-        assert_eq!(world.chunks[0].cube_at(&one_side).unwrap().is_visible(), true);
-        assert_eq!(world.chunks[0].cube_at(&another_side).unwrap().is_visible(), true);
+        world.apply_action(&Action::Destroy { at: middle });
+        assert_eq!(
+            world.chunks[0].cube_at(&one_side).unwrap().is_visible(),
+            true
+        );
+        assert_eq!(
+            world.chunks[0].cube_at(&another_side).unwrap().is_visible(),
+            true
+        );
     }
 
     #[test]
@@ -603,7 +580,10 @@ mod tests {
         let top = Vector3::new(4., 2., 4.);
 
         // First, we add a cube on top of the world
-        world.apply_action(&Action::Add {at: above, block: Block::COBBELSTONE});
+        world.apply_action(&Action::Add {
+            at: above,
+            block: Block::COBBELSTONE,
+        });
 
         // Assert the visibility: the block 'top' should not be rendered anymore
         assert_eq!(world.chunks[0].cube_at(&above).unwrap().is_visible(), true);
@@ -620,12 +600,15 @@ mod tests {
         world.chunks.push(chunk);
         world.compute_visible_cubes();
         let bottom = Vector3::new(4., 0., 4.);
-        assert_eq!(world.chunks[0].cube_at(&bottom).unwrap().is_visible(), false);
+        assert_eq!(
+            world.chunks[0].cube_at(&bottom).unwrap().is_visible(),
+            false
+        );
     }
 
     #[test]
     fn test_world_persistence() {
-        let world = World::create_new_random_world(2);
+        let world = WorldGenerator::create_new_random_world(2);
         let serialized = world.to_json();
         let reconstructed = World::from_json(serialized);
         assert_eq!(world.chunks, reconstructed.chunks);
