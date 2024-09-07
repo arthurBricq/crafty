@@ -81,20 +81,20 @@ pub fn get_opengl_entities(mut position: Position) -> Vec<EntityCube> {
 
     // Body
     position += Vector3::new(0., PLAYER_BODY_SHIFT, 0.);
-    ent.push(EntityCube::new(&position, 2, PLAYER_BODY_SCALE));
+    ent.push(EntityCube::new_only_yaw(&position, 2, PLAYER_BODY_SCALE));
 
     // Arm
     position += Vector3::new(0., 0., PLAYER_ARM_WIDTH_SHIFT).rotation_y(position.yaw());
-    ent.push(EntityCube::new(&position, 3, PLAYER_ARM_SCALE));
+    ent.push(EntityCube::new_only_yaw(&position, 3, PLAYER_ARM_SCALE));
     position += Vector3::new(0., 0., -2. * PLAYER_ARM_WIDTH_SHIFT).rotation_y(position.yaw());
-    ent.push(EntityCube::new(&position, 3, PLAYER_ARM_SCALE));
+    ent.push(EntityCube::new_only_yaw(&position, 3, PLAYER_ARM_SCALE));
     position += Vector3::new(0., 0., PLAYER_ARM_WIDTH_SHIFT).rotation_y(position.yaw());
 
     // Legs
     position += Vector3::new(0., PLAYER_LEG_SHIFT, PLAYER_LEG_WIDTH_SHIFT).rotation_y(position.yaw());
-    ent.push(EntityCube::new(&position, 1, PLAYER_LEG_SCALE));
+    ent.push(EntityCube::new_only_yaw(&position, 1, PLAYER_LEG_SCALE));
     position += Vector3::new(0., 0., -2. * PLAYER_LEG_WIDTH_SHIFT).rotation_y(position.yaw());
-    ent.push(EntityCube::new(&position, 1, PLAYER_LEG_SCALE));
+    ent.push(EntityCube::new_only_yaw(&position, 1, PLAYER_LEG_SCALE));
     
     ent
 }
