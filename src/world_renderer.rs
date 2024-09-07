@@ -6,11 +6,10 @@ use std::time::{Duration, Instant};
 
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
-use crate::block_kind::Block;
 use crate::block_kind::Block::COBBELSTONE;
 use crate::camera::{Camera, MotionState};
 use crate::entity::entity_manager::EntityManager;
-use crate::entity::humanoid::PATRON_PLAYER_CUT;
+use crate::entity::humanoid;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 
@@ -22,13 +21,10 @@ use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
 use crate::player_items::PlayerItems;
-use crate::primitives::math;
+use crate::texture;
 use crate::world::World;
-use glium::glutin::surface::WindowSurface;
-use glium::texture::Texture2dArray;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
-use glium::{uniform, Display, Surface, Texture2d};
-use image::GenericImageView;
+use glium::{uniform, Surface};
 use winit::event::ElementState::{Pressed, Released};
 use winit::event::{AxisId, ButtonId, ElementState, RawKeyEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
@@ -110,15 +106,15 @@ impl WorldRenderer {
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
         // Build the texture library, and change the sampler to use the proper filters
-        let textures = self.build_textures_array(&display);
+        let textures = texture::build_textures_array(&display);
         let cubes_texture_sampler = textures.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
         // Load other textures that are used
-        let selected_texture = Self::load_texture(std::fs::read("./resources/selected.png").unwrap().as_slice(), &display);
-        let font_atlas = Self::load_texture(std::fs::read("./resources/fonts.png").unwrap().as_slice(), &display);
+        let selected_texture = texture::load_texture(std::fs::read("./resources/selected.png").unwrap().as_slice(), &display);
+        let font_atlas = texture::load_texture(std::fs::read("./resources/fonts.png").unwrap().as_slice(), &display);
 
         // Textures for the player
-        let player_texture = Self::load_texture_cut(std::fs::read("./resources/entity/player.png").unwrap().as_slice(), &display, Vec::from(PATRON_PLAYER_CUT));
+        let player_texture = humanoid::load_humanoid_textures(std::fs::read("./resources/entity/player.png").unwrap().as_slice(), &display);
         let player_texture_sample = player_texture.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
         // Build the shader programs
@@ -281,59 +277,6 @@ impl WorldRenderer {
                 _ => (),
             };
         }).unwrap();
-    }
-
-    /// Builds the array of 2D textures using all the blocks
-    /// Each block is associated with 3 textures: side, top and bottom
-    /// All these textures are loaded into one single texture array, that is fed to OpenGL.
-    /// The fragment shader responsible for the cubes is then in charge of selecting the correct element of this array.
-    fn build_textures_array(&self, display: &Display<WindowSurface>) -> Texture2dArray {
-        // Get the path of the block textures
-        let root = "./resources/block/";
-        let extension = ".png";
-        let all_textures = Block::get_texture_files();
-        let source = all_textures.iter().map(|name| {
-            println!(" Adding texture {name} into texture array");
-            let data = std::fs::read(root.to_string() + name + extension).unwrap();
-            let image = image::load(std::io::Cursor::new(data), image::ImageFormat::Png).unwrap().to_rgba8();
-            let image_dimensions = image.dimensions();
-            glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions)
-        }).collect();
-        Texture2dArray::new(display, source).unwrap()
-    }
-
-    /// Loads a texture and returns it
-    fn load_texture(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2d {
-        let image = image::load(std::io::Cursor::new(bytes),
-                                image::ImageFormat::Png).unwrap().to_rgba8();
-        let image_dimensions = image.dimensions();
-        let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
-        Texture2d::new(display, image).unwrap()
-    }
-
-    /// Loads an image from a path,
-    /// uses cut to divide the image into sub images,
-    /// cuts is in the format \[x, y, height, width\],
-    /// rescales the sub image to a common size and
-    /// returns a Texture2dArray with this images.
-    /// (0, 0) is top left and x, y, height and width are in pixels.
-    fn load_texture_cut(bytes: &[u8], display: &Display<WindowSurface>, cut: Vec<[u32; 4]>) -> Texture2dArray {
-        let image = image::load(std::io::Cursor::new(bytes),
-                                image::ImageFormat::Png).unwrap().to_rgba8();
-        let mut source = Vec::new();
-        // Set a scaling factor which is a common multiplier for every texture
-        let mut lcm_x: u32 = 1;
-        let mut lcm_y: u32 = 1;
-        for cut_pos in &cut {
-            lcm_x = math::lcm(lcm_x, cut_pos[2]);
-            lcm_y = math::lcm(lcm_y, cut_pos[3]);
-        }
-        for cut_pos in cut {
-            let sub_image = image.view(cut_pos[0], cut_pos[1], cut_pos[2], cut_pos[3]).to_image();
-            let sub_image = image::imageops::resize(&sub_image, lcm_x, lcm_y, image::imageops::FilterType::Nearest);
-            source.push(glium::texture::RawImage2d::from_raw_rgba_reversed(&sub_image.into_raw(), (lcm_x, lcm_y)));
-        }
-        Texture2dArray::new(display, source).unwrap()
     }
 
     fn handle_key_event(&mut self, event: RawKeyEvent, window: &Window) {

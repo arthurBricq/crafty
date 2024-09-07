@@ -1,7 +1,12 @@
+use glium::glutin::surface::WindowSurface;
+use glium::texture::Texture2dArray;
+use glium::Display;
 
 use crate::graphics::entity::EntityCube;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
+use crate::texture;
+use crate::texture::ImageCut;
 
 // Define some constants to draw a player
 // Height taken from human proportion in drawing
@@ -11,8 +16,8 @@ const PLAYER_BODY_HEIGHT: f32 = 0.370 * PLAYER_HEIGHT;
 const PLAYER_LEG_HEIGHT: f32 = 0.460 * PLAYER_HEIGHT;
 const PLAYER_ARM_HEIGHT: f32 = 0.370 * PLAYER_HEIGHT;
 
-const PLAYER_BODY_SHIFT: f32 = - 0.5 * ( PLAYER_HEAD_SIZE + PLAYER_BODY_HEIGHT );
-const PLAYER_LEG_SHIFT: f32 = - 0.5 * ( PLAYER_BODY_HEIGHT  + PLAYER_LEG_HEIGHT );
+const PLAYER_BODY_SHIFT: f32 = -0.5 * (PLAYER_HEAD_SIZE + PLAYER_BODY_HEIGHT);
+const PLAYER_LEG_SHIFT: f32 = -0.5 * (PLAYER_BODY_HEIGHT + PLAYER_LEG_HEIGHT);
 
 const PLAYER_BODY_WIDTH: f32 = 0.3 * PLAYER_HEIGHT;
 const PLAYER_LEG_WIDTH: f32 = 0.5 * PLAYER_BODY_WIDTH;
@@ -23,25 +28,51 @@ const PLAYER_LEG_LENGTH: f32 = PLAYER_BODY_LENGTH;
 const PLAYER_ARM_LENGTH: f32 = PLAYER_BODY_LENGTH;
 
 const PLAYER_LEG_WIDTH_SHIFT: f32 = (PLAYER_BODY_WIDTH - PLAYER_LEG_WIDTH) / 2.;
-const PLAYER_ARM_WIDTH_SHIFT: f32 = 1.01 * (PLAYER_BODY_WIDTH + PLAYER_ARM_WIDTH ) / 2.;
+const PLAYER_ARM_WIDTH_SHIFT: f32 = 1.01 * (PLAYER_BODY_WIDTH + PLAYER_ARM_WIDTH) / 2.;
 
 const PLAYER_BODY_SCALE: [f32; 3] = [PLAYER_BODY_LENGTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH];
 const PLAYER_ARM_SCALE: [f32; 3] = [PLAYER_ARM_LENGTH, PLAYER_ARM_HEIGHT, PLAYER_ARM_WIDTH];
 const PLAYER_LEG_SCALE: [f32; 3] = [PLAYER_LEG_LENGTH, PLAYER_LEG_HEIGHT, PLAYER_LEG_WIDTH];
 
-// Define the position of the textures to use for the player
-// TODO if this remain public, it needs a much clearer documentation
-pub const PATRON_PLAYER_CUT: [[u32; 4]; 24] = [
+/// Define how to cut the image of the player to generate the textures for the player
+/// Values are in (u,v) coord, in fraction of the image dimension
+const PLAYER_CUT_TEMPLATE: [ImageCut; 24] = [
     // Head
-    [0, 24, 8, 8], [8, 24, 8, 8], [16, 24, 8, 8], [24, 24, 8, 8], [32, 24, 8, 8], [40, 24, 8, 8], 
+    [ 0.,      3. / 4., 1. / 6., 1. / 4.],
+    [ 1. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    [ 2. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    [ 3. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    [ 4. / 6., 3. / 4., 1. / 6., 1. / 4.],
+    [ 5. / 6., 3. / 4., 1. / 6., 1. / 4.],
     // Leg
-    [0, 12, 4, 12], [4, 12, 4, 12], [8, 12, 4, 12], [12, 12, 4, 12], [16, 20, 4, 4], [20, 20, 4, 4],
+    [ 0.,       3. / 8., 1. / 12., 3. / 8.],
+    [ 1. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 2. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 3. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 4. / 12., 5. / 8., 1. / 12., 1. / 8.],
+    [ 5. / 12., 5. / 8., 1. / 12., 1. / 8.],
     // Body
-    [0, 0, 4, 12], [4, 0, 8, 12], [20, 0, 4, 12], [12, 0, 8, 12], [24, 0, 8, 4], [32, 0, 8, 4], 
+    [ 0.,       0., 1. / 12., 3. / 8.],
+    [ 1. / 12., 0., 1. / 6.,  3. / 8.],
+    [ 5. / 12., 0., 1. / 12., 3. / 8.],
+    [ 3. / 12., 0., 1. / 6.,  3. / 8.],
+    [ 6. / 12., 0., 1. / 6.,  1. / 8.],
+    [ 8. / 12., 0., 1. / 6.,  1. / 8.],
     // Arm
-    [24, 12, 4, 12], [28, 12, 4, 12], [32, 12, 4, 12], [36, 12, 4, 12], [28, 8, 4, 4], [32, 8, 4, 4],
+    [ 6. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 7. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 8. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 9. / 12., 3. / 8., 1. / 12., 3. / 8.],
+    [ 7. / 12., 1. / 4., 1. / 12., 1. / 8.],
+    [ 8. / 12., 1. / 4., 1. / 12., 1. / 8.],
 ];
 
+/// Load the texture for a humanoid entity
+pub fn load_humanoid_textures(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2dArray {
+    texture::load_texture_cut(bytes, display, &PLAYER_CUT_TEMPLATE)
+}
+
+/// Return a vector of EntityCube forming a humanoid
 pub fn get_opengl_entities(mut position: Position) -> Vec<EntityCube> {
     let mut ent = Vec::new();
 
