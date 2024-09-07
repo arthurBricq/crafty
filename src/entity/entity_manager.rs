@@ -23,7 +23,6 @@ impl EntityManager {
     }
 
     pub fn set_position(&mut self, id: u8, position: Position) {
-        println!("Updating pos for player: {id}");
         self.entities.get_mut(&id).map(|entity| entity.set_position(position));
     }
 
