@@ -9,6 +9,7 @@ use crate::world::World;
 
 pub struct WorldGenerator {}
 
+/// Class which manages the generation of a new world
 impl WorldGenerator {
     /// Creates a simple world with hills
     pub fn create_new_random_world(n_chunks: i32) -> World {

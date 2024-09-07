@@ -11,19 +11,21 @@ use rand::distributions::Open01;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
-use std::iter::{zip, Scan};
+use std::iter::zip;
 
+/// Number of scales to use in the Perlin Noise
 const SCALE_LEVEL_PERLIN: usize = 5;
 
+/// Class containing the different scales of Perlin noise,
+/// combines them to return a single value for each querried coord.
 pub struct MultiscalePerlinNoise {
-    seed: u32,
     perlin_noises: Vec<PerlinNoise>,
-    scales: [f32; SCALE_LEVEL_PERLIN],
     amplitudes: [f32; SCALE_LEVEL_PERLIN],
 }
 
 impl MultiscalePerlinNoise {
-    // TO DO: test best way to config the amplitudes / scales combo
+    /// Create a new MultiscalePerlinNoise, requires the level of scales and amplitudes associated.
+    /// These values will change the world aspect.
     pub fn new(
         seed: u32,
         scales: [f32; SCALE_LEVEL_PERLIN],
@@ -31,7 +33,6 @@ impl MultiscalePerlinNoise {
     ) -> Self {
         let mut temp_perlin_noises: Vec<PerlinNoise> = Vec::new();
 
-        let base_amp: i32 = 2;
         for i in 0..SCALE_LEVEL_PERLIN {
             let complete_seed = (seed as u64) + (i as u64);
 
@@ -39,13 +40,12 @@ impl MultiscalePerlinNoise {
         }
 
         Self {
-            seed,
             perlin_noises: temp_perlin_noises,
-            scales,
             amplitudes,
         }
     }
 
+    /// Returns the noise value at a given coordinate of the world
     pub fn at(&mut self, coord: [f32; 2]) -> f32 {
         let mut value: f32 = 0.0;
 
@@ -57,6 +57,7 @@ impl MultiscalePerlinNoise {
     }
 }
 
+/// Single scale Perlin noise
 pub struct PerlinNoise {
     seed: u64,
     gradients: HashMap<[i64; 2], [f32; 2]>,
@@ -72,6 +73,7 @@ impl PerlinNoise {
         }
     }
 
+    /// Returns the noise at a given world coordinate.
     pub fn at(&mut self, coord: [f32; 2]) -> f32 {
         let [xc, yc] = self.closest_corner(coord);
         let corners = [[xc, yc], [xc + 1, yc], [xc, yc + 1], [xc + 1, yc + 1]];
@@ -91,6 +93,7 @@ impl PerlinNoise {
             lerp(fade(xr), values[2], values[3]),
         )
     }
+
     /// Change the coordinates to the noise-specific coordinate system, e.g. 0.5
     /// for noise.scale / 2
     fn coord_to_fractional_space(&self, coord: [f32; 2]) -> [f32; 2] {
@@ -112,6 +115,7 @@ impl PerlinNoise {
     }
 }
 
+/// Returns a deterministic random gradient for a given coord and seed
 fn random_gradient(coord: &[i64; 2], seed: u64) -> [f32; 2] {
     let mut specific_seed = [0u8; 32];
     specific_seed[..8].copy_from_slice(&seed.to_be_bytes());
