@@ -55,7 +55,7 @@ impl HUDRenderer {
             show_help: false,
             show_debug: false,
             items_bar: ItemBar::new(),
-            inventory_menu: InventoryMenu::new(),
+            inventory_menu: InventoryMenu::new(1.0),
             show_inventory: false,
         };
 
@@ -135,7 +135,12 @@ impl HUDRenderer {
     pub fn set_dimension(&mut self, dim: (u32, u32)) {
         println!("dimension={dim:?}");
         self.aspect_ratio = dim.0 as f32 / dim.1 as f32;
+
+        // Cascade down the aspect ratio to the HUD parts that require it
         self.items_bar.set_aspect_ratio(self.aspect_ratio);
+        self.inventory_menu.set_aspect_ratio(self.aspect_ratio);
+        
+        // Update the collection of rectangles
         self.update();
     }
 
