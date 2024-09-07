@@ -194,6 +194,7 @@ impl WorldRenderer {
                         // Server updates
                         if self.cam.is_moving() {
                             self.proxy.lock().unwrap().send_position_update(self.cam.position().clone());
+                            self.cam.unset_moving();
                         }
                         self.handle_server_updates();
 

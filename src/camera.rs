@@ -48,6 +48,9 @@ pub struct Camera {
     touched_cube: Option<(Cube, Vector3)>,
 
     in_air: bool,
+    
+    /// Is the player moving ?
+    is_moving: bool,
 }
 
 
@@ -63,6 +66,7 @@ impl Camera {
             d_pressed: false,
             touched_cube: None,
             in_air: true, // will be updated every frame anyway
+            is_moving: false
         }
     }
 
@@ -134,6 +138,7 @@ impl Camera {
         if collision.time >= dt {
             // can move straight away
             self.position += self.velocity * dt;
+            self.is_moving = true;
 
             dt
         } else {
@@ -272,6 +277,9 @@ impl Camera {
         } else if vertical < 0.0 && self.position.pitch() > -PI * 0.5 + 0.05 {
             self.position.rotate_pitch(vertical * sensitivity);
         }
+        if horizontal != 0. || vertical != 0. {
+            self.is_moving = true;
+        }
     }
 
     /// Returns the optional (cube, position on the cube) of the cube that the player is looking at.
@@ -293,6 +301,11 @@ impl Camera {
     }
 
     pub fn is_moving(&self) -> bool {
-        self.d_pressed || self.a_pressed || self.w_pressed || self.s_pressed
+        self.is_moving
     }
+    
+    pub fn unset_moving(&mut self) {
+        self.is_moving = false;
+    }
+
 }
