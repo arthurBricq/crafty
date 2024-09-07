@@ -102,12 +102,19 @@ impl HUDRenderer {
         // and then do it again here, maybe we can only do it here ?
         // rects() would return a Vec of ref to append
         self.rects=self.base.clone();
-        self.rects.append(&mut self.items_bar.rects());
+
+        if !self.show_inventory {
+            self.rects.append(&mut self.items_bar.rects());
+        }
+        
         if self.show_help {
             self.rects.append(&mut self.help_menu.rects().clone());
         }
         if self.show_debug {
             self.rects.append(&mut self.debug_menu.rects().clone());
+        }
+        if self.show_inventory {
+            self.rects.append(&mut self.inventory_menu.rects().clone());
         }
     }
 
@@ -142,6 +149,7 @@ impl HUDRenderer {
 
     pub fn toggle_inventory(&mut self) {
         self.show_inventory = !self.show_inventory;
+        self.update();
         println!("inventory toggled to: {}", self.is_inventory_open());
     }
 }
