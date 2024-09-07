@@ -1,7 +1,12 @@
+use super::biome::BiomeGenerator;
 use super::perlin::MultiscalePerlinNoise;
 use super::perlin::PerlinNoiseConfig;
+use crate::block_kind::Block;
 use crate::block_kind::Block::DIRT;
 use crate::block_kind::Block::GRASS;
+use crate::block_kind::Block::COBBELSTONE;
+use crate::block_kind::Block::OAKLOG;
+use crate::block_kind::Block::OAKLEAVES;
 use crate::chunk::Chunk;
 use crate::chunk::CHUNK_FLOOR;
 use crate::chunk::CHUNK_SIZE;
@@ -31,6 +36,9 @@ const BASIC_WORLD_CONF: [PerlinNoiseConfig; 5] = [
     },
 ];
 
+// TO DO: REMOVE THAT IT IS JUST SOME FIRST BIOME TEST
+const TOP_BLOCK_BIOME: [Block; 4] = [GRASS, COBBELSTONE, OAKLOG, OAKLEAVES];
+
 /// Class which manages the generation of a new world
 pub struct WorldGenerator {}
 
@@ -38,7 +46,8 @@ impl WorldGenerator {
     /// Creates a simple world with hills
     pub fn create_new_random_world(n_chunks: i32) -> World {
         //let mut noise = PerlinNoise::new(121, 32.);
-        let mut noise = MultiscalePerlinNoise::new(42, BASIC_WORLD_CONF.to_vec());
+        let seed: u64 = 42;
+        let mut noise = MultiscalePerlinNoise::new(seed, BASIC_WORLD_CONF.to_vec());
 
         let s = CHUNK_SIZE as f32;
         let mut chunks = vec![];
@@ -48,11 +57,15 @@ impl WorldGenerator {
         // Yes this is slow, but it will be fine for now
         for i in -n_chunks..n_chunks + 1 {
             for j in -n_chunks..n_chunks + 1 {
-                let mut chunk = Chunk::new([i as f32 * s, j as f32 * s]);
+                let x0 = i as f32 * s;
+                let z0 = j as f32 * s;
+                let mut chunk = Chunk::new([x0, z0]);
 
                 // get the height from the perlin noise for each block
                 for x in 0..8 {
                     for z in 0..8 {
+                        let biome_t: u64 = BiomeGenerator::find_closest_biome(seed, x + x0 as i32, z + z0 as i32);
+
                         let height = terrain_offset
                             + terrain_scale
                                 * noise.at([i as f32 * s + x as f32, j as f32 * s + z as f32]);
@@ -76,7 +89,7 @@ impl WorldGenerator {
                                 cube_height as f32,
                                 j as f32 * s + z as f32,
                             ),
-                            GRASS,
+                            TOP_BLOCK_BIOME[biome_t as usize],
                             0,
                         );
                     }

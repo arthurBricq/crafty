@@ -8,26 +8,26 @@ use rand::{Rng, RngCore, SeedableRng};
 use crate::chunk::CHUNK_SIZE;
 
 const NUM_BIOMES: u64 = 4;
-const PROBABILITY_BIOME_CENTER_IN_CHUNK: f32 = 0.2;
+const PROBABILITY_BIOME_CENTER_IN_CHUNK: f32 = 0.05;
 
 /// Manages how biomes are generated, for a given coordinate x,z
 /// will return in which biome the position is
 pub struct BiomeGenerator {}
 
 impl BiomeGenerator {
-    fn get_chunk_coord(world_pos: [f32; 2]) -> [i64; 2] {
-        [(world_pos[0] / CHUNK_SIZE as f32) as i64,
-            (world_pos[1] / CHUNK_SIZE as f32) as i64]
+    fn get_chunk_coord(world_pos: [i32; 2]) -> [i64; 2] {
+        [(world_pos[0] / CHUNK_SIZE as i32) as i64,
+            (world_pos[1] / CHUNK_SIZE as i32) as i64]
     }
 
-    fn get_world_coord(chunk_coord: [i64; 2], coord_in_chunk: [u64; 2]) -> [f32; 2] {
-        let x: f32 = (8 * chunk_coord[0] + coord_in_chunk[0] as i64) as f32;
-        let y: f32 = (8 * chunk_coord[1] + coord_in_chunk[1] as i64) as f32;
+    fn get_world_coord(chunk_coord: [i64; 2], coord_in_chunk: [u64; 2]) -> [i32; 2] {
+        let x: i32 = (8 * chunk_coord[0] + coord_in_chunk[0] as i64) as i32;
+        let z: i32 = (8 * chunk_coord[1] + coord_in_chunk[1] as i64) as i32;
         
-        [x, y]
+        [x, z]
     }
 
-    fn get_chunk_biome_center(seed: u64, chunk_coord: [i64; 2]) -> (Option<[f32; 2]>, u64) {
+    fn get_chunk_biome_center(seed: u64, chunk_coord: [i64; 2]) -> (Option<[i32; 2]>, u64) {
         // Generate a seed for deterministic PRNG
         let mut hasher = std::hash::DefaultHasher::new();
         // Hash the seed
@@ -41,12 +41,12 @@ impl BiomeGenerator {
 
         if rng.sample::<f32, Open01>(Open01) < PROBABILITY_BIOME_CENTER_IN_CHUNK {
             let x = rng.next_u64() % 8;
-            let y = rng.next_u64() % 8;
+            let z = rng.next_u64() % 8;
 
-            (Some(Self::get_world_coord(chunk_coord, [x, y])),
-                (rng.next_u64() % 8) + NUM_BIOMES)
+            (Some(Self::get_world_coord(chunk_coord, [x, z])),
+                (rng.next_u64() % NUM_BIOMES))
         } else {
-            (None, 0)
+            (None, u64::MAX)
         }
     }
 
@@ -61,8 +61,8 @@ impl BiomeGenerator {
 
             if x.abs() == half_side {
                 for j in 0..num_side {
-                    let y: i64 = j - half_side;
-                    chunks_in_shell.push([x, y]);
+                    let z: i64 = j - half_side;
+                    chunks_in_shell.push([x, z]);
                 }
             } else {
                 chunks_in_shell.push([x, half_side]);
@@ -73,13 +73,13 @@ impl BiomeGenerator {
         chunks_in_shell
     }
 
-    pub fn find_closest_biome(seed: u64, x: f32, y: f32) -> u64 {
-        let world_pos: [f32; 2] = [x, y];    
+    pub fn find_closest_biome(seed: u64, x: i32, z: i32) -> u64 {
+        let world_pos: [i32; 2] = [x, z];    
         let mut current_level: i64 = 0;
 
         let center_chunk_coord = Self::get_chunk_coord(world_pos);
 
-        let mut closest_biome_type: u64 = 0;
+        let mut closest_biome_type: u64 = u64::MAX;
         let mut shortest_dist: f32 = f32::MAX;
 
         loop {
@@ -93,8 +93,8 @@ impl BiomeGenerator {
                 let (center_opt, biome_type) = BiomeGenerator::get_chunk_biome_center(seed, coords);
 
                 if let Some(center) = center_opt {
-                    let diff = [world_pos[0] - center[0],
-                                            world_pos[1] - center[1]];
+                    let diff = [(world_pos[0] - center[0]) as f32,
+                                            (world_pos[1] - center[1]) as f32];
                     let new_dist = diff[0].abs() + diff[1].abs();
 
                     if new_dist < shortest_dist {
@@ -105,7 +105,7 @@ impl BiomeGenerator {
                 }
             }
 
-            if (closest_biome_type != 0) && (!found_better) {
+            if (closest_biome_type != u64::MAX) && (!found_better) {
                 return closest_biome_type;
             }
 
@@ -172,8 +172,8 @@ use crate::world_generation::biome::*;
         let level: i64 = 3;
         let shell = BiomeGenerator::get_chunk_shell(level);
 
-        assert!(shell.iter().all(|&[x, y]| {
-            let max_abs = x.abs().max(y.abs());
+        assert!(shell.iter().all(|&[x, z]| {
+            let max_abs = x.abs().max(z.abs());
             max_abs == level
         }) == true);
     }
@@ -181,12 +181,41 @@ use crate::world_generation::biome::*;
     #[test]
     fn test_find_closest_biome() {
         let seed: u64 = 42;
-        let x: f32 = -1.0;
-        let y: f32 = 10.0;
+        let x: i32 = -1;
+        let z: i32 = 10;
 
-        let biome_t1 = BiomeGenerator::find_closest_biome(seed, x, y);
-        let biome_t2 = BiomeGenerator::find_closest_biome(seed, x, y);
+        let biome_t1 = BiomeGenerator::find_closest_biome(seed, x, z);
+        let biome_t2 = BiomeGenerator::find_closest_biome(seed, x, z);
 
         assert_eq!(biome_t1, biome_t2);
+    }
+
+
+
+    #[test]
+    fn test_randomness() {
+        for i in 0..5 {
+            for j in 0..5 {
+                let seed: u64 = 42;
+                let chunk_coord: [i64; 2] = [i, j];
+                // Generate a seed for deterministic PRNG
+                let mut hasher = std::hash::DefaultHasher::new();
+                // Hash the seed
+                seed.hash(&mut hasher);
+                // Hash the chunk coordinates
+                chunk_coord.hash(&mut hasher);
+                // Combine the hashes into a final value
+                let specific_seed_hash = hasher.finish();  
+
+                let mut rng: SmallRng = SmallRng::seed_from_u64(specific_seed_hash);
+
+                let n = rng.sample::<f32, Open01>(Open01);
+                let x = rng.next_u64() % 8;
+                let z = rng.next_u64() % 8;
+                let t = rng.next_u64() % NUM_BIOMES;
+                
+                println!("n= {}  x= {}  z= {}  t= {}", n, x, z, t);
+            }
+        }
     }
 }
