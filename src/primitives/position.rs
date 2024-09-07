@@ -11,6 +11,14 @@ pub struct Position {
 }
 
 impl Position {
+    pub fn empty() -> Self {
+        Self {
+            pos: Vector3::empty(),
+            yaw: 0.,
+            pitch: 0.
+        }
+    }
+    
     pub fn new(pos: Vector3, yaw: f32, pitch: f32) -> Self {
         Self { pos, yaw, pitch }
     }
