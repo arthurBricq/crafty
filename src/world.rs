@@ -1,4 +1,3 @@
-use std::ops::Index;
 use crate::aabb::AABB;
 use crate::actions::Action;
 use crate::block_kind::Block;
@@ -14,6 +13,7 @@ use crate::world_serializer::{get_serialize_container, serialize_one_chunk, Seri
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, VertexBuffer};
 use serde::{Deserialize, Serialize};
+use std::ops::Index;
 use strum::IntoEnumIterator;
 
 pub struct World {
@@ -208,7 +208,7 @@ impl World {
     }
 
     fn cube_at_mut(&mut self, pos: Vector3) -> Option<&mut Cube> {
-        for chunk in &mut self.chunks { 
+        for chunk in &mut self.chunks {
             if chunk.is_in(&pos) {
                 return chunk.cube_at_mut(&pos);
             }
@@ -385,37 +385,45 @@ impl World {
 
 impl Collidable for World {
     fn collides(&self, aabb: &AABB) -> bool {
-	for chunk in &self.chunks {
-	    if chunk.collides(aabb) {
-		return true
-	    }
-	}
+        for chunk in &self.chunks {
+            if chunk.collides(aabb) {
+                return true;
+            }
+        }
 
-	false
+        false
     }
 
     // now returns collision time; f32::MAX if no collision
-    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
-			  -> Option<CollisionData> {
-	// find with which chunks it is colliding
-	let mut acc_time = f32::MAX;
-	let mut acc_normal = Vector3::empty();
+    fn collision_time(
+        &self,
+        aabb: &AABB,
+        target: &AABB,
+        velocity: &Vector3,
+    ) -> Option<CollisionData> {
+        // find with which chunks it is colliding
+        let mut acc_time = f32::MAX;
+        let mut acc_normal = Vector3::empty();
 
-	// TODO be smarter
-	for chunk in &self.chunks {
-            if let Some(CollisionData { time, normal })
-                = chunk.collision_time(aabb, target, velocity) {
-                    if time < acc_time {
-		        acc_time = time;
-		        acc_normal = normal;
-	            }
+        // TODO be smarter
+        for chunk in &self.chunks {
+            if let Some(CollisionData { time, normal }) =
+                chunk.collision_time(aabb, target, velocity)
+            {
+                if time < acc_time {
+                    acc_time = time;
+                    acc_normal = normal;
                 }
+            }
         }
 
         if acc_time > 1e10 {
             None
         } else {
-            Some(CollisionData{ time: acc_time, normal: acc_normal })
+            Some(CollisionData {
+                time: acc_time,
+                normal: acc_normal,
+            })
         }
     }
 }
@@ -428,6 +436,7 @@ mod tests {
     use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
     use crate::primitives::vector::Vector3;
     use crate::world::World;
+    use crate::world_generation::world_generator::WorldGenerator;
 
     #[test]
     fn test_chunk_collision_1() {
@@ -599,7 +608,7 @@ mod tests {
 
     #[test]
     fn test_world_persistence() {
-        let world = World::create_new_random_world(2);
+        let world = WorldGenerator::create_new_random_world(2);
         let serialized = world.to_json();
         let reconstructed = World::from_json(serialized);
         assert_eq!(world.chunks, reconstructed.chunks);
