@@ -1,4 +1,4 @@
-use crate::graphics::rectangle::RectVertexAttr;
+use crate::graphics::rectangle::RectInstance;
 use crate::graphics::string_rect::StringRect;
 
 use crate::primitives::position::Position;
@@ -73,9 +73,9 @@ impl DebugMenuData {
 
 /// Implement the debug menu
 pub struct DebugMenu {
-    static_part: Vec<RectVertexAttr>,
+    static_part: Vec<RectInstance>,
     coord_to_update: Vec<[f32; 2]>,
-    rects: Vec<RectVertexAttr>,
+    rects: Vec<RectInstance>,
 }
 
 impl DebugMenu {
@@ -99,7 +99,7 @@ impl DebugMenu {
         }
     }
 
-    pub fn rects(&self) -> &Vec<RectVertexAttr> {
+    pub fn rects(&self) -> &Vec<RectInstance> {
         &self.rects
     }
 

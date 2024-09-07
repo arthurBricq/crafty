@@ -1,4 +1,4 @@
-use crate::graphics::rectangle::RectVertexAttr;
+use crate::graphics::rectangle::RectInstance;
 
 
 
@@ -60,7 +60,7 @@ impl HelpMenuData {
 
 /// Implement the help menu
 pub struct HelpMenu {
-    rects:Vec<RectVertexAttr>,
+    rects:Vec<RectInstance>,
 }
 
 impl HelpMenu {
@@ -78,7 +78,7 @@ impl HelpMenu {
             rects
         }
     }
-    pub fn rects(&self) -> &Vec<RectVertexAttr> {
+    pub fn rects(&self) -> &Vec<RectInstance> {
         &self.rects
     }
 }

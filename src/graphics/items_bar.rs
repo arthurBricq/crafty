@@ -1,12 +1,12 @@
 use crate::graphics::color::Color::{LightCoral, LightGray, Red};
-use crate::graphics::rectangle::RectVertexAttr;
+use crate::graphics::rectangle::RectInstance;
 use crate::graphics::string_rect::StringRect;
 use crate::player_items::Items;
 
 pub struct ItemBar {
     items: Items,
     selected_item: usize, 
-    rects: Vec<RectVertexAttr>,
+    rects: Vec<RectInstance>,
     aspect_ratio: f32
 }
 
@@ -32,7 +32,7 @@ impl ItemBar {
 
         // Add the background tiles
         let mut rects = Vec::new();
-        let background = RectVertexAttr::new_from_corner(-W / 2., BOTTOM - 1., W, H + 2. * PADDING, LightGray);
+        let background = RectInstance::new_from_corner(-W / 2., BOTTOM - 1., W, H + 2. * PADDING, LightGray);
         rects.push(background);
 
         // Add the items
@@ -44,7 +44,7 @@ impl ItemBar {
             // We want to do a square
             let a = ITEM_SIDE / self.aspect_ratio;
             let b = ITEM_SIDE;
-            let mut cube = RectVertexAttr::new_from_corner(x0 + (i as f32) * (ITEM_SIDE), BOTTOM - 1. + 2. * PADDING, a, b, color);
+            let mut cube = RectInstance::new_from_corner(x0 + (i as f32) * (ITEM_SIDE), BOTTOM - 1. + 2. * PADDING, a, b, color);
             cube.set_block_id(kind as u8 as i8);
             rects.push(cube);
             
@@ -57,7 +57,7 @@ impl ItemBar {
         self.rects = rects;
     }
 
-    pub fn rects(&self) -> Vec<RectVertexAttr> {
+    pub fn rects(&self) -> Vec<RectInstance> {
         self.rects.clone()
     }
 

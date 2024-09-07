@@ -90,10 +90,9 @@ pub const RECT_VERTICES: [RectVertex; 6] = [
     RectVertex { position: [-1.0, -1.0, 0.], tex_coords: [0., 0.] },
 ];
 
-
 /// Holds the model of 1 tile
 #[derive(Copy, Clone)]
-pub struct RectVertexAttr {
+pub struct RectInstance {
     transformation: [[f32; 4]; 4],
     /// RGBa color
     color: [f32; 4],
@@ -106,9 +105,9 @@ pub struct RectVertexAttr {
     block_id: i8
 }
 
-implement_vertex!(RectVertexAttr, transformation, color, is_font, font_coords, block_id);
+implement_vertex!(RectInstance, transformation, color, is_font, font_coords, block_id);
 
-impl RectVertexAttr {
+impl RectInstance {
     /// Create a new rectangle
     ///
     /// For the (u,v) coordinates:
@@ -139,7 +138,7 @@ impl RectVertexAttr {
     
     /// wrapper of new with origin at the bottom left corner of the rectangle
     pub fn new_from_corner(u: f32, v: f32, w: f32, h: f32, c: Color) -> Self {
-        RectVertexAttr::new(u+w/2., v+h/2., w/2., h/2., c)
+        RectInstance::new(u+w/2., v+h/2., w/2., h/2., c)
     }
 
     /// Creates a new rectangle that draws a given character

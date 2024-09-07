@@ -1,7 +1,7 @@
 use crate::graphics::color::Color::LightGray;
 
 use crate::graphics::font::GLChar;
-use crate::graphics::rectangle::RectVertexAttr;
+use crate::graphics::rectangle::RectInstance;
 
 use super::menu_help;
 use super::menu_help::HelpMenu;
@@ -21,9 +21,9 @@ pub struct HUDRenderer {
     /// Ratio of the W over the H
     aspect_ratio: f32,
     /// List of the tiles to be presented on the screen
-    rects: Vec<RectVertexAttr>,
+    rects: Vec<RectInstance>,
     /// The rects that are always present on the screen
-    base: Vec<RectVertexAttr>,
+    base: Vec<RectInstance>,
 
     help_menu: HelpMenu,
     show_help: bool,
@@ -63,20 +63,20 @@ impl HUDRenderer {
     pub fn add_cross(&mut self) {
         let w = 0.05;
         let s = 0.01;
-        self.base.push(RectVertexAttr::new(0., 0., w / 1.5 , s, LightGray));
-        self.base.push(RectVertexAttr::new(0., 0., s / 2.5, w, LightGray));
+        self.base.push(RectInstance::new(0., 0., w / 1.5, s, LightGray));
+        self.base.push(RectInstance::new(0., 0., s / 2.5, w, LightGray));
     }
     
     pub fn add_crafty_label(&mut self) {
         let h = 0.4;
         let s = 0.05;
         let x0 = -0.3;
-        self.base.push(RectVertexAttr::new_with_char(x0, h, s, GLChar::C));
-        self.base.push(RectVertexAttr::new_with_char(x0 + 1. * s * 3., h, s, GLChar::R));
-        self.base.push(RectVertexAttr::new_with_char(x0 + 2. * s * 3., h, s, GLChar::A));
-        self.base.push(RectVertexAttr::new_with_char(x0 + 3. * s * 3., h, s, GLChar::F));
-        self.base.push(RectVertexAttr::new_with_char(x0 + 4. * s * 3., h, s, GLChar::T));
-        self.base.push(RectVertexAttr::new_with_char(x0 + 5. * s * 3., h, s, GLChar::Y));
+        self.base.push(RectInstance::new_with_char(x0, h, s, GLChar::C));
+        self.base.push(RectInstance::new_with_char(x0 + 1. * s * 3., h, s, GLChar::R));
+        self.base.push(RectInstance::new_with_char(x0 + 2. * s * 3., h, s, GLChar::A));
+        self.base.push(RectInstance::new_with_char(x0 + 3. * s * 3., h, s, GLChar::F));
+        self.base.push(RectInstance::new_with_char(x0 + 4. * s * 3., h, s, GLChar::T));
+        self.base.push(RectInstance::new_with_char(x0 + 5. * s * 3., h, s, GLChar::Y));
     }
 
     /// Add/Remove the help menu
@@ -111,7 +111,7 @@ impl HUDRenderer {
         self.update();
     }
 
-    pub fn rects(&self) -> &Vec<RectVertexAttr> {
+    pub fn rects(&self) -> &Vec<RectInstance> {
         &self.rects
     }
     
