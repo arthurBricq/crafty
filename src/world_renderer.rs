@@ -114,7 +114,7 @@ impl WorldRenderer {
         let font_atlas = texture::load_texture(std::fs::read("./resources/fonts.png").unwrap().as_slice(), &display);
 
         // Textures for the player
-        let player_texture = humanoid::load_texture_humanoid(std::fs::read("./resources/entity/player.png").unwrap().as_slice(), &display);
+        let player_texture = humanoid::load_humanoid_textures(std::fs::read("./resources/entity/player.png").unwrap().as_slice(), &display);
         let player_texture_sample = player_texture.sampled().magnify_filter(MagnifySamplerFilter::Nearest).minify_filter(MinifySamplerFilter::Nearest);
 
         // Build the shader programs
