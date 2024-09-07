@@ -10,7 +10,8 @@ use crate::texture::ImageCut;
 
 // Define some constants to draw a player
 // Height taken from human proportion in drawing
-const PLAYER_HEIGHT: f32 = 1.0;
+// TODO communicate size inbetween camera and humanoid
+const PLAYER_HEIGHT: f32 = 1.9;
 const PLAYER_HEAD_SIZE: f32 = 0.190 * PLAYER_HEIGHT;
 const PLAYER_BODY_HEIGHT: f32 = 0.360 * PLAYER_HEIGHT;
 const PLAYER_LEG_HEIGHT: f32 = 0.450 * PLAYER_HEIGHT;
