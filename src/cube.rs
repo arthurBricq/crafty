@@ -80,8 +80,7 @@ impl Cube {
             self.position[1],
             self.position[0] + 1.,
             self.position[0],
-        )
-        .unwrap()
+        ).unwrap()
     }
 }
 
