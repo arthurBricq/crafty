@@ -26,9 +26,9 @@ impl Action {
         let faces = touched_cube.faces();
         let mut best_result = (f32::MAX, 0);
         for i in 0..faces.len() {
-            if let Some(t) = faces[i].face_intersection(camera_pos, camera_dir) {
-                if t < best_result.0 {
-                    best_result = (t, i)
+            if let Some((intersection, proj)) = faces[i].face_intersection(camera_pos, camera_dir) {
+                if proj.is_in_square() && proj.distance < best_result.0 {
+                    best_result = (proj.distance, i)
                 }
             }
         }

@@ -7,6 +7,7 @@ use crate::world::World;
 use std::f32::consts::PI;
 use std::time::Duration;
 use crate::cube::Cube;
+use crate::primitives::face::Plane3;
 
 /// Travel speed [m/s] or [cube/s]
 const SPEED: f32 = 6.;
@@ -170,21 +171,54 @@ impl Camera {
 
     /// Set the attribute `selected` to the cube currently being selected
     fn compute_selected_cube(&mut self, world: &World) {
-        // TODO dichotomy should be much better in terms of performance
-        const STEP: f32 = 0.05;
-        const REACH_DISTANCE: f32 = 5.0;
-        let unit_direction = self.direction();
-        for i in 1..(REACH_DISTANCE / STEP) as usize {
-            // If the query position is not free, it means that we have found
-            // the selected cube
-            let query = self.position.pos() + unit_direction * i as f32 * STEP;
-            // If the query position is not free, it means that we have found the selected cube
-            if let Some(cube) = world.cube_at(query) {
-                self.touched_cube = Some((cube.clone(), query));
-                return
+
+        let mut P = self.position.pos();
+        let dir = self.direction();
+
+        let (principal_direction, u, v, mut origin) = match (dir[0], dir[1], dir[2]) {
+            (x,y,z) if x.abs() >= y.abs() && x.abs() >= z.abs() => {
+                (Vector3::unit_x() * x.signum(), Vector3::unit_y(), Vector3::unit_z(), Vector3::new(P.x().floor() + 0.5 * (1. + P.x().signum()), 0., 0. ))
+            }
+            (x,y,z) if y.abs() >= x.abs() && y.abs() >= z.abs() => {
+                (Vector3::unit_y() * y.signum(), Vector3::unit_x(), Vector3::unit_z(), Vector3::new(0., P.y().floor() + 0.5 * (1. + P.y().signum()), 0.))
+            }
+            (x,y,z) if z.abs() >= x.abs() && z.abs() >= y.abs() => {
+                (Vector3::unit_z() * z.signum(), Vector3::unit_x(), Vector3::unit_y(), Vector3::new(0., 0., P.z().floor() + 0.5 * (1. + P.z().signum())))
+            }
+            _ => panic!("Not sure why you have arrived here... diff = {dir:?}"),
+        };
+
+        let epsilon = dir * 0.01;
+
+        let mut count: usize = 0;
+
+        loop {
+            let face = Plane3::new(origin, u, v, Vector3::empty());
+            if let Some((intersection, _)) = face.face_intersection(P, dir) {
+
+                let query1 = intersection - epsilon;
+                if let Some(cube) = world.cube_at(query1) {
+                    self.touched_cube = Some((cube.clone(), query1));
+                    return
+                }
+
+                let query2 = intersection + epsilon;
+                if let Some(cube) = world.cube_at(query2) {
+                    self.touched_cube = Some((cube.clone(), query2));
+                    return
+                }
+
+            }
+
+            origin += principal_direction;
+            count += 1;
+
+            if count > 5 {
+                self.touched_cube = None;
+                return;
             }
         }
-        self.touched_cube = None
+
     }
 
     pub fn toggle_state(&mut self, state: MotionState) {
