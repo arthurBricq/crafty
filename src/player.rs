@@ -10,6 +10,8 @@ use std::time::Duration;
 use crate::input::PlayerInputStatus;
 use crate::input::MotionState;
 
+pub const CLICK_TIME_TO_BREAK: f32 = 2.0;
+
 /// Travel speed [m/s] or [cube/s]
 const SPEED: f32 = 5.0;
 // TODO for some obscure reason, actual speed is lower than that. Perhaps the dt
@@ -184,10 +186,6 @@ impl Player {
     pub fn position(&self) -> &Position {
         &self.position
     }
-
-    // pub fn is_moving(&self) -> bool {
-    //     self.d_pressed || self.a_pressed || self.w_pressed || self.s_pressed
-    // }
     
     pub fn debug(&mut self) {
         println!("* Camera - position   : {:?}", self.position);
@@ -305,4 +303,14 @@ impl Player {
         Vector3::new(self.position.yaw().sin(), 0., -self.position.yaw().cos())
     }
 
+    pub fn is_time_to_break_over(&mut self, dt: f32) -> bool {
+        if self.is_selecting_cube() && self.left_click() {
+            self.add_click_time(dt);
+            if self.left_click_time() >= CLICK_TIME_TO_BREAK {
+                self.reset_click_time();
+                return true;
+            }
+        }
+        false
+    }
 }

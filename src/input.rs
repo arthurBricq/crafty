@@ -55,17 +55,16 @@ impl PlayerInputStatus {
     }
 
     /// Return the time the left button have been clicked
-    /// If left click is not pressed return 0.
     pub fn click_time(&self) -> f32 {
-        if self.left_click {
-            self.click_time
-        } else {
-            0.
-        }
+        self.click_time
     }
     
+    /// Add time to the click time counter
+    /// Only add time if left_click is true
     pub fn add_click_time(&mut self, click_time: f32) {
+    if self.left_click {
         self.click_time += click_time;
+    }
     }
 
     pub fn reset_click_time(&mut self) {

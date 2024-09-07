@@ -33,9 +33,9 @@ use winit::event_loop::ControlFlow;
 use crate::input::MotionState;
 use winit::event::{AxisId, ElementState, KeyEvent, MouseButton};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{CursorGrabMode, Fullscreen, Window};
+use winit::window::{CursorGrabMode, Fullscreen, Window, WindowBuilder};
+use crate::player::CLICK_TIME_TO_BREAK;
 
-const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
 /// 16ms => 60 FPS roughly
 const TARGET_FRAME_DURATION: Duration = Duration::from_millis(16);
@@ -226,15 +226,11 @@ impl WorldRenderer {
                         target.clear_color_and_depth(Color::Sky1.to_tuple(), 1.0);
 
                         // Step the camera with the elapsed time
-                        if self.player.is_selecting_cube() && self.player.left_click() {
-                            self.player.add_click_time(dt.as_secs_f32());
-                            if self.player.left_click_time() >= CLICK_TIME_TO_BREAK {
-                                // Break the cube
-                                self.apply_action(Destroy { at: self.player.selected_cube().unwrap().to_cube_coordinates() });
-                                self.player.reset_click_time();
-                            }
+                        // Try to break the selected cube
+                        if self.player.is_time_to_break_over(dt.as_secs_f32()) {
+                            self.apply_action(Destroy { at: self.player.selected_cube().unwrap().to_cube_coordinates() });
                         }
-
+     
                         // Step
                         self.fps_manager.step(dt);
                         self.player.step(dt, &self.world);
