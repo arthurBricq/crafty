@@ -11,3 +11,4 @@ pub mod menu_help;
 pub mod menu_debug;
 pub mod string_rect;
 pub mod entity;
+pub mod items_bar;

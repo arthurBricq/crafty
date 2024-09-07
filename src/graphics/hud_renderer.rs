@@ -12,7 +12,7 @@ use super::menu_debug::DebugData;
 use super::menu_debug::DebugMenu;
 use super::menu_debug::DebugMenuData;
 
-use crate::items_bar::ItemBar;
+use crate::graphics::items_bar::ItemBar;
 use crate::player_items::Items;
 
 

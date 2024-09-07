@@ -1,12 +1,11 @@
-
-
-use crate::graphics::color::Color::{LightGray, Red};
+use crate::graphics::color::Color::{LightCoral, LightGray, Red};
 use crate::graphics::rectangle::RectVertexAttr;
 use crate::graphics::string_rect::StringRect;
 use crate::player_items::Items;
 
 pub struct ItemBar {
     items: Items,
+    selected_item: usize, 
     rects: Vec<RectVertexAttr>,
     aspect_ratio: f32
 }
@@ -15,6 +14,7 @@ impl ItemBar {
     pub fn new() -> Self {
         let menu = Self {
             items: Vec::new(),
+            selected_item: 0,
             aspect_ratio: 2.0,
             rects: Vec::new()
         };
@@ -39,10 +39,12 @@ impl ItemBar {
         let x0 = -W / 2. + PADDING;
         const ITEM_SIDE: f32 = H * 0.9;
         for (i, &(kind, quantity)) in self.items.iter().enumerate() {
+            let color = if (i == self.selected_item) { Red } else { LightCoral };
+            
             // We want to do a square
             let a = ITEM_SIDE / self.aspect_ratio;
             let b = ITEM_SIDE;
-            let mut cube = RectVertexAttr::new_from_corner(x0 + (i as f32) * (ITEM_SIDE), BOTTOM - 1. + 2. * PADDING, a, b, Red);
+            let mut cube = RectVertexAttr::new_from_corner(x0 + (i as f32) * (ITEM_SIDE), BOTTOM - 1. + 2. * PADDING, a, b, color);
             cube.set_block_id(kind as u8 as i8);
             rects.push(cube);
             

@@ -8,7 +8,6 @@ pub mod graphics;
 pub mod actions;
 pub mod fps;
 pub mod block_kind;
-pub mod items_bar;
 pub mod player_items;
 pub mod game_server;
 pub mod world_dispatcher;
