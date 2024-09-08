@@ -48,6 +48,15 @@ impl PlayerItems {
         self.inventory_items[index]
     }
 
+    pub fn take_bar_item(&mut self, index: usize) -> Option<Block> {
+        Self::take_item(&mut self.bar_items[index])
+    }
+
+    pub fn take_inventory_item(&mut self, index: usize) -> Option<Block> {
+        Self::take_item(&mut self.inventory_items[index])
+    }
+
+    
     pub fn get_current_block(&self) -> Option<Block> {
         if let Some((_, Some((block, _)))) = self.bar_items.iter()
             .filter(|item| item.is_some())
@@ -125,7 +134,22 @@ impl PlayerItems {
         self.current_item
     }
 
+    fn take_item(itemstack: &mut Option<ItemStack>) -> Option<Block> {
+        let mut ret: Option<Block> = None;
+        
+        *itemstack = if let Some((block, count)) = itemstack {
+            if *count > 0 {
+                ret = Some(*block);
+                Some((*block, *count - 1))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
 
+        ret
+    }
 }
 
 #[cfg(test)]

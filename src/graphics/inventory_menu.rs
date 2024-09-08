@@ -4,6 +4,8 @@ use crate::graphics::rectangle::RectInstance;
 use crate::player_items::PlayerItems;
 use crate::graphics::update_status::UpdateStatus;
 use crate::graphics::inventory_slot::InventorySlot;
+use winit::event::ElementState;
+use crate::block_kind::Block;
 
 /// A position in inventory space, i.e. from 0 to 1, origin on the bottom left
 /// corner, with 0, 1 being the sides of the UI
@@ -50,6 +52,10 @@ pub struct InventoryMenu {
     inventory_slots: [[InventorySlot; 8]; 4],
     crafting_slots: [[InventorySlot; 3]; 3],
     crafting_output_slot: InventorySlot,
+
+    carried_item: Option<Block>,
+    crafting_items: [[Option<Block>; 3]; 3],
+    crafting_output_items: Option<Block>,
 }
 
 impl InventoryMenu {
@@ -65,6 +71,10 @@ impl InventoryMenu {
             inventory_slots: [[slot; 8]; 4],
             crafting_slots: [[slot; 3]; 3],
             crafting_output_slot: slot,
+
+            carried_item: None,
+            crafting_items: [[None; 3]; 3],
+            crafting_output_items: None,
         };
         inventory.update();
 
@@ -96,11 +106,44 @@ impl InventoryMenu {
                 else { UpdateStatus::NoUpdate }
             },
             InventoryEvent::Button(state) => {
-                dbg!(state);
-
-                UpdateStatus::NoUpdate
+                if state == ElementState::Pressed {
+                    self.handle_button_pressed()
+                }
+                else { UpdateStatus::Update }
             }
         }
+    }
+
+    fn handle_button_pressed(&mut self) -> UpdateStatus {
+        if let Some(carried_item) = self.carried_item {
+            // if we have a valid slot, put it in
+
+            // a valid slot is an inventory or crafting slot (no crafting
+            // output), either empty or with an item of the same kind
+            
+            todo!("later");
+        } else {
+            // if we are in a non empty slot, take it
+
+            for row in 0..4 {
+                for col in 0..8 {
+                    if self.inventory_slots[row][col].is_in(&self.cursor_pos) {
+                        // grab it
+                        if row == 0 {
+                            if let Some(block) = self.items.take_bar_item(col) {
+                                self.carried_item = Some(block);
+                            }
+                        }
+                        else {
+                            todo!("  ");
+                        }
+                    }
+                }
+            }
+        }
+
+        self.update();
+        UpdateStatus::Update
     }
 
     fn update(&mut self) {
@@ -165,14 +208,16 @@ impl InventoryMenu {
                 self.rects.append(&mut slot.rects(&self.ui_rect, None, slot.is_in(&self.cursor_pos)));
             }
 
-            // tmp
-            {
+            // carried item
+            dbg!("is there a carried_item");
+            if let Some(block) = self.carried_item {
+                dbg!("there is a carried_item");
                 let (x, y, w, h) = Self::from_ui_to_ndc_rect(&self.ui_rect, &(self.cursor_pos.x,
                                                                               self.cursor_pos.y,
                                                                               item_size,
                                                                               item_size));
                 let mut rect = RectInstance::new_from_corner(x, y, w, h, Red);
-                rect.set_block_id(0);
+                rect.set_block_id(block as u8 as i8);
                 self.rects.push(rect);
             }
             
