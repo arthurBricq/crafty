@@ -118,6 +118,14 @@ impl Chunk {
         !in_bound || Self::empty_or_transparent(self.cubes[i_z][i_x][i_y])
     }
 
+    /// Returns true if the position in the chunk is not part of a cube.
+    /// The function does not check that the cube is chunk, and will crash if it is not.
+    pub fn is_position_free(&self, pos: &Vector3) -> bool {
+        let (i_z, i_x, i_y) = self.get_indices(pos);
+        let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
+        let result = !in_bound || self.cubes[i_z][i_x][i_y].is_none();
+        result
+    }
 
     /// Goes through all the cubes that are strictly inside the chunk and compute whether they have
     /// a free neighbors.
