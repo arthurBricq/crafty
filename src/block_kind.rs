@@ -13,7 +13,8 @@ pub enum Block {
     OAKLEAVES,
     WATER,
     STONE,
-    SAND
+    SAND,
+    SWORD,
 }
 
 impl Block {
@@ -27,6 +28,7 @@ impl Block {
             Block::WATER => "water".to_string(),
             Block::STONE => "stone".to_string(),
             Block::SAND => "sand".to_string(),
+            Block::SWORD => "stone_sword".to_string(),
         }
     }
 
