@@ -11,7 +11,9 @@ pub enum Block {
     COBBELSTONE,
     OAKLOG,
     OAKLEAVES,
-    WATER
+    WATER,
+    STONE,
+    SAND
 }
 
 impl Block {
@@ -23,6 +25,8 @@ impl Block {
             Block::OAKLOG => "oak_log".to_string(),
             Block::OAKLEAVES => "oak_leaves".to_string(),
             Block::WATER => "water".to_string(),
+            Block::STONE => "stone".to_string(),
+            Block::SAND => "sand".to_string(),
         }
     }
 

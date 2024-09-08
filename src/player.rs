@@ -64,7 +64,7 @@ impl Player {
     /// based on right hand perspective look along the positive z-Axis
     pub fn new() -> Self {
         Self {
-            position: Position::new(Vector3::new(4.0, CHUNK_FLOOR as f32 + 24., 3.0), PI, 0.),
+            position: Position::new(Vector3::new(4.0, CHUNK_FLOOR as f32 + 48., 3.0), PI, 0.),
             velocity: Vector3::new(0., 0., 0.),
             input_status: PlayerInputStatus::new(),
             touched_cube: None,

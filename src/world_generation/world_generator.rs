@@ -1,5 +1,5 @@
 use super::biome::BiomeGenerator;
-use super::biomes_def::BIOMES;
+use super::biomes_def::{BIOMES, SINGLE_NOISE_CONFIG, BASE_BIOME_CONFIG};
 use super::perlin::MultiscalePerlinNoise;
 use super::perlin::PerlinNoiseConfig;
 use crate::block_kind::Block;
@@ -38,9 +38,14 @@ impl WorldGenerator {
                 for x in 0..8 {
                     for z in 0..8 {
                         let biome_t: u64 = BiomeGenerator::find_closest_biome(seed, x + x0 as i32, z + z0 as i32);
+                        
                         let biome_config = &BIOMES[biome_t as usize];
 
-                        noise.change_config(biome_config.noise_config.clone());
+                        if SINGLE_NOISE_CONFIG {
+                            noise.change_config(BASE_BIOME_CONFIG);
+                        } else {
+                            noise.change_config(biome_config.noise_config.clone());
+                        }
 
                         let height = biome_config.terrain_offset
                             + biome_config.terrain_scale
