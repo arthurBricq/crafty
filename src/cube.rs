@@ -86,38 +86,34 @@ impl Cube {
         ]
     }
 
-    /// Returns the distance between this cube and the the player, computed from ray-tracing
-    pub fn intersection_with(&self, pos: Vector3, dir: Vector3) -> Option<f32> {
-        let faces = self.faces();
-        let mut best_result = None;
+    /// Computes the intersection between a ray and 6 faces
+    /// Returns (distance, index in the array of faces)
+    pub fn intersection_with_faces(faces: &[Plane3; 6], pos: Vector3, dir: Vector3,) -> Option<(f32, usize)> {
+        let mut best_result: Option<(f32, usize)> = None;
         for i in 0..faces.len() {
             if let Some(t) = faces[i].face_intersection(pos, dir) {
-                if best_result.is_none() || t < best_result.unwrap()  {
-                    best_result = Some(t);
+                if best_result.is_none() || t < best_result.unwrap().0 {
+                    best_result = Some((t, i));
                 }
             }
         }
         best_result
     }
     
-    /// Returns the position where to add a new cube, given 
+    /// Returns the distance between this cube and the the player, computed from ray-tracing
+    pub fn intersection_with(&self, pos: Vector3, dir: Vector3) -> Option<f32> {
+        Self::intersection_with_faces(&self.faces(), pos, dir).map(|(dist, _)| dist)
+    }
+
+    /// Returns the position where to add a new cube, given
     /// `touched_cube`    : ref to the cube being touched
     /// `camera_pos`      : position of the player
     /// `camera_dir`      : direction of the player
-    pub fn position_to_add_new_cube(&self, camera_pos: Vector3, camera_dir: Vector3) -> Vector3 {
-        let faces = self.faces();
-        let mut best_result = (f32::MAX, 0);
-        for i in 0..faces.len() {
-            if let Some(t) = faces[i].face_intersection(camera_pos, camera_dir) {
-                if t < best_result.0 {
-                    best_result = (t, i)
-                }
-            }
-        }
-        faces[best_result.1].adjacent_cube()
+    pub fn position_to_add_new_cube(&self, pos: Vector3, dir: Vector3) -> Vector3 {
+        let index = Self::intersection_with_faces(&self.faces(), pos, dir)
+            .map(|(_, index)| index).unwrap();
+        self.faces()[index].adjacent_cube()
     }
-    
-    
 
     pub fn cube_aabb(pos: Vector3) -> AABB {
         AABB::new(
