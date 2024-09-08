@@ -234,7 +234,7 @@ impl Player {
         let mut current_best: Option<(f32, Cube)> = None;
         for cube in world.cubes_near_player(position)
             .filter_map(|c| *c)
-            .filter(|c| c.is_visible())
+            .filter(|c| c.is_visible() || c.is_transparent())
             .filter(|c| c.position().distance_to(&position) < 6.) {
             if let Some(result) = cube.intersection_with(position, direction) {
                 if current_best.is_none() || result < current_best.unwrap().0 {

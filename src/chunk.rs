@@ -105,20 +105,19 @@ impl Chunk {
         pos[0] >= self.corner[0] && pos[0] < (self.corner[0] + CHUNK_SIZE as f32) &&
             pos[2] >= self.corner[1] && pos[2] < (self.corner[1] + CHUNK_SIZE as f32)
     }
+    
+    fn empty_or_transparent(cube: Option<Cube>) -> bool {
+        cube.is_none() || cube.unwrap().is_transparent()
+    }
 
     /// Returns true if the position in the chunk is not part of a cube.
     /// The function does not check that the cube is chunk, and will crash if it is not.
-    pub fn is_position_free(&self, pos: &Vector3) -> bool {
+    pub fn is_position_free_or_transparent(&self, pos: &Vector3) -> bool {
         let (i_z, i_x, i_y) = self.get_indices(pos);
         let in_bound = i_z < CHUNK_HEIGHT && i_x < CHUNK_SIZE && i_y < CHUNK_SIZE;
-        let result = !in_bound || self.cubes[i_z][i_x][i_y].is_none();
-        result
+        !in_bound || Self::empty_or_transparent(self.cubes[i_z][i_x][i_y])
     }
 
-    pub fn is_position_free_falling(&self, pos: &Vector3) -> bool {
-        // We simply check if the cube below the player is occupied.
-        self.is_position_free(&Vector3::new(pos[0], pos[1] - 1., pos[2]))
-    }
 
     /// Goes through all the cubes that are strictly inside the chunk and compute whether they have
     /// a free neighbors.
@@ -131,12 +130,12 @@ impl Chunk {
                         // We set the cube as not visible if all the 6 neighbors are not full
                         // If either one is none, the cube must be visible.
                         let mut count = 0;
-                        if self.cubes[k - 1][i][j].is_some() { count += 1 }
-                        if self.cubes[k + 1][i][j].is_some() { count += 1 }
-                        if self.cubes[k][i - 1][j].is_some() { count += 1 }
-                        if self.cubes[k][i + 1][j].is_some() { count += 1 }
-                        if self.cubes[k][i][j - 1].is_some() { count += 1 }
-                        if self.cubes[k][i][j + 1].is_some() { count += 1 }
+                        if !Self::empty_or_transparent(self.cubes[k - 1][i][j]) { count += 1 }
+                        if !Self::empty_or_transparent(self.cubes[k + 1][i][j]) { count += 1 }
+                        if !Self::empty_or_transparent(self.cubes[k][i - 1][j]) { count += 1 }
+                        if !Self::empty_or_transparent(self.cubes[k][i + 1][j]) { count += 1 }
+                        if !Self::empty_or_transparent(self.cubes[k][i][j - 1]) { count += 1 }
+                        if !Self::empty_or_transparent(self.cubes[k][i][j + 1]) { count += 1 }
                         self.cubes[k][i][j].as_mut().unwrap().set_n_neighbors(count);
                     }
                 }
@@ -335,7 +334,7 @@ mod tests {
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
-                    assert!(chunk.is_position_free(&Vector3::new(i as f32, k as f32, j as f32)));
+                    assert!(chunk.is_position_free_or_transparent(&Vector3::new(i as f32, k as f32, j as f32)));
                 }
             }
         }
@@ -348,9 +347,9 @@ mod tests {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if k != 10 {
-                        assert!(chunk.is_position_free(&Vector3::new(i as f32, k as f32, j as f32)));
+                        assert!(chunk.is_position_free_or_transparent(&Vector3::new(i as f32, k as f32, j as f32)));
                     } else {
-                        assert!(!chunk.is_position_free(&Vector3::new(i as f32, k as f32, j as f32)));
+                        assert!(!chunk.is_position_free_or_transparent(&Vector3::new(i as f32, k as f32, j as f32)));
                     }
                 }
             }
@@ -361,30 +360,19 @@ mod tests {
     fn test_free_check_2() {
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(9, GRASS);
-        assert!(chunk.is_position_free(&Vector3::new(4.0, 10.1, 4.0)));
+        assert!(chunk.is_position_free_or_transparent(&Vector3::new(4.0, 10.1, 4.0)));
     }
 
     #[test]
     fn test_free_check_3() {
         let mut chunk = Chunk::new([0., 0.]);
         chunk.fill_layer(0, GRASS);
-        assert!(!chunk.is_position_free(&Vector3::new(4.0, 0.1, 4.0)));
-        assert!(!chunk.is_position_free(&Vector3::new(4.0, 0.5, 4.0)));
-        assert!(!chunk.is_position_free(&Vector3::new(4.0, 0.9, 4.0)));
-        assert!(chunk.is_position_free(&Vector3::new(4.0, 1.1, 4.0)));
-        assert!(chunk.is_position_free(&Vector3::new(4.0, 1.2, 4.0)));
-        assert!(chunk.is_position_free(&Vector3::new(4.0, 1.5, 4.0)));
-    }
-
-    #[test]
-    fn test_free_fall_1() {
-        let mut chunk = Chunk::new([0., 0.]);
-        chunk.fill_layer(0, GRASS);
-        let x = 4.;
-        let y = 4.;
-        assert!(!chunk.is_position_free_falling(&Vector3::new(x, 0., y)));
-        assert!(chunk.is_position_free_falling(&Vector3::new(x, 2., y)));
-        assert!(chunk.is_position_free_falling(&Vector3::new(x, 3., y)));
+        assert!(!chunk.is_position_free_or_transparent(&Vector3::new(4.0, 0.1, 4.0)));
+        assert!(!chunk.is_position_free_or_transparent(&Vector3::new(4.0, 0.5, 4.0)));
+        assert!(!chunk.is_position_free_or_transparent(&Vector3::new(4.0, 0.9, 4.0)));
+        assert!(chunk.is_position_free_or_transparent(&Vector3::new(4.0, 1.1, 4.0)));
+        assert!(chunk.is_position_free_or_transparent(&Vector3::new(4.0, 1.2, 4.0)));
+        assert!(chunk.is_position_free_or_transparent(&Vector3::new(4.0, 1.5, 4.0)));
     }
 
 

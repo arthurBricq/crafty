@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 use crafty::network::proxy::Proxy;
 
 #[allow(dead_code)]
+#[derive(Debug)]
 enum WorldInitializer {
     RANDOM,
     FLAT,
@@ -15,11 +16,12 @@ enum WorldInitializer {
 
 fn main() {
     // Create the initial world
-    let init = WorldInitializer::RANDOM;
+    let init = WorldInitializer::DISK;
+    println!("Loading world using : {:?}", init);
     let world = match init {
-        WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(10),
+        WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(5),
         WorldInitializer::FLAT => WorldGenerator::create_new_flat_world(10),
-        WorldInitializer::DISK => World::from_file("map.json").unwrap(),
+        WorldInitializer::DISK => World::from_file("map.json").unwrap_or(WorldGenerator::create_new_random_world(10)),
     };
 
     // The server holds the 'full' world
