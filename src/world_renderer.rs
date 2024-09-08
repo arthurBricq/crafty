@@ -21,6 +21,7 @@ use crate::graphics::font::GLChar;
 use crate::graphics::hud_renderer::HUDRenderer;
 use crate::graphics::menu_debug::DebugData;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
+use crate::graphics::inventory_event::InventoryEvent;
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
 use crate::player_items::PlayerItems;
@@ -313,6 +314,12 @@ impl WorldRenderer {
                     }
                     winit::event::WindowEvent::MouseInput { device_id: _, state, button } => self.handle_button_event(button, state),
                     winit::event::WindowEvent::KeyboardInput { device_id: _, event, is_synthetic: _ } => self.handle_key_event(event, &window),
+		    // Inventory requires us to deal with cursor events, not mouse events
+		    winit::event::WindowEvent::CursorMoved{ device_id, position } => {
+		        let x: f32 = -1. + 2. * position.x as f32 / window.inner_size().width as f32;
+		        let y: f32 = 1. - 2. * position.y as f32 / window.inner_size().height as f32;
+		        self.hud_renderer.maybe_forward_inventory_event(InventoryEvent::CursorMoved(x, y));
+		    }
                     _ => (),
                 },
                 winit::event::Event::AboutToWait => {
@@ -340,13 +347,14 @@ impl WorldRenderer {
         }
     }
 
-    fn handle_inventory_key_event(&mut self, event: RawKeyEvent, window: &Window) {
+    fn handle_inventory_key_event(&mut self, event: KeyEvent, window: &Window) {
 	if event.state == Pressed {
 	    match event.physical_key {
 		PhysicalKey::Code(key) => {
 		    match key {
 			KeyCode::KeyE => {
 			    self.items = self.hud_renderer.close_inventory();
+			    window.set_cursor_visible(false);
 			    self.update_items_bar();
 			},
 			_ => {}
@@ -387,6 +395,7 @@ impl WorldRenderer {
 			// Inventory
 			KeyCode::KeyE => {
 			    self.hud_renderer.open_inventory(self.items.clone());
+			    window.set_cursor_visible(true);
 			}
 			
 			// Item bar shortcuts
@@ -503,11 +512,14 @@ impl WorldRenderer {
     }
 
     fn handle_motion_event(&mut self, axis: AxisId, value: f64) {
-        if axis == 0 {
-            self.player.mousemove(value as f32, 0.0, 0.005);
-        } else {
-            self.player.mousemove(0.0, -value as f32, 0.005);
-        }
+	// TODO make something cleaner
+	if !self.hud_renderer.is_inventory_open() {
+	    if axis == 0 {
+		self.player.mousemove(value as f32, 0.0, 0.005);
+            } else {
+		self.player.mousemove(0.0, -value as f32, 0.005);
+            }
+	}
     }
 
     fn toggle_fullscreen(&mut self, window: &Window) {

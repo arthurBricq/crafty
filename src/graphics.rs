@@ -13,3 +13,5 @@ pub mod string_rect;
 pub mod entity;
 pub mod items_bar;
 pub mod inventory_menu;
+pub mod inventory_event;
+pub mod update_status;

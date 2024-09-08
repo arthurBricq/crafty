@@ -13,7 +13,9 @@ use super::menu_debug::DebugMenu;
 use super::menu_debug::DebugMenuData;
 
 use super::inventory_menu::InventoryMenu;
+use crate::graphics::update_status::UpdateStatus;
 
+use crate::graphics::inventory_event::InventoryEvent;
 use crate::graphics::items_bar::ItemBar;
 use crate::player_items::{ItemStack, PlayerItems};
 
@@ -161,5 +163,19 @@ impl HUDRenderer {
         self.update();
         
         items
+    }
+
+    /// If the inventory is open, forward it the event
+    pub fn maybe_forward_inventory_event(&mut self, event: InventoryEvent) {
+        let status = self.inventory_menu.as_mut().map(|inv| {
+            inv.handle_event(event)
+        }).unwrap_or(UpdateStatus::NoUpdate);
+
+        dbg!(&status);
+        
+        if let UpdateStatus::Update = status {
+            dbg!("doing something ?!");
+            self.update();
+        }
     }
 }
