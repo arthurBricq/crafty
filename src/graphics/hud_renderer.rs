@@ -159,7 +159,7 @@ impl HUDRenderer {
     }
 
     pub fn close_inventory(&mut self) -> PlayerItems {
-        let items = self.inventory_menu.take().unwrap().take_player_items();
+        let items = self.inventory_menu.take().unwrap().take_items();
         self.update();
         
         items

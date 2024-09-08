@@ -40,6 +40,14 @@ impl PlayerItems {
             .collect()
     }
 
+    pub fn get_bar_item(&self, index: usize) -> Option<ItemStack> {
+        self.bar_items[index]
+    }
+
+    pub fn get_inventory_item(&self, index: usize) -> Option<ItemStack> {
+        self.inventory_items[index]
+    }
+
     pub fn get_current_block(&self) -> Option<Block> {
         if let Some((_, Some((block, _)))) = self.bar_items.iter()
             .filter(|item| item.is_some())

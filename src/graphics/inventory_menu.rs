@@ -42,7 +42,7 @@ pub struct InventoryMenu {
     rects: Vec<RectInstance>,
     aspect_ratio: f32,
     
-    player_items: PlayerItems,
+    items: PlayerItems,
     cursor_pos: InventoryPosition,
     /// u, v, w, h of the UI, in NDC coordinates
     ui_rect: (f32, f32, f32, f32),
@@ -53,13 +53,13 @@ pub struct InventoryMenu {
 }
 
 impl InventoryMenu {
-    pub fn new(aspect_ratio: f32, player_items: PlayerItems) -> Self {
+    pub fn new(aspect_ratio: f32, items: PlayerItems) -> Self {
         let slot = InventorySlot::new(InventoryPosition::zero(), 1.);
         
         let mut inventory = Self {
             rects: Vec::new(),
             aspect_ratio,
-            player_items,
+            items,
             cursor_pos: InventoryPosition::zero(),
             ui_rect: (0., 0., 0., 0.),
             inventory_slots: [[slot; 8]; 4],
@@ -80,8 +80,8 @@ impl InventoryMenu {
         &self.rects
     }
 
-    pub fn take_player_items(self) -> PlayerItems {
-        self.player_items
+    pub fn take_items(self) -> PlayerItems {
+        self.items
     }
 
     pub fn handle_event(&mut self, event: InventoryEvent) -> UpdateStatus {
@@ -123,12 +123,21 @@ impl InventoryMenu {
 
             for row in 0..nrows {
                 for col in 0..ncols {
+                    let item = if row == 0 {
+                        // from item bar
+                        self.items.get_bar_item(col)
+                        
+                    } else {
+                        // inventory itself
+                        self.items.get_inventory_item((row - 1) * 8 + col)
+                    };
+                    
                     let slot = InventorySlot::new(InventoryPosition::new(margin + col as f32 * (item_size + margin),
                                                                          margin + row as f32 * (item_size + margin)),
                                                   item_size);
                     
                     self.inventory_slots[row][col] = slot;
-                    self.rects.push(slot.rect(&self.ui_rect, slot.is_in(&self.cursor_pos)));
+                    self.rects.append(&mut slot.rects(&self.ui_rect, item, slot.is_in(&self.cursor_pos)));
                 }
             }
 
@@ -143,7 +152,7 @@ impl InventoryMenu {
                                                   item_size);
 
                     self.crafting_slots[row][col] = slot;
-                    self.rects.push(slot.rect(&self.ui_rect, slot.is_in(&self.cursor_pos)));
+                    self.rects.append(&mut slot.rects(&self.ui_rect, None, slot.is_in(&self.cursor_pos)));
                 }
             }
 
@@ -153,7 +162,7 @@ impl InventoryMenu {
                                                                      crafty + 1 as f32 * (item_size + margin)),
                                               item_size);
                 self.crafting_output_slot = slot;
-                self.rects.push(slot.rect(&self.ui_rect, slot.is_in(&self.cursor_pos)));
+                self.rects.append(&mut slot.rects(&self.ui_rect, None, slot.is_in(&self.cursor_pos)));
             }
 
             // tmp
@@ -162,8 +171,9 @@ impl InventoryMenu {
                                                                               self.cursor_pos.y,
                                                                               item_size,
                                                                               item_size));
-                self.rects.push(
-                    RectInstance::new_from_corner(x, y, w, h, Red));
+                let mut rect = RectInstance::new_from_corner(x, y, w, h, Red);
+                rect.set_block_id(0);
+                self.rects.push(rect);
             }
             
         }

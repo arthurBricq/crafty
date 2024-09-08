@@ -2,6 +2,7 @@ use crate::graphics::inventory_menu::InventoryMenu;
 use crate::graphics::inventory_menu::InventoryPosition;
 use crate::graphics::rectangle::RectInstance;
 use crate::graphics::color::Color::{LighterGray, EvenLighterGray};
+use crate::player_items::ItemStack;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InventorySlot {
@@ -21,13 +22,24 @@ impl InventorySlot {
             position.y <= self.position.y + self.size
     }
     
-    pub fn rect(&self, ui_rect: &(f32, f32, f32, f32), hover: bool) -> RectInstance {
+    pub fn rects(&self, ui_rect: &(f32, f32, f32, f32), item: Option<ItemStack>, hover: bool) -> Vec<RectInstance> {
         let (x, y, w, h) =
             InventoryMenu::from_ui_to_ndc_rect(ui_rect, &(self.position.x,
                                                           self.position.y,
                                                           self.size,
                                                           self.size));
+        
+        let mut rects = Vec::new();
+        rects.push(RectInstance::new_from_corner(x, y, w, h, if hover { EvenLighterGray } else { LighterGray }));
 
-        RectInstance::new_from_corner(x, y, w, h, if hover { EvenLighterGray } else { LighterGray })
+        // draw the item as well
+        if let Some((block, count)) = item {
+            let mut rect = RectInstance::new_from_corner(x, y, w, h, LighterGray);
+            rect.set_block_id(block as u8 as i8);
+            rects.push(rect);
+            
+        }
+
+        rects
     }
 }
