@@ -56,6 +56,15 @@ Then, every client can connect like this:
 cargo run --bin client -- --server "YOUR.IP" -- name "UNIQUE_IDENTIFIER"
 ```
 
+## Crafting recipes (for now)
+Stone word:
+```
+ c 
+ c
+ o
+```
+where `c` is a cobblestone block, and `o` is an oak log. 
+
 ## Missing features (short term milestones)
 
 - Infinite map creation (*almost there*)
