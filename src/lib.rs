@@ -21,3 +21,4 @@ pub mod args;
 pub mod camera;
 pub mod input;
 pub mod server;
+pub mod crafting;

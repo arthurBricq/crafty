@@ -6,6 +6,7 @@ use crate::graphics::update_status::UpdateStatus;
 use crate::graphics::inventory_slot::InventorySlot;
 use winit::event::ElementState;
 use crate::block_kind::Block;
+use crate::crafting::{CraftingGrid, CraftingManager};
 
 const INVENTORY_NROWS: usize = 4; // the 0th is the item bar
 const INVENTORY_NCOLS: usize = 8;
@@ -57,7 +58,7 @@ pub struct InventoryMenu {
     crafting_output_slot: InventorySlot,
 
     carried_item: Option<Block>,
-    crafting_items: [[Option<Block>; 3]; 3],
+    crafting_items: CraftingGrid,
     crafting_output_items: Option<Block>,
 }
 
