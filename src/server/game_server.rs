@@ -135,3 +135,42 @@ impl GameServer {
     }
 }
 
+
+#[cfg(test)]
+mod tests {
+    use crate::network::server_update::ServerUpdate;
+    use crate::server::game_server::GameServer;
+    use crate::world::World;
+
+    #[test]
+    fn test_two_clients_connecting() {
+        // Create a server with an empty world
+        let mut server = GameServer::new(World::empty());
+
+        // first client logins
+        let id1 = server.login("arthur".to_string());
+
+        // We expect 1 update: the login message
+        let updates = server.consume_updates(id1);
+        assert_eq!(1, updates.len());
+        assert!(matches!(updates[0], ServerUpdate::LoggedIn(_, _)));
+
+        // Once the update has been consumed, there is nothing anymore to be sent
+        assert_eq!(0, server.consume_updates(id1).len());
+
+        // Second client logins
+        let id2 = server.login("johan".to_string());
+
+        // We expect 1 new update for the first player: the register message
+        let updates = server.consume_updates(id1);
+        assert_eq!(1, updates.len());
+        assert!(matches!(updates[0], ServerUpdate::RegisterEntity(_, _)));
+
+        // The second player must have 2 messages: LoggedIn and Register
+        let updates = server.consume_updates(id2);
+        assert_eq!(2, updates.len());
+        assert!(matches!(updates[0], ServerUpdate::LoggedIn(_, _)));
+        assert!(matches!(updates[1], ServerUpdate::RegisterEntity(_, _)));
+    }
+
+}

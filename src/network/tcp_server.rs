@@ -110,7 +110,6 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
         if let Some(id) = client_id {
             let updates = game.lock().unwrap().consume_updates(id);
             if updates.len() > 0 {
-                println!("Server has {} updates for client {}", updates.len(), id);
                 for update in &updates {
                     let msg = to_tcp_repr(update);
                     match stream.write_all(msg.as_slice()) {
