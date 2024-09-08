@@ -1,5 +1,6 @@
 use crate::primitives::vector::Vector3;
 use std::fmt::{Display, Error, Formatter};
+use crate::primitives::face::Plane3;
 
 #[derive(Debug)]
 pub struct AABB {
@@ -48,13 +49,27 @@ impl AABB {
     pub fn collides(&self, aabb: &AABB) -> bool {
         self.west <= aabb.east &&
             self.east >= aabb.west &&
-
             self.bottom <= aabb.top &&
             self.top >= aabb.bottom &&
-
             self.south <= aabb.north &&
             self.north >= aabb.south
     }
+    
+    pub fn faces(&self) -> [Plane3; 6] {
+        let bottom_left = Vector3::new(self.west, self.bottom, self.south);
+        let unit_x = Vector3::unit_x() * (self.east - self.west);
+        let unit_y = Vector3::unit_x() * (self.top - self.bottom);
+        let unit_z = Vector3::unit_x() * (self.north - self.south);
+        [
+            Plane3::new(bottom_left, unit_x, unit_y, Vector3::empty()),
+            Plane3::new(bottom_left, unit_y, unit_z, Vector3::empty()),
+            Plane3::new(bottom_left, unit_z, unit_x, Vector3::empty()),
+            Plane3::new(bottom_left + unit_z, unit_x, unit_y, Vector3::empty()),
+            Plane3::new(bottom_left + unit_x, unit_z, unit_y, Vector3::empty()),
+            Plane3::new(bottom_left + unit_y, unit_x, unit_z, Vector3::empty()),
+        ]
+    }
+    
 }
 
 #[cfg(test)]
