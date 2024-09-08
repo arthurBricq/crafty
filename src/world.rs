@@ -163,23 +163,12 @@ impl World {
 
         None
     }
+    
     /// Returns true if there is a cube at this position
-    pub fn is_position_free(&self, pos: &Vector3) -> bool {
+    pub fn is_position_free_or_transparent(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
             if chunk.is_in(pos) {
-                if !chunk.is_position_free(pos) {
-                    return false;
-                }
-            }
-        }
-        true
-    }
-
-    /// Returns true if the given position is free falling
-    pub fn is_position_free_falling(&self, pos: &Vector3) -> bool {
-        for chunk in &self.chunks {
-            if chunk.is_in(pos) {
-                if !chunk.is_position_free_falling(pos) {
+                if !chunk.is_position_free_or_transparent(pos) {
                     return false;
                 }
             }
@@ -239,15 +228,18 @@ impl World {
         // For all the neighbors positions, increase their internal counter
         let mut count = 0;
         let mut to_hide = Vec::new();
-        for pos in Cube::neighbors_positions(at) {
-            // Toggle this position
-            if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
-                // This cube now has a new neighbor
-                cube_to_toggle.add_neighhor();
-                if !cube_to_toggle.is_visible() {
-                    to_hide.push(cube_to_toggle.position().clone())
+        if !block.is_transparent() {
+            for pos in Cube::neighbors_positions(at) {
+                // Toggle this position
+                if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
+
+                    // This cube now has a new neighbor
+                    cube_to_toggle.add_neighhor();
+                    if !cube_to_toggle.is_visible() {
+                        to_hide.push(cube_to_toggle.position().clone())
+                    }
+                    count += 1;
                 }
-                count += 1;
             }
         }
         self.add_cube_unsafe(at, block, count);
@@ -274,14 +266,14 @@ impl World {
             }
         }
 
-        let mut cubes_to_add = Vec::new();
+        let mut cubes_to_reveal = Vec::new();
         // Mark all the neighbors cube as visible
         if let Some(_cube) = self.chunks[chunk_index].cube_at(&at) {
             for pos in Cube::neighbors_positions(at) {
                 if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
                     // If the cube was not visible before, add it
                     if !cube_to_toggle.is_visible() {
-                        cubes_to_add.push(cube_to_toggle.clone());
+                        cubes_to_reveal.push(cube_to_toggle.clone());
                     }
                     cube_to_toggle.remove_neighbor();
                 }
@@ -290,7 +282,7 @@ impl World {
 
         // Shouldn't this be inside the if let ?
         self.chunks[chunk_index].destroy_cube(at);
-        cubes_to_add
+        cubes_to_reveal
     }
 
     #[cfg(test)]
@@ -317,7 +309,7 @@ impl World {
                     let neighbors = Cube::neighbors_positions(cube_at_border.position().clone());
                     let count = neighbors
                         .iter()
-                        .filter(|pos| !self.is_position_free(&pos))
+                        .filter(|pos| !self.is_position_free_or_transparent(&pos))
                         .count();
                     count as u8
                 } else {
@@ -454,11 +446,11 @@ mod tests {
         world.chunks[0].print_all_cubes();
 
         // Assert some positions
-        assert!(!world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 1.5, 4.0)));
-        assert!(!world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 0.5, 4.0)));
-        assert!(!world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 0.5, 4.0)));
-        assert!(world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
-        assert!(world.is_position_free(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
+        assert!(!world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 1.5, 4.0)));
+        assert!(!world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 0.5, 4.0)));
+        assert!(!world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 0.5, 4.0)));
+        assert!(world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
+        assert!(world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
     }
 
     #[test]
@@ -466,7 +458,7 @@ mod tests {
         let mut world = World::empty();
         // Adding one chunk
         world.chunks.push(Chunk::new_for_demo([0., 0.], 0));
-        assert!(world.is_position_free(&Vector3::new(4.0, 10.2, 3.0)));
+        assert!(world.is_position_free_or_transparent(&Vector3::new(4.0, 10.2, 3.0)));
     }
 
     #[test]

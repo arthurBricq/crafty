@@ -26,6 +26,10 @@ impl Cube {
         &self.block
     }
 
+    pub fn is_transparent(&self) -> bool {
+        self.block.is_transparent()
+    }
+
     pub fn block_id(&self) -> u8 {
         self.block as u8
     }

@@ -57,4 +57,12 @@ impl Block {
             _ => 1
         }
     }
+
+    pub fn is_transparent(&self) -> bool {
+        match self {
+            Block::OAKLEAVES | Block::WATER => true,
+            _ => false
+        }
+
+    }
 }
