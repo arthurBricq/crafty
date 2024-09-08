@@ -1,8 +1,9 @@
 use crate::aabb::AABB;
+use crate::block_kind::Block;
 use crate::chunk::CHUNK_FLOOR;
 use crate::collidable::{Collidable, CollisionData};
 use crate::cube::Cube;
-use crate::primitives::position::Position;
+use crate::primitives::position::{self, Position};
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 use std::f32::consts::PI;
@@ -185,6 +186,14 @@ impl Player {
 
     pub fn position(&self) -> &Position {
         &self.position
+    }
+
+    /// Check if tha player is colliding with a block position
+    pub fn is_in(&self, cube_pos: Vector3) -> bool {
+        let cube_aabb = Cube::cube_aabb(cube_pos);
+        let player_aabb = &Self::make_aabb(&self.position);
+
+        return cube_aabb.collides(player_aabb);
     }
     
     pub fn debug(&mut self) {
