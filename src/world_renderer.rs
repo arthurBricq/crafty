@@ -450,7 +450,11 @@ impl WorldRenderer {
                     self.items.collect(block);
                 }
             }
-            Add { at: _, block } => {
+            Add { at, block } => {
+                if self.player.is_in(at) {
+                    return;
+                }
+
                 self.items.consume(block);
             }
         }

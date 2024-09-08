@@ -72,15 +72,19 @@ impl Cube {
         self.position.to_cube_coordinates()
     }
 
-    fn aabb(&self) -> AABB {
+    pub fn cube_aabb(pos: Vector3) -> AABB {
         AABB::new(
-            self.position[2] + 1.,
-            self.position[2],
-            self.position[1] + 1.,
-            self.position[1],
-            self.position[0] + 1.,
-            self.position[0],
+            pos[2] + 1.,
+            pos[2],
+            pos[1] + 1.,
+            pos[1],
+            pos[0] + 1.,
+            pos[0],
         ).unwrap()
+    }
+
+    fn aabb(&self) -> AABB {
+        Cube::cube_aabb(self.position)
     }
 }
 
