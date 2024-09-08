@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
-use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG};
+use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG, WATER };
 use crate::player::Player;
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
@@ -107,6 +107,7 @@ impl WorldRenderer {
             self.items.collect(DIRT);
             self.items.collect(GRASS);
             self.items.collect(OAKLOG);
+            self.items.collect(WATER)
         }
 
         // Try to lock the mouse to the window, this doen't work for all OS

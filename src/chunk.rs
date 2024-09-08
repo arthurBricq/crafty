@@ -11,7 +11,7 @@ type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 pub type CubeIndex = (usize, usize, usize);
 
 pub const CHUNK_SIZE: usize = 8;
-const CHUNK_HEIGHT: usize = 32;
+const CHUNK_HEIGHT: usize = 64;
 pub const CHUNK_FLOOR: usize = 9;
 
 /// A chunk is a (size * size * h) partition of the space that contains cubes
