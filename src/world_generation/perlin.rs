@@ -17,7 +17,7 @@ use std::iter::zip;
 pub const MAX_LEVEL_NOISE: usize = 5;
 
 /// A Perlin noise is determined by its scaling factor and by the amplitude of outputed values.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PerlinNoiseConfig {
     pub scale: f32,
     pub amplitude: f32,
@@ -26,19 +26,22 @@ pub struct PerlinNoiseConfig {
 /// Class containing the different scales of Perlin noise,
 /// combines them to return a single value for each querried coord.
 pub struct MultiscalePerlinNoise {
-    perlin_noises: Vec<PerlinNoise>,
+    perlin_noises: [PerlinNoise; MAX_LEVEL_NOISE],
 }
 
 impl MultiscalePerlinNoise {
     /// Create a new MultiscalePerlinNoise, requires the level of scales and amplitudes associated.
     /// These values will change the world aspect.
-    pub fn new(seed: u64, perlin_conf: Vec<PerlinNoiseConfig>) -> Self {
+    pub fn new(seed: u64, perlin_conf: [PerlinNoiseConfig; MAX_LEVEL_NOISE]) -> Self {
+        
         Self {
             perlin_noises: perlin_conf
                 .into_iter()
                 .enumerate()
                 .map(|(i, conf)| PerlinNoise::new(seed + (i as u64), conf))
-                .collect(),
+                .collect::<Vec<PerlinNoise>>()
+                .try_into()
+                .unwrap(),
         }
     }
 
@@ -52,9 +55,16 @@ impl MultiscalePerlinNoise {
 
         value
     }
+
+    pub fn change_config(&mut self, new_conf: [PerlinNoiseConfig; MAX_LEVEL_NOISE]) {
+        for i in 0..MAX_LEVEL_NOISE {
+            self.perlin_noises[i].update_config(new_conf[i].clone());
+        }
+    }
 }
 
 /// Single scale Perlin noise
+#[derive(Debug)]
 pub struct PerlinNoise {
     seed: u64,
     gradients: HashMap<[i64; 2], [f32; 2]>,
@@ -90,6 +100,10 @@ impl PerlinNoise {
                 lerp(fade(xr), values[0], values[1]),
                 lerp(fade(xr), values[2], values[3]),
             )
+    }
+
+    pub fn update_config(&mut self, new_conf: PerlinNoiseConfig) {
+        self.config = new_conf;
     }
 
     /// Change the coordinates to the noise-specific coordinate system, e.g. 0.5
@@ -225,7 +239,7 @@ mod tests {
     fn test_determinism_multiscale() {
         let mut noise = MultiscalePerlinNoise::new(
             42,
-            vec![
+            [
                 PerlinNoiseConfig {
                     scale: 64.,
                     amplitude: 1.0,

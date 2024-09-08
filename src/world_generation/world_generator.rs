@@ -46,7 +46,7 @@ impl WorldGenerator {
     pub fn create_new_random_world(n_chunks: i32) -> World {
         //let mut noise = PerlinNoise::new(121, 32.);
         let seed: u64 = 42;
-        let mut noise = MultiscalePerlinNoise::new(seed, BASIC_WORLD_CONF.to_vec());
+        let mut noise = MultiscalePerlinNoise::new(seed, BASIC_WORLD_CONF);
 
         let s = CHUNK_SIZE as f32;
         let mut chunks = vec![];

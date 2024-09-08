@@ -80,7 +80,7 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
     // Plain biome
     BiomeConfig {
         name: "Mountain",
-        terrain_offset: 20.,
+        terrain_offset: 15.,
         terrain_scale: 40.,
         noise_config: [
             PerlinNoiseConfig {
