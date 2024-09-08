@@ -59,9 +59,9 @@ cargo run --bin client -- --server "YOUR.IP" -- name "UNIQUE_IDENTIFIER"
 ## Crafting recipes (for now)
 Stone word:
 ```
- c 
- c
- o
+_c_
+_c_
+_o_
 ```
 where `c` is a cobblestone block, and `o` is an oak log. 
 
