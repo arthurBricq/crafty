@@ -14,30 +14,6 @@ use crate::chunk::CHUNK_SIZE;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 
-// TO DO: REMOVE THAT AND USE THE ONE FROM THE ACTUAL BIOMES
-const BASIC_WORLD_CONF: [PerlinNoiseConfig; 5] = [
-    PerlinNoiseConfig {
-        scale: 50.,
-        amplitude: 1.0,
-    },
-    PerlinNoiseConfig {
-        scale: 25.,
-        amplitude: 0.5,
-    },
-    PerlinNoiseConfig {
-        scale: 12.5,
-        amplitude: 0.25,
-    },
-    PerlinNoiseConfig {
-        scale: 6.25,
-        amplitude: 0.125,
-    },
-    PerlinNoiseConfig {
-        scale: 3.125,
-        amplitude: 0.0625,
-    },
-];
-
 /// Class which manages the generation of a new world
 pub struct WorldGenerator {}
 
@@ -46,7 +22,7 @@ impl WorldGenerator {
     pub fn create_new_random_world(n_chunks: i32) -> World {
         //let mut noise = PerlinNoise::new(121, 32.);
         let seed: u64 = 42;
-        let mut noise = MultiscalePerlinNoise::new(seed, BASIC_WORLD_CONF);
+        let mut noise = MultiscalePerlinNoise::new(seed, BIOMES[0].noise_config.clone());
 
         let s = CHUNK_SIZE as f32;
         let mut chunks = vec![];
@@ -64,6 +40,8 @@ impl WorldGenerator {
                         let biome_t: u64 = BiomeGenerator::find_closest_biome(seed, x + x0 as i32, z + z0 as i32);
                         let biome_config = &BIOMES[biome_t as usize];
 
+                        noise.change_config(biome_config.noise_config.clone());
+
                         let height = biome_config.terrain_offset
                             + biome_config.terrain_scale
                                 * noise.at([i as f32 * s + x as f32, j as f32 * s + z as f32]);
@@ -71,7 +49,8 @@ impl WorldGenerator {
                         let cube_height = height.floor() as i32;
 
                         for y in 0..cube_height {
-                            let block_at_height = biome_config.get_block_at(y);
+                            let block_at_height = biome_config.get_block_at(cube_height - y - 1);
+
                             if let Some(block) = block_at_height {
                                 chunk.add_cube(
                                     Vector3::new(

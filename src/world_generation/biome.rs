@@ -18,7 +18,7 @@ const MAX_NUMBER_LAYER: usize = 8;
 /// of a biome
 #[derive(Clone)]
 pub struct BiomeLayer {
-    pub start_y: i32,
+    pub start_y_from_top: i32,
     pub block: Block,
 }
 /// What a biome is.
@@ -26,6 +26,7 @@ pub struct BiomeLayer {
 /// Note:
 /// - the layers must be ordered from lowest to highest
 ///     and the None ones should all be after the highest real layer
+#[derive(Clone)]
 pub struct BiomeConfig {
     pub name: &'static str,
     pub terrain_offset: f32,
@@ -46,7 +47,7 @@ impl BiomeConfig {
         for i in 0..(num_layer-1) {
             if let Some(curr_layer) = &layers[i] {
                 if let Some(next_layer) = &layers[i+1] {
-                    if next_layer.start_y <= curr_layer.start_y {
+                    if next_layer.start_y_from_top <= curr_layer.start_y_from_top {
                         panic!("The layers need to be ordered from lowest to highest!");
                     }
                 } else {
@@ -69,18 +70,18 @@ impl BiomeConfig {
 
     pub fn get_block_at(&self, y: i32) -> Option<Block> {
 
-        if self.layers.is_empty() || self.layers[0].is_none() || self.layers[0].as_ref().unwrap().start_y > y {
+        if self.layers.is_empty() || self.layers[0].is_none() || self.layers[0].as_ref().unwrap().start_y_from_top > y {
             return None;  // No valid position if the first element is already greater than target
         }
 
-        // Thanks to the construction, know for sure there are no Option between 0 and num_layer
+        // Thanks to the construction, know for sure there are no None between 0 and num_layer
         let mut low = 0;
         let mut high = self.num_layer;
 
         // Binary search
         while low < high {
             let mid = (low + high) / 2;
-            if self.layers[mid].as_ref().unwrap().start_y <= y {
+            if self.layers[mid].as_ref().unwrap().start_y_from_top <= y {
                 low = mid + 1;
             } else {
                 high = mid;
@@ -314,11 +315,38 @@ use crate::world_generation::biome::*;
     }
 
     #[test]
+    fn putting_block() {
+        let layers: [Option<BiomeLayer>; MAX_NUMBER_LAYER] = [
+            Some(BiomeLayer {start_y_from_top:  0, block: Block::GRASS}),
+            Some(BiomeLayer {start_y_from_top:  1, block: Block::DIRT}),
+            Some(BiomeLayer {start_y_from_top:  5, block: Block::COBBELSTONE}),
+            None, None, None, None, None, 
+        ];
+        let num_layer = 3;
+        let noise_config = [
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, 
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, ];
+        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, search_in, num_layer);
+
+        let cube_height = 20;
+        for i in 0..cube_height {
+            let block_at_height = config.get_block_at(i);
+            let y = cube_height - i - 1;
+            if let Some(block) = block_at_height {
+                dbg!(block);
+            }
+        }
+    }
+
+    #[test]
     fn test_binary_search() {
         let search_in: [Option<BiomeLayer>; MAX_NUMBER_LAYER] = [
-            Some(BiomeLayer {start_y:  0, block: Block::DIRT}),
-            Some(BiomeLayer {start_y: 10, block: Block::GRASS}),
-            Some(BiomeLayer {start_y: 20, block: Block::OAKLEAVES}),
+            Some(BiomeLayer {start_y_from_top:  0, block: Block::DIRT}),
+            Some(BiomeLayer {start_y_from_top: 10, block: Block::GRASS}),
+            Some(BiomeLayer {start_y_from_top: 20, block: Block::OAKLEAVES}),
             None, None, None, None, None,
         ];
         let num_layer = 2;
@@ -330,10 +358,10 @@ use crate::world_generation::biome::*;
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, ];
         let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, search_in, num_layer);
 
-        let y = 11;
+        let y = 9;
 
         let block = config.get_block_at(y);
 
-        assert_eq!(block, Some(Block::GRASS));
+        assert_eq!(block, Some(Block::DIRT));
     }
 }

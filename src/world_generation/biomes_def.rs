@@ -10,8 +10,8 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
     // Plain biome
     BiomeConfig {
         name: "Plain",
-        terrain_offset: 10.,
-        terrain_scale: 20.,
+        terrain_offset: 20.,
+        terrain_scale: 10.,
         noise_config: [
             PerlinNoiseConfig {
                 scale: 50.,
@@ -35,8 +35,8 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             },
         ],
         layers: [
-            Some(BiomeLayer {start_y:  0, block: Block::DIRT}),
-            Some(BiomeLayer {start_y: 8, block: Block::GRASS}),
+            Some(BiomeLayer {start_y_from_top:  0, block: Block::GRASS}),
+            Some(BiomeLayer {start_y_from_top: 1, block: Block::DIRT}),
             None, None, None, None, None, None
         ],
         num_layer: 2
@@ -45,6 +45,77 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
     // Plain biome
     BiomeConfig {
         name: "Forest",
+        terrain_offset: 20.,
+        terrain_scale: 5.,
+        noise_config: [
+            PerlinNoiseConfig {
+                scale: 50.,
+                amplitude: 1.0,
+            },
+            PerlinNoiseConfig {
+                scale: 25.,
+                amplitude: 0.5,
+            },
+            PerlinNoiseConfig {
+                scale: 12.5,
+                amplitude: 0.25,
+            },
+            PerlinNoiseConfig {
+                scale: 6.25,
+                amplitude: 0.125,
+            },
+            PerlinNoiseConfig {
+                scale: 3.125,
+                amplitude: 0.0625,
+            },
+        ],
+        layers: [
+            Some(BiomeLayer {start_y_from_top:  0, block: Block::OAKLOG}),
+            Some(BiomeLayer {start_y_from_top: 1, block: Block::DIRT}),
+            None, None, None, None, None, None
+        ],
+        num_layer: 2
+    },
+
+    // Plain biome
+    BiomeConfig {
+        name: "Mountain",
+        terrain_offset: 35.,
+        terrain_scale: 10.,
+        noise_config: [
+            PerlinNoiseConfig {
+                scale: 75.,
+                amplitude: 4.0,
+            },
+            PerlinNoiseConfig {
+                scale: 25.,
+                amplitude: 2.,
+            },
+            PerlinNoiseConfig {
+                scale: 12.5,
+                amplitude: 0.5,
+            },
+            PerlinNoiseConfig {
+                scale: 9.25,
+                amplitude: 0.35,
+            },
+            PerlinNoiseConfig {
+                scale: 5.,
+                amplitude: 0.3,
+            },
+        ],
+        layers: [
+            Some(BiomeLayer {start_y_from_top:  0, block: Block::GRASS}),
+            Some(BiomeLayer {start_y_from_top:  1, block: Block::DIRT}),
+            Some(BiomeLayer {start_y_from_top:  5, block: Block::COBBELSTONE}),
+            None, None, None, None, None, 
+        ],
+        num_layer: 3
+    },
+
+    // Plain biome
+    BiomeConfig {
+        name: "Ocean",
         terrain_offset: 10.,
         terrain_scale: 20.,
         noise_config: [
@@ -70,76 +141,7 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             },
         ],
         layers: [
-            Some(BiomeLayer {start_y:  0, block: Block::DIRT}),
-            Some(BiomeLayer {start_y: 8, block: Block::OAKLOG}),
-            None, None, None, None, None, None
-        ],
-        num_layer: 2
-    },
-
-    // Plain biome
-    BiomeConfig {
-        name: "Mountain",
-        terrain_offset: 15.,
-        terrain_scale: 40.,
-        noise_config: [
-            PerlinNoiseConfig {
-                scale: 50.,
-                amplitude: 1.0,
-            },
-            PerlinNoiseConfig {
-                scale: 25.,
-                amplitude: 0.5,
-            },
-            PerlinNoiseConfig {
-                scale: 12.5,
-                amplitude: 0.25,
-            },
-            PerlinNoiseConfig {
-                scale: 6.25,
-                amplitude: 0.125,
-            },
-            PerlinNoiseConfig {
-                scale: 3.125,
-                amplitude: 0.0625,
-            },
-        ],
-        layers: [
-            Some(BiomeLayer {start_y:  0, block: Block::COBBELSTONE}),
-            None, None, None, None, None, None, None
-        ],
-        num_layer: 1
-    },
-
-    // Plain biome
-    BiomeConfig {
-        name: "Ocean",
-        terrain_offset: 2.,
-        terrain_scale: 20.,
-        noise_config: [
-            PerlinNoiseConfig {
-                scale: 50.,
-                amplitude: 1.0,
-            },
-            PerlinNoiseConfig {
-                scale: 25.,
-                amplitude: 0.5,
-            },
-            PerlinNoiseConfig {
-                scale: 12.5,
-                amplitude: 0.25,
-            },
-            PerlinNoiseConfig {
-                scale: 6.25,
-                amplitude: 0.125,
-            },
-            PerlinNoiseConfig {
-                scale: 3.125,
-                amplitude: 0.0625,
-            },
-        ],
-        layers: [
-            Some(BiomeLayer {start_y:  0, block: Block::COBBELSTONE}),
+            Some(BiomeLayer {start_y_from_top:  0, block: Block::COBBELSTONE}),
             None, None, None, None, None, None, None
         ],
         num_layer: 1
