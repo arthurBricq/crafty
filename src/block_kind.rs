@@ -43,4 +43,11 @@ impl Block {
         }
         names
     }
+
+    pub fn can_be_placed(&self) -> bool {
+        match self {
+            Block::SWORD => false,
+            _ => true,
+        }
+    }
 }

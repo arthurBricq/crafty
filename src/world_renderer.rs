@@ -477,7 +477,14 @@ impl WorldRenderer {
             }
             Add { at, block } => {
                 if self.player.is_in(at) {
-                    return;
+                    return; // cannot place a block on oneself
+                }
+
+                // cannot place some blocks (i.e. swords)
+                if let Some(block) = self.items.get_current_block() {
+                    if !block.can_be_placed() {
+                        return;
+                    }
                 }
 
                 self.items.consume(block);
