@@ -14,6 +14,8 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::iter::zip;
 
+pub const MAX_LEVEL_NOISE: usize = 5;
+
 /// A Perlin noise is determined by its scaling factor and by the amplitude of outputed values.
 #[derive(Clone)]
 pub struct PerlinNoiseConfig {

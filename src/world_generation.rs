@@ -3,3 +3,4 @@
 pub mod perlin;
 pub mod world_generator;
 pub mod biome;
+pub mod biomes_def;

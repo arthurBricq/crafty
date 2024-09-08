@@ -1,4 +1,5 @@
 use super::biome::BiomeGenerator;
+use super::biomes_def::BIOMES;
 use super::perlin::MultiscalePerlinNoise;
 use super::perlin::PerlinNoiseConfig;
 use crate::block_kind::Block;
@@ -13,6 +14,7 @@ use crate::chunk::CHUNK_SIZE;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 
+// TO DO: REMOVE THAT AND USE THE ONE FROM THE ACTUAL BIOMES
 const BASIC_WORLD_CONF: [PerlinNoiseConfig; 5] = [
     PerlinNoiseConfig {
         scale: 50.,
@@ -36,9 +38,6 @@ const BASIC_WORLD_CONF: [PerlinNoiseConfig; 5] = [
     },
 ];
 
-// TO DO: REMOVE THAT IT IS JUST SOME FIRST BIOME TEST
-const TOP_BLOCK_BIOME: [Block; 4] = [GRASS, COBBELSTONE, OAKLOG, OAKLEAVES];
-
 /// Class which manages the generation of a new world
 pub struct WorldGenerator {}
 
@@ -51,8 +50,6 @@ impl WorldGenerator {
 
         let s = CHUNK_SIZE as f32;
         let mut chunks = vec![];
-        let terrain_scale = 20.;
-        let terrain_offset = CHUNK_FLOOR as f32;
 
         // Yes this is slow, but it will be fine for now
         for i in -n_chunks..n_chunks + 1 {
@@ -65,33 +62,28 @@ impl WorldGenerator {
                 for x in 0..8 {
                     for z in 0..8 {
                         let biome_t: u64 = BiomeGenerator::find_closest_biome(seed, x + x0 as i32, z + z0 as i32);
+                        let biome_config = &BIOMES[biome_t as usize];
 
-                        let height = terrain_offset
-                            + terrain_scale
+                        let height = biome_config.terrain_offset
+                            + biome_config.terrain_scale
                                 * noise.at([i as f32 * s + x as f32, j as f32 * s + z as f32]);
 
                         let cube_height = height.floor() as i32;
 
                         for y in 0..cube_height {
-                            chunk.add_cube(
-                                Vector3::new(
-                                    i as f32 * s + x as f32,
-                                    y as f32,
-                                    j as f32 * s + z as f32,
-                                ),
-                                DIRT,
-                                0,
-                            );
+                            let block_at_height = biome_config.get_block_at(y);
+                            if let Some(block) = block_at_height {
+                                chunk.add_cube(
+                                    Vector3::new(
+                                        i as f32 * s + x as f32,
+                                        y as f32,
+                                        j as f32 * s + z as f32,
+                                    ),
+                                    block,
+                                    0,
+                                );
+                            }
                         }
-                        chunk.add_cube(
-                            Vector3::new(
-                                i as f32 * s + x as f32,
-                                cube_height as f32,
-                                j as f32 * s + z as f32,
-                            ),
-                            TOP_BLOCK_BIOME[biome_t as usize],
-                            0,
-                        );
                     }
                 }
 

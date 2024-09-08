@@ -5,10 +5,91 @@ use rand::distributions::Open01;
 use rand::rngs::SmallRng;
 use rand::{Rng, RngCore, SeedableRng};
 
+use crate::block_kind::Block;
 use crate::chunk::CHUNK_SIZE;
 
-const NUM_BIOMES: u64 = 4;
+use super::biomes_def::NUM_BIOMES;
+use super::perlin::{PerlinNoiseConfig, MAX_LEVEL_NOISE};
+
 const PROBABILITY_BIOME_CENTER_IN_CHUNK: f32 = 0.05;
+const MAX_NUMBER_LAYER: usize = 8;
+
+/// Used to make a list in BiomeConfig, will make the different layers
+/// of a biome
+#[derive(Clone)]
+pub struct BiomeLayer {
+    pub start_y: i32,
+    pub block: Block,
+}
+/// What a biome is.
+/// 
+/// Note:
+/// - the layers must be ordered from lowest to highest
+///     and the None ones should all be after the highest real layer
+pub struct BiomeConfig {
+    pub name: &'static str,
+    pub terrain_offset: f32,
+    pub terrain_scale: f32,
+    
+    pub noise_config: [PerlinNoiseConfig; MAX_LEVEL_NOISE],
+    pub layers: [Option<BiomeLayer>; MAX_NUMBER_LAYER],
+    pub num_layer: usize,
+}
+
+impl BiomeConfig {
+    // The constructor enforces that layers respect the convention, allowing for efficient binary search
+    pub fn new(name: &'static str, terrain_offset: f32, terrain_scale: f32, noise_config: [PerlinNoiseConfig; MAX_LEVEL_NOISE], layers: [Option<BiomeLayer>; MAX_NUMBER_LAYER], num_layer: usize) -> Self {
+        if num_layer == 0 || (num_layer == 1 && layers[0].is_none()) {
+            panic!("Should have at least one layer")
+        }
+        
+        for i in 0..(num_layer-1) {
+            if let Some(curr_layer) = &layers[i] {
+                if let Some(next_layer) = &layers[i+1] {
+                    if next_layer.start_y <= curr_layer.start_y {
+                        panic!("The layers need to be ordered from lowest to highest!");
+                    }
+                } else {
+                    panic!("There should be no None layers here!");
+                }
+            } else {
+                panic!("There should be no None layers here!");
+            }
+        }
+
+        Self {
+            name,
+            terrain_offset,
+            terrain_scale,
+            noise_config,
+            layers,
+            num_layer
+        }
+    }
+
+    pub fn get_block_at(&self, y: i32) -> Option<Block> {
+
+        if self.layers.is_empty() || self.layers[0].is_none() || self.layers[0].as_ref().unwrap().start_y > y {
+            return None;  // No valid position if the first element is already greater than target
+        }
+
+        // Thanks to the construction, know for sure there are no Option between 0 and num_layer
+        let mut low = 0;
+        let mut high = self.num_layer;
+
+        // Binary search
+        while low < high {
+            let mid = (low + high) / 2;
+            if self.layers[mid].as_ref().unwrap().start_y <= y {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+
+        Some(self.layers[low - 1].as_ref().unwrap().block)  // The last smaller or equal element will be at `low - 1`
+    }
+}
 
 /// Manages how biomes are generated, for a given coordinate x,z
 /// will return in which biome the position is.
@@ -230,5 +311,29 @@ use crate::world_generation::biome::*;
                 println!("n= {}  x= {}  z= {}  t= {}", n, x, z, t);
             }
         }
+    }
+
+    #[test]
+    fn test_binary_search() {
+        let search_in: [Option<BiomeLayer>; MAX_NUMBER_LAYER] = [
+            Some(BiomeLayer {start_y:  0, block: Block::DIRT}),
+            Some(BiomeLayer {start_y: 10, block: Block::GRASS}),
+            Some(BiomeLayer {start_y: 20, block: Block::OAKLEAVES}),
+            None, None, None, None, None,
+        ];
+        let num_layer = 2;
+        let noise_config = [
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, 
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
+            PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, ];
+        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, search_in, num_layer);
+
+        let y = 11;
+
+        let block = config.get_block_at(y);
+
+        assert_eq!(block, Some(Block::GRASS));
     }
 }
