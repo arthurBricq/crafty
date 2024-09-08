@@ -1,22 +1,18 @@
-use crate::aabb::AABB;
-use crate::block_kind::Block;
-use crate::chunk::CHUNK_FLOOR;
 use crate::collidable::{Collidable, CollisionData};
 use crate::cube::Cube;
-use crate::primitives::position::{self, Position};
+use crate::entity::humanoid::humanoid_aabb;
+use crate::input::MotionState;
+use crate::input::PlayerInputStatus;
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 use std::f32::consts::PI;
-use std::io::empty;
 use std::time::Duration;
-use crate::entity::humanoid::humanoid_aabb;
-use crate::input::PlayerInputStatus;
-use crate::input::MotionState;
 
 pub const CLICK_TIME_TO_BREAK: f32 = 2.0;
 
 /// Travel speed [m/s] or [cube/s]
-const SPEED: f32 = 15.0;
+const SPEED: f32 = 4.0;
 // TODO for some obscure reason, actual speed is lower than that. Perhaps the dt
 // is wrong, or yet again the collision ?
 

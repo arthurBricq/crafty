@@ -7,13 +7,11 @@ use std::time::{Duration, Instant};
 
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
-use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG, SWORD };
-use crate::player::Player;
+use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG, SWORD};
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
-use crate::player::Player;
 
 use crate::camera::perspective_matrix;
 use crate::graphics::color::Color;
@@ -26,7 +24,7 @@ use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_
 use crate::input::MotionState;
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
-use crate::player::CLICK_TIME_TO_BREAK;
+use crate::player::{Player, CLICK_TIME_TO_BREAK};
 use crate::player_items::PlayerItems;
 use crate::texture;
 use crate::world::World;
@@ -77,7 +75,7 @@ impl WorldRenderer {
         Self {
             proxy,
             world,
-            player: player,
+            player,
             hud_renderer: HUDRenderer::new(),
             fps_manager: FpsManager::new(),
             items: PlayerItems::empty(),
