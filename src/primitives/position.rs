@@ -42,7 +42,7 @@ impl Position {
     
     /// Send the player in the air
     pub fn raise(&mut self) {
-        self.pos[1] += 2. * CHUNK_FLOOR as f32;
+        self.pos[1] += 5. * CHUNK_FLOOR as f32;
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {

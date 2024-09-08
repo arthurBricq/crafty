@@ -70,7 +70,7 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             },
         ],
         layers: [
-            Some(BiomeLayer {start_y_from_top:  0, block: Block::OAKLOG}),
+            Some(BiomeLayer {start_y_from_top:  0, block: Block::GRASS}),
             Some(BiomeLayer {start_y_from_top: 1, block: Block::DIRT}),
             None, None, None, None, None, None
         ],
@@ -117,7 +117,7 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
     BiomeConfig {
         name: "Ocean",
         terrain_offset: 30.,
-        terrain_scale: 20.,
+        terrain_scale: 5.,
         noise_config: [
             PerlinNoiseConfig {
                 scale: 50.,
