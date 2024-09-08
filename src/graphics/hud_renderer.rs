@@ -7,6 +7,8 @@ use super::menu_help;
 use super::menu_help::HelpMenu;
 use super::menu_help::HelpMenuData;
 
+use crate::health::Health;
+
 use super::menu_debug;
 use super::menu_debug::DebugData;
 use super::menu_debug::DebugMenu;
@@ -17,6 +19,7 @@ use crate::graphics::update_status::UpdateStatus;
 
 use crate::graphics::inventory_event::InventoryEvent;
 use crate::graphics::items_bar::ItemBar;
+use crate::graphics::health_bar::HealthBar;
 use crate::player_items::{ItemStack, PlayerItems};
 
 /// Has the responsability to provide all the HUD to be drawn by OpenGL.
@@ -36,6 +39,7 @@ pub struct HUDRenderer {
     show_debug: bool,
 
     items_bar: ItemBar,
+    health_bar: HealthBar,
 
     inventory_menu: Option<InventoryMenu>,
 }
@@ -56,6 +60,7 @@ impl HUDRenderer {
             show_help: false,
             show_debug: false,
             items_bar: ItemBar::new(),
+            health_bar: HealthBar::new(10, 1.),
             inventory_menu: None,
         };
 
@@ -106,6 +111,7 @@ impl HUDRenderer {
 
         if !self.is_inventory_open() {
             self.rects.append(&mut self.items_bar.rects());
+            self.rects.append(&mut self.health_bar.rects());
         }
         
         if self.show_help {
@@ -138,6 +144,7 @@ impl HUDRenderer {
 
         // Cascade down the aspect ratio to the HUD parts that require it
         self.items_bar.set_aspect_ratio(self.aspect_ratio);
+        self.health_bar.set_aspect_ratio(self.aspect_ratio);
         self.inventory_menu.as_mut().map(|mut inv| { inv.set_aspect_ratio(self.aspect_ratio); });
         
         // Update the collection of rectangles
@@ -146,6 +153,11 @@ impl HUDRenderer {
 
     pub fn set_player_items(&mut self, items: Vec<ItemStack>, selected: usize) {
         self.items_bar.set_items(items, selected);
+        self.update();
+    }
+
+    pub fn set_health(&mut self, health: &Health) {
+        self.health_bar.set_health(health.health());
         self.update();
     }
 

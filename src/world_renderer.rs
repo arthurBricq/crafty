@@ -28,6 +28,7 @@ use crate::player::{Player, CLICK_TIME_TO_BREAK};
 use crate::player_items::PlayerItems;
 use crate::texture;
 use crate::world::World;
+use crate::health::Health;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Surface};
 use winit::event::ElementState::Pressed;
@@ -57,6 +58,9 @@ pub struct WorldRenderer {
     /// Items of the player
     items: PlayerItems,
 
+    /// Health of the player
+    health: Health,
+
     /// In charge of rendering of the 2D menus on the screen
     hud_renderer: HUDRenderer,
 
@@ -76,6 +80,7 @@ impl WorldRenderer {
             proxy,
             world,
             player,
+            health: Health::new(10),
             hud_renderer: HUDRenderer::new(),
             fps_manager: FpsManager::new(),
             items: PlayerItems::empty(),
@@ -572,7 +577,8 @@ impl WorldRenderer {
                 }
                 ServerUpdate::UpdatePosition(id, pos) => self.entity_manager.set_position(id, pos),
                 ServerUpdate::Attack(attack) => {
-                    println!("Oh no, I was attacked... By amount: {}", attack.strength())
+                    self.health.damage(attack.strength());
+                    self.hud_renderer.set_health(&self.health);
                 }
             }
         }
