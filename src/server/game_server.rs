@@ -7,6 +7,7 @@ use crate::network::server_update::ServerUpdate::{LoggedIn, RegisterEntity, Send
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::server::monster_manager::MonsterManager;
+use crate::server::server_state::ServerState;
 use crate::world::World;
 use crate::server::world_dispatcher::WorldDispatcher;
 
@@ -25,9 +26,6 @@ pub struct GameServer {
     /// The full world
     world: Arc<Mutex<World>>,
 
-    /// number of players
-    n_players: usize,
-
     /// In charge of telling which chunks must be loaded by which player
     world_dispatcher: WorldDispatcher,
 
@@ -35,7 +33,10 @@ pub struct GameServer {
     server_updates_buffer: Vec<Vec<ServerUpdate>>,
 
     /// In charge of handling the entities
-    entity_server: MonsterManager
+    entity_server: MonsterManager,
+    
+    /// Internal state of the server (expect the entities)
+    state: ServerState
 }
 
 impl GameServer {
@@ -43,10 +44,10 @@ impl GameServer {
         let ref_to_world = Arc::new(Mutex::new(world));
         Self {
             world: Arc::clone(&ref_to_world),
-            n_players: 0,
             world_dispatcher: WorldDispatcher::new(),
             server_updates_buffer: Vec::new(),
             entity_server: MonsterManager::new(ref_to_world),
+            state: ServerState::new()
         }
     }
 
@@ -54,29 +55,29 @@ impl GameServer {
     /// Returns the ID of the registered player
     pub fn login(&mut self, name: String) -> usize {
         // Create the new ID
-        let id = self.n_players;
-        self.n_players += 1;
-        println!("[SERVER] New player registered: {name} (ID={})", id);
+        let player = self.state.login(name.clone());
+        println!("[SERVER] New player registered: {name} (ID={}, pos={:?})", player.id, player.pos);
 
-        // Create a new buffer of updates, and initialize it directly with a LoggedIn message and the position of the other players
-        let mut initial_updates = vec![LoggedIn(id as u8)];
-        for i in 0..self.n_players - 1 {
-            // TODO find the actual position of each player...
-            initial_updates.push(RegisterEntity(i as u8, Position::from_pos(Vector3::newi(0, CHUNK_FLOOR as i32 + 2, 0))))
+        // Create a new buffer of updates for this client, 
+        let mut initial_updates = vec![LoggedIn(player.id as u8, player.pos.clone())];
+
+        // Initialize it directly with a LoggedIn message and the position of the other players
+        for (i, connected) in self.state.connected_players().enumerate() {
+            if connected.id != player.id {
+                initial_updates.push(RegisterEntity(i as u8, player.pos.clone()))
+            }
         }
-
         self.server_updates_buffer.push(initial_updates);
 
-
         // Register the player in the dispatcher
-        self.world_dispatcher.register_player(id);
+        self.world_dispatcher.register_player(player.id);
 
-        // Register the player to other players of the game.
-        for i in 0..self.n_players - 1 {
-            self.server_updates_buffer[i].push(RegisterEntity(id as u8, Position::from_pos(Vector3::newi(0, CHUNK_FLOOR as i32 + 2, 0))))
+        // Register the new player to other players of the game.
+        for i in 0..self.state.n_players_connected() - 1 {
+            self.server_updates_buffer[i].push(RegisterEntity(player.id as u8, player.pos.clone()));
         }
 
-        id
+        player.id
     }
 
     // Implementation of the 'callbacks': entry points of the server
@@ -97,19 +98,21 @@ impl GameServer {
         }
 
         // Update other players
-        for i in 0..self.n_players {
+        for i in 0..self.state.n_players_connected() {
             if i != player_id {
                 self.server_updates_buffer[i].push(UpdatePosition(player_id as u8, position.clone()))
             }
         }
 
+        // Update internal state
+        self.state.set_player_pos(player_id, position.clone());
     }
 
     pub fn on_new_action(&mut self, player_id: usize, action: Action) {
         // Edit the world of the server
         self.world.lock().unwrap().apply_action(&action);
         // Forward the action to all OTHER clients
-        for i in 0..self.n_players {
+        for i in 0..self.state.n_players_connected() {
             if i != player_id {
                 self.server_updates_buffer[i].push(SendAction(action.clone()))
             }

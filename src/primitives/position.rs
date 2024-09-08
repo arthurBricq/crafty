@@ -1,5 +1,6 @@
 use std::ops::{Add, AddAssign};
 use std::str::from_utf8;
+use crate::chunk::CHUNK_FLOOR;
 use crate::primitives::vector::Vector3;
 
 /// Position of an entity in a 3D world
@@ -14,6 +15,14 @@ impl Position {
     pub fn empty() -> Self {
         Self {
             pos: Vector3::empty(),
+            yaw: 0.,
+            pitch: 0.
+        }
+    }
+    
+    pub fn spawn_position() -> Self {
+        Self {
+            pos: Vector3::new(0., 3. * CHUNK_FLOOR as f32, 0.),
             yaw: 0.,
             pitch: 0.
         }

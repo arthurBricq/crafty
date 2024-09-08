@@ -76,8 +76,6 @@ impl Player {
             self.velocity += GRAVITY_ACCELERATION_VECTOR * dt;
         }
 
-        // TODO will have to do something cleaner when other sources of
-        //      horizontal velocity will be implemented
         {
             let controls_vel = self.controls_velocity();
             self.velocity[0] = controls_vel[0];
@@ -103,9 +101,13 @@ impl Player {
         self.compute_selected_cube(world);
     }
 
-
     pub fn toggle_state(&mut self, element: MotionState, pressed: bool ) {
         self.input_status.set_input(element, pressed);
+    }
+    
+    /// Sets the position of the player to the given one, without collision checks
+    pub fn set_position(&mut self, position: Position) {
+        self.position = position
     }
 
     pub fn left_click(&self) -> bool {
