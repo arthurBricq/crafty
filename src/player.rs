@@ -8,6 +8,7 @@ use crate::primitives::vector::Vector3;
 use crate::world::World;
 use std::f32::consts::PI;
 use std::time::Duration;
+use crate::entity::humanoid::humanoid_aabb;
 use crate::input::PlayerInputStatus;
 use crate::input::MotionState;
 
@@ -26,7 +27,10 @@ const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
 
 const PLAYER_MARGIN: f32 = 1e-5;
 
+
 pub const PLAYER_HEIGHT: f32 = 1.8;
+pub const DIAMETER: f32 = 0.5;
+pub const FOREHEAD: f32 = 0.1;
 
 
 /// Represents the physical state of a player, on the client side.
@@ -97,8 +101,7 @@ impl Player {
 
         // update in_air
         let displacement = Vector3::new(0., -2.0 * PLAYER_MARGIN, 0.);
-        self.in_air = !world.collides(&Self::make_aabb(&(&self.position + displacement)));
-
+        self.in_air = !world.collides(&humanoid_aabb(&(&self.position + displacement)));
         self.compute_selected_cube(world);
     }
 
@@ -188,7 +191,7 @@ impl Player {
     /// Check if tha player is colliding with a block position
     pub fn is_in(&self, cube_pos: Vector3) -> bool {
         let cube_aabb = Cube::cube_aabb(cube_pos);
-        let player_aabb = &Self::make_aabb(&self.position);
+        let player_aabb = &humanoid_aabb(&self.position);
 
         return cube_aabb.collides(player_aabb);
     }
@@ -221,21 +224,6 @@ impl Player {
         displacement
     }
 
-    /// Returns the bounding box around the player
-    fn make_aabb(position: &Position) -> AABB {
-        const DIAMETER: f32 = 0.5;
-        const FOREHEAD: f32 = 0.1;
-
-        AABB::new(
-            position.z() + DIAMETER / 2.,
-            position.z() - DIAMETER / 2.,
-            position.y() + FOREHEAD,
-            position.y() - PLAYER_HEIGHT + FOREHEAD,
-            position.x() + DIAMETER / 2.,
-            position.x() - DIAMETER / 2.,
-        ).unwrap()
-    }
-
     /// Set the attribute `selected` to the cube currently being selected
     fn compute_selected_cube(&mut self, world: &World) {
         let position = self.position.pos();
@@ -264,10 +252,10 @@ impl Player {
         /// Integrate the velocity to move the camera, with collision. Returns the
     /// dt (in seconds), which can be smaller than `dt` if there is a collision.
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
-        let target = Self::make_aabb(&(&self.position + self.velocity * dt));
+        let target = humanoid_aabb(&(&self.position + self.velocity * dt));
 
         let collision = world
-            .collision_time(&Self::make_aabb(&self.position), &target, &self.velocity)
+            .collision_time(&humanoid_aabb(&self.position), &target, &self.velocity)
             .unwrap_or(CollisionData {
                 time: f32::MAX,
                 normal: Vector3::empty(),
@@ -315,6 +303,7 @@ impl Player {
         Vector3::new(self.position.yaw().sin(), 0., -self.position.yaw().cos())
     }
 
+    /// Returns true if the player is asking to break a cube
     pub fn is_time_to_break_over(&mut self, dt: f32) -> bool {
         if self.is_selecting_cube() && self.left_click() {
             self.add_click_time(dt);

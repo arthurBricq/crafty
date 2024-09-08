@@ -1,4 +1,3 @@
-
 /// Reprensent a logical input to player's action
 pub enum MotionState {
     Up,
@@ -23,7 +22,7 @@ pub struct PlayerInputStatus {
 
 impl PlayerInputStatus {
     pub fn new() -> PlayerInputStatus {
-        Self { 
+        Self {
             left_click: false,
             click_time: 0.,
             forward: false,
@@ -35,7 +34,7 @@ impl PlayerInputStatus {
     }
 
     ///Change the player's action status from a logical input
-    pub fn set_input(&mut self, element: MotionState ,pressed: bool) {
+    pub fn set_input(&mut self, element: MotionState, pressed: bool) {
         match element {
             MotionState::Up => self.forward = pressed,
             MotionState::Down => self.backward = pressed,
@@ -45,7 +44,7 @@ impl PlayerInputStatus {
             MotionState::LeftClick => {
                 self.left_click = pressed;
                 self.click_time = 0.;
-            },
+            }
             _ => ()
         }
     }
@@ -58,35 +57,35 @@ impl PlayerInputStatus {
     pub fn click_time(&self) -> f32 {
         self.click_time
     }
-    
+
     /// Add time to the click time counter
     /// Only add time if left_click is true
     pub fn add_click_time(&mut self, click_time: f32) {
-    if self.left_click {
-        self.click_time += click_time;
-    }
+        if self.left_click {
+            self.click_time += click_time;
+        }
     }
 
     pub fn reset_click_time(&mut self) {
         self.click_time = 0.;
     }
-    
+
     pub fn forward(&self) -> bool {
         self.forward
     }
-    
+
     pub fn backward(&self) -> bool {
         self.backward
     }
-    
+
     pub fn left(&self) -> bool {
         self.left
     }
-    
+
     pub fn right(&self) -> bool {
         self.right
     }
-    
+
     pub fn jump(&self) -> bool {
         self.jump
     }
@@ -101,7 +100,6 @@ mod tests {
 
     #[test]
     fn test_set_input() {
-
         let mut input = PlayerInputStatus::new();
 
         input.set_input(MotionState::Left, true);
@@ -119,7 +117,6 @@ mod tests {
 
     #[test]
     fn test_set_all_input() {
-
         let mut input = PlayerInputStatus::new();
 
         input.set_input(MotionState::Left, true);
@@ -138,7 +135,6 @@ mod tests {
 
     #[test]
     fn test_click_time() {
-
         let mut input = PlayerInputStatus::new();
 
         input.add_click_time(0.5);

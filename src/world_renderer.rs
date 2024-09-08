@@ -501,7 +501,11 @@ impl WorldRenderer {
     fn handle_button_event(&mut self, button: MouseButton, state: ElementState) {
         match button {
             MouseButton::Left => {
-                self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
+                if self.player.is_selecting_cube() {
+                    self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
+                } else {
+                    self.entity_manager.attack(self.player.position().pos(), self.player.direction())
+                }
             }
             MouseButton::Right => {
                 if state == Pressed {

@@ -1,7 +1,8 @@
 use glium::glutin::surface::WindowSurface;
 use glium::texture::Texture2dArray;
 use glium::Display;
-use crate::player::PLAYER_HEIGHT;
+use crate::aabb::AABB;
+use crate::player::{DIAMETER, FOREHEAD, PLAYER_HEIGHT};
 use crate::graphics::entity::EntityCube;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
@@ -104,4 +105,16 @@ pub fn get_opengl_entities(mut position: Position) -> Vec<EntityCube> {
     ent.push(EntityCube::new_only_yaw(&position, 1, PLAYER_LEG_SCALE));
     
     ent
+}
+
+/// Returns the bounding box around the player
+pub fn humanoid_aabb(eye_position: &Position) -> AABB {
+    AABB::new(
+        eye_position.z() + DIAMETER / 2.,
+        eye_position.z() - DIAMETER / 2.,
+        eye_position.y() + FOREHEAD,
+        eye_position.y() - PLAYER_HEIGHT + FOREHEAD,
+        eye_position.x() + DIAMETER / 2.,
+        eye_position.x() - DIAMETER / 2.,
+    ).unwrap()
 }

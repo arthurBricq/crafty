@@ -1,5 +1,7 @@
+use crate::aabb::AABB;
 use crate::graphics::entity::EntityCube;
 use crate::entity::humanoid;
+use crate::entity::humanoid::humanoid_aabb;
 use crate::primitives::position::Position;
 
 
@@ -51,4 +53,9 @@ impl Entity {
         }
     }
 
+    pub fn aabb(&self) -> AABB {
+        match self.entity_type {
+            EntityKind::Player | EntityKind::Monster1 => humanoid_aabb(&self.position)
+        }
+    }
 }

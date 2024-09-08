@@ -2,6 +2,7 @@ use crate::entity::entity::{Entity, EntityKind};
 use crate::graphics::entity::EntityCube;
 use crate::primitives::position::Position;
 use std::collections::HashMap;
+use crate::primitives::vector::Vector3;
 
 /// Contain all the entities
 pub struct EntityManager {
@@ -33,6 +34,12 @@ impl EntityManager {
             .map(|(_, entity)| entity.get_opengl_entities())
             .collect::<Vec<Vec<EntityCube>>>()
             .concat()
+    }
+    
+    pub fn attack(&self, position: Vector3, direction: Vector3) {
+        
+        
+        
     }
 
 }
