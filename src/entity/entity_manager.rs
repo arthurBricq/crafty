@@ -2,6 +2,7 @@ use crate::entity::entity::{Entity, EntityKind};
 use crate::graphics::entity::EntityCube;
 use crate::primitives::position::Position;
 use std::collections::HashMap;
+use crate::cube::Cube;
 use crate::primitives::vector::Vector3;
 
 /// Contain all the entities
@@ -37,9 +38,14 @@ impl EntityManager {
     }
     
     pub fn attack(&self, position: Vector3, direction: Vector3) {
-        
-        
-        
+        println!("Attacking !");
+        if let Some((id, _)) = self.entities
+            .iter()
+            .map(|(id, entity)| (id, entity.aabb().faces())) 
+            .find(|(id, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some()) 
+        {
+            println!("Player {id} was hit !");
+        }
     }
 
 }
