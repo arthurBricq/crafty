@@ -27,7 +27,7 @@ impl HealthBar {
         self.update();
     }
 
-    pub fn set_heath(&mut self, health: u8) {
+    pub fn set_health(&mut self, health: u8) {
         self.health = health;
         self.update();
     }

@@ -7,6 +7,8 @@ use super::menu_help;
 use super::menu_help::HelpMenu;
 use super::menu_help::HelpMenuData;
 
+use crate::health::Health;
+
 use super::menu_debug;
 use super::menu_debug::DebugData;
 use super::menu_debug::DebugMenu;
@@ -151,6 +153,11 @@ impl HUDRenderer {
 
     pub fn set_player_items(&mut self, items: Vec<ItemStack>, selected: usize) {
         self.items_bar.set_items(items, selected);
+        self.update();
+    }
+
+    pub fn set_health(&mut self, health: &Health) {
+        self.health_bar.set_health(health.health());
         self.update();
     }
 
