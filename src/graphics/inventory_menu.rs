@@ -7,7 +7,7 @@ use crate::graphics::inventory_slot::InventorySlot;
 use winit::event::ElementState;
 use crate::block_kind::Block;
 
-const INVENTORY_NROWS: usize = 4; /// the 0th is the item bar
+const INVENTORY_NROWS: usize = 4; // the 0th is the item bar
 const INVENTORY_NCOLS: usize = 8;
 
 /// A position in inventory space, i.e. from 0 to 1, origin on the bottom left
