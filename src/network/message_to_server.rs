@@ -54,7 +54,7 @@ mod tests {
     fn test_integrity(m: MessageToServer) {
         let bytes = to_tcp_repr(&m);
         let mut context = ParseContext::new();
-        let parsed = from_tcp_repr(bytes.as_slice(), &mut context);
+        let parsed = from_tcp_repr(bytes.as_slice(), &mut context).unwrap();
         assert_eq!(m, parsed[0]);
     }
 
@@ -72,7 +72,7 @@ mod tests {
             .collect::<Vec<Vec<u8>>>()
             .concat();
         let mut context = ParseContext::new();
-        let parsed = from_tcp_repr(bytes.as_slice(), &mut context);
+        let parsed = from_tcp_repr(bytes.as_slice(), &mut context).unwrap();
         assert_eq!(messages.len(), parsed.len());
         for (i, m) in messages.iter().enumerate() {
             assert_eq!(*m, parsed[i]);
