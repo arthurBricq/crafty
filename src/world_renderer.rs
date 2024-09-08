@@ -475,7 +475,7 @@ impl WorldRenderer {
         match action {
             Destroy { at } => {
                 if let Some(block) = self.world.block_at(&at) {
-                    self.items.collect(block);
+                    self.items.collect(block.block_dropped());
                 }
             }
             Add { at, block } => {

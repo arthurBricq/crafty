@@ -63,6 +63,13 @@ impl Block {
             Block::OAKLEAVES | Block::WATER => true,
             _ => false
         }
-
+    }
+        
+    pub fn block_dropped(&self) -> Self {
+        match self {
+            Block::GRASS => Block::DIRT,
+            Block::STONE => Block::COBBELSTONE,
+            block => *block
+        }
     }
 }
