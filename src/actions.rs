@@ -42,14 +42,10 @@ mod tests {
         let cube = Cube::new([0., 0., 0.], Block::COBBELSTONE, 0);
         
         assert_eq!(Vector3::new(1., 0., 0.), 
-                   Action::position_to_generate_cube(&cube, Vector3::new(3., 0.5, 0.5), Vector3::unit_x().opposite()));
+                   cube.position_to_add_new_cube(Vector3::new(3., 0.5, 0.5), Vector3::unit_x().opposite()));
         
         assert_eq!(Vector3::new(0., 0., 1.),
-                   Action::position_to_generate_cube(&cube, Vector3::new(0.5, 0.5, 3.5), Vector3::unit_z().opposite()));
-        
-        
-        
-        
+                   cube.position_to_add_new_cube(Vector3::new(0.5, 0.5, 3.5), Vector3::unit_z().opposite()));
         
         
     }
