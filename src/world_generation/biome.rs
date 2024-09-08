@@ -11,15 +11,20 @@ const NUM_BIOMES: u64 = 4;
 const PROBABILITY_BIOME_CENTER_IN_CHUNK: f32 = 0.05;
 
 /// Manages how biomes are generated, for a given coordinate x,z
-/// will return in which biome the position is
+/// will return in which biome the position is.
+/// The base concept is that we first generate biome centers in the world, each chunk has a certain
+/// probability to generate one. Each one is of a randomly chosen biome type.
+/// Then, for each block, find the closest biome center and take its type.
 pub struct BiomeGenerator {}
 
 impl BiomeGenerator {
+    /// Get the chunk position in their grid
     fn get_chunk_coord(world_pos: [i32; 2]) -> [i64; 2] {
         [(world_pos[0] / CHUNK_SIZE as i32) as i64,
             (world_pos[1] / CHUNK_SIZE as i32) as i64]
     }
 
+    /// From a pos in a chunk, compute the world pos
     fn get_world_coord(chunk_coord: [i64; 2], coord_in_chunk: [u64; 2]) -> [i32; 2] {
         let x: i32 = (8 * chunk_coord[0] + coord_in_chunk[0] as i64) as i32;
         let z: i32 = (8 * chunk_coord[1] + coord_in_chunk[1] as i64) as i32;
@@ -27,6 +32,7 @@ impl BiomeGenerator {
         [x, z]
     }
 
+    /// For a given chunk, computes if it has a biome center and if it does of what kind and where
     fn get_chunk_biome_center(seed: u64, chunk_coord: [i64; 2]) -> (Option<[i32; 2]>, u64) {
         // Generate a seed for deterministic PRNG
         let mut hasher = std::hash::DefaultHasher::new();
@@ -50,6 +56,12 @@ impl BiomeGenerator {
         }
     }
 
+    /// Return the ring of a certain level around a chunk
+    /// Example: for chunk x, level=1 will return:
+    /// o o o
+    /// o x o
+    /// o o o
+    /// the positions of the chunks o
     fn get_chunk_shell(level: i64) -> Vec<[i64; 2]> {
         let num_side: i64 = 2 * level + 1;
         let half_side: i64 = num_side / 2;
@@ -73,6 +85,7 @@ impl BiomeGenerator {
         chunks_in_shell
     }
 
+    /// For a given world pos, look for the nearest biome center and return its type
     pub fn find_closest_biome(seed: u64, x: i32, z: i32) -> u64 {
         let world_pos: [i32; 2] = [x, z];    
         let mut current_level: i64 = 0;
