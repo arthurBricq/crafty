@@ -39,10 +39,11 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             Some(BiomeLayer {start_y_from_top: 1, block: Block::DIRT}),
             None, None, None, None, None, None
         ],
-        num_layer: 2
+        num_layer: 2,
+        tree_probability: 0.15
     },
 
-    // Plain biome
+    // Forest biome
     BiomeConfig {
         name: "Forest",
         terrain_offset: 35.,
@@ -74,10 +75,11 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             Some(BiomeLayer {start_y_from_top: 1, block: Block::DIRT}),
             None, None, None, None, None, None
         ],
-        num_layer: 2
+        num_layer: 2,
+        tree_probability: 0.4
     },
 
-    // Plain biome
+    // Mountain biome
     BiomeConfig {
         name: "Mountain",
         terrain_offset: 35.,
@@ -110,12 +112,13 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             Some(BiomeLayer {start_y_from_top:  2, block: Block::STONE}),
             None, None, None, None, None, 
         ],
-        num_layer: 3
+        num_layer: 3,
+        tree_probability: 0.3
     },
 
-    // Plain biome
+    // Desert biome
     BiomeConfig {
-        name: "Ocean",
+        name: "Desert",
         terrain_offset: 30.,
         terrain_scale: 5.,
         noise_config: [
@@ -144,7 +147,8 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             Some(BiomeLayer {start_y_from_top:  0, block: Block::SAND}),
             None, None, None, None, None, None, None
         ],
-        num_layer: 1
+        num_layer: 1,
+        tree_probability: 0.0
     },
 ];
 

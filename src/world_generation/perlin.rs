@@ -14,6 +14,8 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::iter::zip;
 
+use super::rng_from_seed::RNGFromSeed;
+
 pub const MAX_LEVEL_NOISE: usize = 5;
 
 /// A Perlin noise is determined by its scaling factor and by the amplitude of outputed values.
@@ -129,16 +131,7 @@ impl PerlinNoise {
 
 /// Returns a deterministic random gradient for a given coord and seed
 fn random_gradient(coord: &[i64; 2], seed: u64) -> [f32; 2] {
-    // Generate a seed for deterministic PRNG
-    let mut hasher = std::hash::DefaultHasher::new();
-    // Hash the seed
-    seed.hash(&mut hasher);
-    // Hash the chunk coordinates
-    coord.hash(&mut hasher);
-    // Combine the hashes into a final value
-    let specific_seed_hash = hasher.finish();  
-
-    let mut rng: SmallRng = SmallRng::seed_from_u64(specific_seed_hash);
+    let mut rng: SmallRng = RNGFromSeed::rng_seed_coord(seed, *coord);
 
     // TODO uniform distributions do not yield uniform normalized vectors !
     // Should use either gaussians, or a polar representation
