@@ -50,4 +50,11 @@ impl Block {
             _ => true,
         }
     }
+
+    pub fn attack_strength(&self) -> u8 {
+        match self {
+            Block::SWORD => 2,
+            _ => 1
+        }
+    }
 }

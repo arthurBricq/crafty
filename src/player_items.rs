@@ -74,6 +74,14 @@ impl PlayerItems {
             None
         }
     }
+    
+    pub fn attack_strength(&self) -> u8 {
+        if let Some(b) = self.get_current_block() {
+           b.attack_strength() 
+        } else {
+            1
+        }
+    }
 
     pub fn collect(&mut self, block: Block) {
 

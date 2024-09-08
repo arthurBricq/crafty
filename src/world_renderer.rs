@@ -511,8 +511,9 @@ impl WorldRenderer {
             MouseButton::Left => {
                 if self.player.is_selecting_cube() {
                     self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
-                } else if let Some(attack) = self.entity_manager.attack(self.player.position().pos(), self.player.direction()) {
-                   // Forward the attack to the server
+                } else if let Some(mut attack) = self.entity_manager.attack(self.player.position().pos(), self.player.direction()) {
+                    // Forward the attack to the server
+                    attack.set_strength(self.items.attack_strength());
                     self.proxy.lock().unwrap().on_new_attack(attack);
                 }
             }
