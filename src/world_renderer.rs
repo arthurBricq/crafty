@@ -526,12 +526,11 @@ impl WorldRenderer {
                     // We know where is the player and we know
                     if let Some(touched_cube) = self.player.selected_cube() {
                         if let Some(block) = self.items.get_current_block() {
-                            self.apply_action(Action::Add {
-                                at: touched_cube.position_to_add_new_cube(
-                                    self.player.position().pos(),
-                                    self.player.direction()),
-                                block,
-                            });
+                            // TODO Sometimes, I can't understand why, we end up not finding a place to add the new cube.
+                            //      I know this is not easy to debug...
+                            if let Ok(at) = touched_cube.position_to_add_new_cube(self.player.position().pos(), self.player.direction()) {
+                                self.apply_action(Action::Add { at, block, })
+                            }
                         }
                     }
                 }

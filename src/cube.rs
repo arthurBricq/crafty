@@ -113,10 +113,10 @@ impl Cube {
     /// `touched_cube`    : ref to the cube being touched
     /// `camera_pos`      : position of the player
     /// `camera_dir`      : direction of the player
-    pub fn position_to_add_new_cube(&self, pos: Vector3, dir: Vector3) -> Vector3 {
+    pub fn position_to_add_new_cube(&self, pos: Vector3, dir: Vector3) -> Result<Vector3, u8> {
         let index = Self::intersection_with_faces(&self.faces(), pos, dir)
-            .map(|(_, index)| index).unwrap();
-        self.faces()[index].adjacent_cube()
+            .map(|(_, index)| index).ok_or(0)?;
+        Ok(self.faces()[index].adjacent_cube())
     }
 
     pub fn cube_aabb(pos: Vector3) -> AABB {
