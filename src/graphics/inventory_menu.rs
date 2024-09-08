@@ -1,14 +1,17 @@
 use crate::graphics::color::Color::{LighterGray, LightGray};
 use crate::graphics::rectangle::RectInstance;
+use crate::player_items::PlayerItems;
 
 pub struct InventoryMenu {
     rects: Vec<RectInstance>,
     aspect_ratio: f32,
+    
+    player_items: PlayerItems,
 }
 
 impl InventoryMenu {
-    pub fn new(aspect_ratio: f32) -> Self {
-        let mut inventory = Self { rects: Vec::new(), aspect_ratio };
+    pub fn new(aspect_ratio: f32, player_items: PlayerItems) -> Self {
+        let mut inventory = Self { rects: Vec::new(), aspect_ratio, player_items };
         inventory.update();
 
         inventory
@@ -21,6 +24,10 @@ impl InventoryMenu {
 
     pub fn rects(&self) -> &Vec<RectInstance> {
         &self.rects
+    }
+
+    pub fn take_player_items(self) -> PlayerItems {
+        self.player_items
     }
 
     fn update(&mut self) {

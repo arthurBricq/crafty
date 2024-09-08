@@ -340,18 +340,21 @@ impl WorldRenderer {
         }
     }
 
-    fn handle_inventory_key_event(&mut self, event: KeyEvent, window: &Window) {
-        if event.state == Pressed {
-            match event.physical_key {
-                PhysicalKey::Code(key) => {
-                    match key {
-                        KeyCode::KeyE => self.hud_renderer.toggle_inventory(),
-                        _ => {}
-                    }
-                }
-                PhysicalKey::Unidentified(_) => {}
-            }
-        }
+    fn handle_inventory_key_event(&mut self, event: RawKeyEvent, window: &Window) {
+	if event.state == Pressed {
+	    match event.physical_key {
+		PhysicalKey::Code(key) => {
+		    match key {
+			KeyCode::KeyE => {
+			    self.items = self.hud_renderer.close_inventory();
+			    self.update_items_bar();
+			},
+			_ => {}
+		    }
+		},
+		PhysicalKey::Unidentified(_) => {}
+	    }
+	}
     }
 
     fn handle_game_key_event(&mut self, event: KeyEvent, window: &Window) {
@@ -381,12 +384,12 @@ impl WorldRenderer {
             match event.physical_key {
                 PhysicalKey::Code(key) => {
                     match key {
-                        // Inventory
-                        KeyCode::KeyE => {
-                            self.hud_renderer.toggle_inventory();
-                        }
-
-                        // Item bar shortcuts
+			// Inventory
+			KeyCode::KeyE => {
+			    self.hud_renderer.open_inventory(self.items.clone());
+			}
+			
+			// Item bar shortcuts
                         KeyCode::Digit1 => {
                             self.items.set_current_item(0);
                             self.update_items_bar();

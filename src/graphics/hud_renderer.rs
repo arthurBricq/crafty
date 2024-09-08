@@ -15,7 +15,7 @@ use super::menu_debug::DebugMenuData;
 use super::inventory_menu::InventoryMenu;
 
 use crate::graphics::items_bar::ItemBar;
-use crate::player_items::ItemStack;
+use crate::player_items::{ItemStack, PlayerItems};
 
 /// Has the responsability to provide all the HUD to be drawn by OpenGL.
 pub struct HUDRenderer {
@@ -35,8 +35,7 @@ pub struct HUDRenderer {
 
     items_bar: ItemBar,
 
-    inventory_menu: InventoryMenu,
-    show_inventory: bool,
+    inventory_menu: Option<InventoryMenu>,
 }
 
 impl HUDRenderer {
@@ -55,8 +54,7 @@ impl HUDRenderer {
             show_help: false,
             show_debug: false,
             items_bar: ItemBar::new(),
-            inventory_menu: InventoryMenu::new(1.0),
-            show_inventory: false,
+            inventory_menu: None,
         };
 
         hud.add_cross();
@@ -104,7 +102,7 @@ impl HUDRenderer {
         // rects() would return a Vec of ref to append
         self.rects=self.base.clone();
 
-        if !self.show_inventory {
+        if !self.is_inventory_open() {
             self.rects.append(&mut self.items_bar.rects());
         }
         
@@ -114,8 +112,8 @@ impl HUDRenderer {
         if self.show_debug {
             self.rects.append(&mut self.debug_menu.rects().clone());
         }
-        if self.show_inventory {
-            self.rects.append(&mut self.inventory_menu.rects().clone());
+        if self.is_inventory_open() {
+            self.rects.append(&mut self.inventory_menu.as_mut().unwrap().rects().clone());
         }
     }
 
@@ -138,7 +136,7 @@ impl HUDRenderer {
 
         // Cascade down the aspect ratio to the HUD parts that require it
         self.items_bar.set_aspect_ratio(self.aspect_ratio);
-        self.inventory_menu.set_aspect_ratio(self.aspect_ratio);
+        self.inventory_menu.as_mut().map(|mut inv| { inv.set_aspect_ratio(self.aspect_ratio); });
         
         // Update the collection of rectangles
         self.update();
@@ -150,12 +148,18 @@ impl HUDRenderer {
     }
 
     pub fn is_inventory_open(&self) -> bool {
-        self.show_inventory
+        self.inventory_menu.is_some()
     }
 
-    pub fn toggle_inventory(&mut self) {
-        self.show_inventory = !self.show_inventory;
+    pub fn open_inventory(&mut self, items: PlayerItems) {
+        self.inventory_menu = Some(InventoryMenu::new(self.aspect_ratio, items));
         self.update();
-        println!("inventory toggled to: {}", self.is_inventory_open());
+    }
+
+    pub fn close_inventory(&mut self) -> PlayerItems {
+        let items = self.inventory_menu.take().unwrap().take_player_items();
+        self.update();
+        
+        items
     }
 }

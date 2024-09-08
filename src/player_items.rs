@@ -7,6 +7,7 @@ const MAX_ITEMS_IN_SLOT: usize = 64;
 
 
 /// Holds the items of a player.
+#[derive(Clone)]
 pub struct PlayerItems {
     /// The items always displayed on the item bars
     bar_items: [Option<ItemStack>; CURRENT_ITEMS_SIZE],
