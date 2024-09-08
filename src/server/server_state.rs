@@ -24,7 +24,7 @@ impl ServerState {
     pub fn login(&mut self, name: String) -> PlayerState {
         self.connected.insert(name.clone());
         if !self.players.contains_key(&name) {
-            self.players.insert(name.clone(), PlayerState { id: 0, pos: Position::spawn_position() });
+            self.players.insert(name.clone(), PlayerState { id: self.players.len(), pos: Position::spawn_position() });
         }
         self.players.get_mut(&name).map(|player| player.pos.raise());
         self.players.get(&name).unwrap().clone()
@@ -54,4 +54,28 @@ impl ServerState {
     }
     
 
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::server::server_state::{PlayerState, ServerState};
+
+    #[test]
+    fn test_client_id_assignation() {
+        let mut state = ServerState::new();
+
+        let p1 = state.login("arthur".to_string());
+        assert_eq!(1, state.n_players_connected());
+        assert_eq!(0, p1.id);
+
+        let p2 = state.login("johan".to_string());
+        assert_eq!(2, state.n_players_connected());
+        assert_eq!(1, p2.id);
+        
+        state.logout(0);
+        assert_eq!(1, state.n_players_connected());
+        let connected: Vec<&PlayerState> = state.connected_players().collect();
+        assert_eq!(1, connected.len());
+        assert_eq!(1, connected[0].id)
+    }
 }
