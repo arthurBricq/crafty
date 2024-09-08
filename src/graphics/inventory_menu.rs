@@ -1,5 +1,7 @@
 use crate::graphics::color::Color::{LighterGray, LightGray, Red};
 use crate::graphics::inventory_event::InventoryEvent;
+use crate::graphics::inventory_space;
+use crate::graphics::inventory_space::{InventoryPosition, InventoryRect};
 use crate::graphics::rectangle::RectInstance;
 use crate::player_items::PlayerItems;
 use crate::graphics::update_status::UpdateStatus;
@@ -10,39 +12,6 @@ use crate::crafting::{CraftingGrid, CraftingManager};
 
 const INVENTORY_NROWS: usize = 4; // the 0th is the item bar
 const INVENTORY_NCOLS: usize = 8;
-
-/// A position in inventory space, i.e. from 0 to 1, origin on the bottom left
-/// corner, with 0, 1 being the sides of the UI
-#[derive(Debug, Clone, Copy)]
-pub struct InventoryPosition {
-    pub x: f32,
-    pub y: f32
-}
-
-impl InventoryPosition {
-    pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-    
-    pub fn zero() -> Self {
-        Self { x: 0., y: 0.}
-    }
-}
-
-/// A size in inventory space, i.e. from 0 to 1, origin on the bottom left
-/// corner, with 0, 1 being the sides of the UI. Different from
-/// InventoryPosition because the change of coordinates from NDC is different
-#[derive(Debug)]
-pub struct InventorySize {
-    pub w: f32,
-    pub h: f32
-}
-
-impl InventorySize {
-    pub fn new(w: f32, h: f32) -> Self {
-        Self { w, h }
-    }
-}
 
 pub struct InventoryMenu {
     rects: Vec<RectInstance>,
@@ -114,7 +83,7 @@ impl InventoryMenu {
     pub fn handle_event(&mut self, event: InventoryEvent) -> UpdateStatus {
         match event {
             InventoryEvent::CursorMoved(x, y) => {
-                if let Some(pos) = self.from_ndc_to_inventory_position([x, y]) {
+                if let Some(pos) = self.from_ndc_to_ui_position([x, y]) {
                     self.cursor_pos = pos;
                     self.update();
 
@@ -234,7 +203,7 @@ impl InventoryMenu {
         self.rects = Vec::new();
 
         // background of the inventory
-        self.ui_rect = Self::ui_boundaries(self.aspect_ratio);
+        self.ui_rect = inventory_space::ui_boundaries(self.aspect_ratio);
         {
             let (u, v, w, h) = self.ui_rect;
             self.rects.push(
@@ -295,10 +264,11 @@ impl InventoryMenu {
 
             // carried item
             if let Some(block) = self.carried_item {
-                let (x, y, w, h) = Self::from_ui_to_ndc_rect(&self.ui_rect, &(self.cursor_pos.x,
-                                                                              self.cursor_pos.y,
-                                                                              item_size,
-                                                                              item_size));
+                let (x, y, w, h) = inventory_space::from_ui_to_ndc_rect(&self.ui_rect,
+                                                                        &InventoryRect::new(self.cursor_pos.x,
+                                                                                           self.cursor_pos.y,
+                                                                                           item_size,
+                                                                                           item_size));
                 let mut rect = RectInstance::new_from_corner(x, y, w, h, Red);
                 rect.set_block_id(block as u8 as i8);
                 self.rects.push(rect);
@@ -314,36 +284,11 @@ impl InventoryMenu {
         self.crafting_output_items = CraftingManager::recipe(&self.crafting_items)
     }
 
-    fn from_ndc_to_inventory_position(&self, vec: [f32; 2]) -> Option<InventoryPosition> {
-        let (xui, yui, wui, hui) = self.ui_rect;
-        let [x, y] = vec;
-        let u = (x - xui) / wui;
-        let v = (y - yui) / hui;
-
-        if 0. <= u && u <= 1. && 0. <= v && v <= 1. {
-            Some(InventoryPosition::new(u, v))
-        } else { None }
+    /// Same as the function in `inventory_space.rs`, but using the UI rect from
+    /// self
+    fn from_ndc_to_ui_position(&self, vec: [f32; 2]) -> Option<InventoryPosition> {
+        inventory_space::from_ndc_to_ui_position(&self.ui_rect, vec)
     }
     
-    /// Returns the `(x, y, w, h)` boundaries of the ui for a given aspect ratio
-    fn ui_boundaries(aspect_ratio: f32) -> (f32, f32, f32, f32) {
-        let margin_h: f32 = 0.1; // this will be fixed; compute the other margins from that
-        let target_ratio: f32 = 1.; // for now
 
-        let margin_w: f32 = 1. - (1. - margin_h) * target_ratio / aspect_ratio;
-        
-        (-1. + margin_w, -1. + margin_h, 2. - 2. * margin_w, 2. - 2. * margin_h)
-    }
-
-    pub fn from_ui_to_ndc_rect(ui_rect: &(f32, f32, f32, f32), rect: &(f32, f32, f32, f32)) -> (f32, f32, f32, f32) {
-        let (xui, yui, wui, hui) = ui_rect;
-        let (x, y, w, h) = rect;
-        
-        (
-            xui + wui * x,
-            yui + hui * y,
-            wui * w,
-            hui * h,
-        )
-    }
 }
