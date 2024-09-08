@@ -63,7 +63,6 @@ impl PlayerItems {
     pub fn put_inventory_item(&mut self, index: usize, block: Block) -> bool {
         Self::put_item(&mut self.inventory_items[index], block)
     }
-
     
     pub fn get_current_block(&self) -> Option<Block> {
         if let Some((_, Some((block, _)))) = self.bar_items.iter()

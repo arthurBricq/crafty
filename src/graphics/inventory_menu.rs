@@ -7,6 +7,9 @@ use crate::graphics::inventory_slot::InventorySlot;
 use winit::event::ElementState;
 use crate::block_kind::Block;
 
+const INVENTORY_NROWS: usize = 4; /// the 0th is the item bar
+const INVENTORY_NCOLS: usize = 8;
+
 /// A position in inventory space, i.e. from 0 to 1, origin on the bottom left
 /// corner, with 0, 1 being the sides of the UI
 #[derive(Debug, Clone, Copy)]
@@ -49,7 +52,7 @@ pub struct InventoryMenu {
     /// u, v, w, h of the UI, in NDC coordinates
     ui_rect: (f32, f32, f32, f32),
 
-    inventory_slots: [[InventorySlot; 8]; 4],
+    inventory_slots: [[InventorySlot; INVENTORY_NCOLS]; INVENTORY_NROWS],
     crafting_slots: [[InventorySlot; 3]; 3],
     crafting_output_slot: InventorySlot,
 
@@ -68,7 +71,7 @@ impl InventoryMenu {
             items,
             cursor_pos: InventoryPosition::zero(),
             ui_rect: (0., 0., 0., 0.),
-            inventory_slots: [[slot; 8]; 4],
+            inventory_slots: [[slot; INVENTORY_NCOLS]; INVENTORY_NROWS],
             crafting_slots: [[slot; 3]; 3],
             crafting_output_slot: slot,
 
@@ -121,8 +124,8 @@ impl InventoryMenu {
             // a valid slot is an inventory or crafting slot (no crafting
             // output), either empty or with an item of the same kind
 
-            for row in 0..4 {
-                for col in 0..8 {
+            for row in 0..INVENTORY_NROWS {
+                for col in 0..INVENTORY_NCOLS {
                     if self.inventory_slots[row][col].is_in(&self.cursor_pos) {
                         // grab it
                         if row == 0 {
@@ -133,7 +136,7 @@ impl InventoryMenu {
                         }
                         else {
                             // for inventory
-                            if self.items.put_inventory_item(col, carried_item) {
+                            if self.items.put_inventory_item((row - 1) * INVENTORY_NCOLS + col, carried_item) {
                                 self.carried_item = None;
                             }
                         }
@@ -143,8 +146,8 @@ impl InventoryMenu {
         } else {
             // if we are in a non empty slot, take it
 
-            for row in 0..4 {
-                for col in 0..8 {
+            for row in 0..INVENTORY_NROWS {
+                for col in 0..INVENTORY_NCOLS {
                     if self.inventory_slots[row][col].is_in(&self.cursor_pos) {
                         // grab it
                         if row == 0 {
@@ -155,7 +158,7 @@ impl InventoryMenu {
                         }
                         else {
                             // for inventory
-                            if let Some(block) = self.items.take_inventory_item(col) {
+                            if let Some(block) = self.items.take_inventory_item((row - 1) * INVENTORY_NCOLS + col) {
                                 self.carried_item = Some(block);
                             }
                         }
@@ -181,13 +184,11 @@ impl InventoryMenu {
 
         // inventory slots
         {
-            let ncols = 8;
-            let nrows = 4;
             let margin = 0.02;
-            let item_size = (1. - margin * (ncols as f32 + 1.)) / ncols as f32;
+            let item_size = (1. - margin * (INVENTORY_NCOLS as f32 + 1.)) / INVENTORY_NCOLS as f32;
 
-            for row in 0..nrows {
-                for col in 0..ncols {
+            for row in 0..INVENTORY_NROWS {
+                for col in 0..INVENTORY_NCOLS {
                     let item = if row == 0 {
                         // from item bar
                         self.items.get_bar_item(col)
