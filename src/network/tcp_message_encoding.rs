@@ -1,3 +1,17 @@
+use std::fmt::{write, Display, Formatter};
+
+#[derive(Debug)]
+enum TcpError {
+    LengthError
+}
+
+impl Display for TcpError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Error while communicating over TCP: {:?}", self)
+    }
+}
+
+impl std::error::Error for TcpError {}
 
 
 /// A trait that an enum or a struct implement to be shared over the network.
@@ -75,7 +89,7 @@ impl ParseContext{
 }
 
 
-pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext) -> Vec<T> {
+pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext) -> Result<Vec<T>, Box<dyn std::error::Error>> {
     let mut to_return = vec![];
     let mut start = 0;
     loop {
@@ -85,7 +99,7 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
             // Read the header
             // - type of the enum
             // - length of the message being sent
-            let length_bytes: [u8; 4] = bytes[start + 1..start + 5].try_into().unwrap();
+            let length_bytes: [u8; 4] = bytes.get(start + 1..start + 5).ok_or(TcpError::LengthError)?.try_into()?;
             let len = u32::from_le_bytes(length_bytes) as usize;
             let code = bytes[start];
             context.set_code(code);
@@ -124,5 +138,5 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
         }
     }
 
-    to_return
+    Ok(to_return)
 }

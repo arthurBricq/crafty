@@ -25,7 +25,7 @@ fn handle_stream_with_server(mut stream: TcpStream, proxy: Arc<Mutex<TcpProxy>>,
         // Continuously read the bytes received by the server
         match stream.read(&mut data) {
             Ok(size) => {
-                for update in from_tcp_repr(&data[0..size], &mut context) {
+                for update in from_tcp_repr(&data[0..size], &mut context).unwrap() {
                     proxy.lock().unwrap().push_server_update(update);
                 }
             }
@@ -117,6 +117,7 @@ impl Proxy for TcpProxy {
         while let Some(update) = self.pending_updates.pop_front() {
             tmp.push(update);
         }
+        println!("Received {} messages", tmp.len());
         tmp
     }
 
