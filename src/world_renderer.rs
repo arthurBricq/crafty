@@ -312,13 +312,23 @@ impl WorldRenderer {
                             &draw_parameters).unwrap();
                         target.finish().unwrap();
                     }
-                    winit::event::WindowEvent::MouseInput { device_id: _, state, button } => self.handle_button_event(button, state),
+                    winit::event::WindowEvent::MouseInput { device_id: _, state, button } => {
+                        if !self.hud_renderer.is_inventory_open() {
+                            self.handle_button_event(button, state)
+                        }
+
+                        // left click
+			if button == MouseButton::Left {
+			    self.hud_renderer.maybe_forward_inventory_event(InventoryEvent::Button(state))
+			}
+                    },
                     winit::event::WindowEvent::KeyboardInput { device_id: _, event, is_synthetic: _ } => self.handle_key_event(event, &window),
 		    // Inventory requires us to deal with cursor events, not mouse events
-		    winit::event::WindowEvent::CursorMoved{ device_id, position } => {
-		        let x: f32 = -1. + 2. * position.x as f32 / window.inner_size().width as f32;
-		        let y: f32 = 1. - 2. * position.y as f32 / window.inner_size().height as f32;
-		        self.hud_renderer.maybe_forward_inventory_event(InventoryEvent::CursorMoved(x, y));
+		    // TODO capture nicely the events for the inventory
+		    winit::event::WindowEvent::CursorMoved{ position, .. } => {
+			let x: f32 = -1. + 2. * position.x as f32 / window.inner_size().width as f32;
+			let y: f32 = 1. - 2. * position.y as f32 / window.inner_size().height as f32;
+			self.hud_renderer.maybe_forward_inventory_event(InventoryEvent::CursorMoved(x, y));
 		    }
                     _ => (),
                 },
@@ -331,7 +341,7 @@ impl WorldRenderer {
                     window.request_redraw()
                 }
                 winit::event::Event::DeviceEvent { event, .. } => match event {
-                    winit::event::DeviceEvent::Motion { axis, value } => { self.handle_motion_event(axis, value) }
+                    winit::event::DeviceEvent::Motion { axis, value } => self.handle_motion_event(axis, value),
                     _ => {}
                 }
                 _ => (),

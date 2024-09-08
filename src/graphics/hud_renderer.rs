@@ -170,11 +170,8 @@ impl HUDRenderer {
         let status = self.inventory_menu.as_mut().map(|inv| {
             inv.handle_event(event)
         }).unwrap_or(UpdateStatus::NoUpdate);
-
-        dbg!(&status);
         
         if let UpdateStatus::Update = status {
-            dbg!("doing something ?!");
             self.update();
         }
     }

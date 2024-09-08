@@ -4,6 +4,7 @@ pub enum Color {
     LightCoral,
     LightGray,
     LighterGray,
+    EvenLighterGray,
     LightYellow,
     Sky1,
     Sky2,
@@ -16,6 +17,7 @@ impl Color {
             Color::LightCoral => [240./255., 128./255., 128./255., 0.6],
             Color::LightGray => [192./255., 192./255., 192./255., 0.3],
             Color::LighterGray => [220./255., 220./255., 220./255., 0.6],
+            Color::EvenLighterGray => [240./255., 240./255., 240./255., 0.6],
             Color::LightYellow => [252./255., 253./255., 181./255., 0.8],
             Color::Sky1 => [146./255., 210./255., 249./255., 1.],
             Color::Sky2 => [205./255., 226./255., 238./255., 1.]
