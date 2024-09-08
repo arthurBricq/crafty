@@ -56,6 +56,14 @@ impl PlayerItems {
         Self::take_item(&mut self.inventory_items[index])
     }
 
+    pub fn put_bar_item(&mut self, index: usize, block: Block) -> bool {
+        Self::put_item(&mut self.bar_items[index], block)
+    }
+    
+    pub fn put_inventory_item(&mut self, index: usize, block: Block) -> bool {
+        Self::put_item(&mut self.inventory_items[index], block)
+    }
+
     
     pub fn get_current_block(&self) -> Option<Block> {
         if let Some((_, Some((block, _)))) = self.bar_items.iter()
@@ -140,6 +148,9 @@ impl PlayerItems {
         *itemstack = if let Some((block, count)) = itemstack {
             if *count > 0 {
                 ret = Some(*block);
+            }
+            
+            if *count > 1 {
                 Some((*block, *count - 1))
             } else {
                 None
@@ -149,6 +160,27 @@ impl PlayerItems {
         };
 
         ret
+    }
+
+    fn put_item(itemstack: &mut Option<ItemStack>, block: Block) -> bool {
+        let mut success: bool = false;
+        *itemstack = match itemstack {
+            Some((block2, count)) => {
+                if *block2 == block {
+                    // TODO put stack limit
+                    success = true;
+                    Some((*block2, *count + 1))
+                } else {
+                    Some((*block2, *count))
+                }
+            },
+            None => {
+                success = true;
+                Some((block, 1))
+            }
+        };
+
+        success
     }
 }
 

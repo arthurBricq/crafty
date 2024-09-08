@@ -120,8 +120,23 @@ impl InventoryMenu {
 
             // a valid slot is an inventory or crafting slot (no crafting
             // output), either empty or with an item of the same kind
-            
-            todo!("later");
+
+            for row in 0..4 {
+                for col in 0..8 {
+                    if self.inventory_slots[row][col].is_in(&self.cursor_pos) {
+                        // grab it
+                        if row == 0 {
+                            // for item bar
+                            if self.items.put_bar_item(col, carried_item) {
+                                self.carried_item = None;
+                            }
+                        }
+                        else {
+                            todo!("  ");
+                        }
+                    }
+                }
+            }
         } else {
             // if we are in a non empty slot, take it
 
@@ -130,6 +145,7 @@ impl InventoryMenu {
                     if self.inventory_slots[row][col].is_in(&self.cursor_pos) {
                         // grab it
                         if row == 0 {
+                            // for item bar
                             if let Some(block) = self.items.take_bar_item(col) {
                                 self.carried_item = Some(block);
                             }
