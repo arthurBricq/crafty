@@ -38,11 +38,21 @@ This project surely still has some bugs and everything, we did mostly over 1 wee
 
 But the `main` branch is supposed to run !
 
+### Single Player
+
 To run in **single player**, use
 
 ```console
-cargo run --bin crafty
+cargo run --bin crafty -- INIT_MODE
 ```
+
+For `INIT_MODE`, you can use
+- `--random`: generates a random world using our world creation
+- `--flat`  : generates a flat world
+- `--disk`  : tries to load the `map.json` on the disk
+- If put nothing, will use `--random`
+
+### Multi Player
 
 To run in **multiplayer**, first launch a server like this:
 

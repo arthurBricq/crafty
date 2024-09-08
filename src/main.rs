@@ -1,3 +1,5 @@
+use std::env;
+use std::env::Args;
 use crafty::server::game_server::GameServer;
 use crafty::network::single_player_proxy::SinglePlayerProxy;
 use crafty::world::World;
@@ -14,9 +16,28 @@ enum WorldInitializer {
     DISK,
 }
 
+impl WorldInitializer {
+    fn from_args() -> Self {
+        let args: Vec<String> = env::args().collect();
+        println!("args = {args:?}");
+        if args.contains(&"--random".to_string()) {
+            Self::RANDOM
+        }
+        else if args.contains(&"--flat".to_string()) {
+            Self::FLAT
+        }
+        else if args.contains(&"--disk".to_string()) {
+            Self::DISK
+        }
+        else {
+            Self::RANDOM
+        }
+    }
+}
+
 fn main() {
     // Create the initial world
-    let init = WorldInitializer::DISK;
+    let init = WorldInitializer::from_args();
     println!("Loading world using : {:?}", init);
     let world = match init {
         WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(5),
