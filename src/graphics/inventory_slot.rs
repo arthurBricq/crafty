@@ -3,6 +3,7 @@ use crate::graphics::inventory_menu::InventoryPosition;
 use crate::graphics::rectangle::RectInstance;
 use crate::graphics::color::Color::{LighterGray, EvenLighterGray};
 use crate::player_items::ItemStack;
+use crate::graphics::string_rect::StringRect;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InventorySlot {
@@ -37,7 +38,11 @@ impl InventorySlot {
             let mut rect = RectInstance::new_from_corner(x, y, w, h, LighterGray);
             rect.set_block_id(block as u8 as i8);
             rects.push(rect);
-            
+
+            // and the count
+            let text = format!("{count}");
+            let quantity = StringRect::new(&text, x, y, 0.03);
+            rects.append(&mut quantity.rects().clone());
         }
 
         rects
