@@ -7,6 +7,7 @@ const MAX_ITEMS_IN_SLOT: usize = 64;
 
 
 /// Holds the items of a player.
+#[derive(Clone)]
 pub struct PlayerItems {
     /// The items always displayed on the item bars
     bar_items: [Option<ItemStack>; CURRENT_ITEMS_SIZE],
@@ -39,6 +40,30 @@ impl PlayerItems {
             .collect()
     }
 
+    pub fn get_bar_item(&self, index: usize) -> Option<ItemStack> {
+        self.bar_items[index]
+    }
+
+    pub fn get_inventory_item(&self, index: usize) -> Option<ItemStack> {
+        self.inventory_items[index]
+    }
+
+    pub fn take_bar_item(&mut self, index: usize) -> Option<Block> {
+        Self::take_item(&mut self.bar_items[index])
+    }
+
+    pub fn take_inventory_item(&mut self, index: usize) -> Option<Block> {
+        Self::take_item(&mut self.inventory_items[index])
+    }
+
+    pub fn put_bar_item(&mut self, index: usize, block: Block) -> bool {
+        Self::put_item(&mut self.bar_items[index], block)
+    }
+    
+    pub fn put_inventory_item(&mut self, index: usize, block: Block) -> bool {
+        Self::put_item(&mut self.inventory_items[index], block)
+    }
+    
     pub fn get_current_block(&self) -> Option<Block> {
         if let Some((_, Some((block, _)))) = self.bar_items.iter()
             .filter(|item| item.is_some())
@@ -116,7 +141,46 @@ impl PlayerItems {
         self.current_item
     }
 
+    fn take_item(itemstack: &mut Option<ItemStack>) -> Option<Block> {
+        let mut ret: Option<Block> = None;
+        
+        *itemstack = if let Some((block, count)) = itemstack {
+            if *count > 0 {
+                ret = Some(*block);
+            }
+            
+            if *count > 1 {
+                Some((*block, *count - 1))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
 
+        ret
+    }
+
+    fn put_item(itemstack: &mut Option<ItemStack>, block: Block) -> bool {
+        let mut success: bool = false;
+        *itemstack = match itemstack {
+            Some((block2, count)) => {
+                if *block2 == block {
+                    // TODO put stack limit
+                    success = true;
+                    Some((*block2, *count + 1))
+                } else {
+                    Some((*block2, *count))
+                }
+            },
+            None => {
+                success = true;
+                Some((block, 1))
+            }
+        };
+
+        success
+    }
 }
 
 #[cfg(test)]

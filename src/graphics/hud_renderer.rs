@@ -13,9 +13,11 @@ use super::menu_debug::DebugMenu;
 use super::menu_debug::DebugMenuData;
 
 use super::inventory_menu::InventoryMenu;
+use crate::graphics::update_status::UpdateStatus;
 
+use crate::graphics::inventory_event::InventoryEvent;
 use crate::graphics::items_bar::ItemBar;
-use crate::player_items::ItemStack;
+use crate::player_items::{ItemStack, PlayerItems};
 
 /// Has the responsability to provide all the HUD to be drawn by OpenGL.
 pub struct HUDRenderer {
@@ -35,8 +37,7 @@ pub struct HUDRenderer {
 
     items_bar: ItemBar,
 
-    inventory_menu: InventoryMenu,
-    show_inventory: bool,
+    inventory_menu: Option<InventoryMenu>,
 }
 
 impl HUDRenderer {
@@ -55,8 +56,7 @@ impl HUDRenderer {
             show_help: false,
             show_debug: false,
             items_bar: ItemBar::new(),
-            inventory_menu: InventoryMenu::new(),
-            show_inventory: false,
+            inventory_menu: None,
         };
 
         hud.add_cross();
@@ -104,7 +104,7 @@ impl HUDRenderer {
         // rects() would return a Vec of ref to append
         self.rects=self.base.clone();
 
-        if !self.show_inventory {
+        if !self.is_inventory_open() {
             self.rects.append(&mut self.items_bar.rects());
         }
         
@@ -114,8 +114,8 @@ impl HUDRenderer {
         if self.show_debug {
             self.rects.append(&mut self.debug_menu.rects().clone());
         }
-        if self.show_inventory {
-            self.rects.append(&mut self.inventory_menu.rects().clone());
+        if self.is_inventory_open() {
+            self.rects.append(&mut self.inventory_menu.as_mut().unwrap().rects().clone());
         }
     }
 
@@ -135,7 +135,12 @@ impl HUDRenderer {
     pub fn set_dimension(&mut self, dim: (u32, u32)) {
         println!("dimension={dim:?}");
         self.aspect_ratio = dim.0 as f32 / dim.1 as f32;
+
+        // Cascade down the aspect ratio to the HUD parts that require it
         self.items_bar.set_aspect_ratio(self.aspect_ratio);
+        self.inventory_menu.as_mut().map(|mut inv| { inv.set_aspect_ratio(self.aspect_ratio); });
+        
+        // Update the collection of rectangles
         self.update();
     }
 
@@ -145,12 +150,35 @@ impl HUDRenderer {
     }
 
     pub fn is_inventory_open(&self) -> bool {
-        self.show_inventory
+        self.inventory_menu.is_some()
     }
 
-    pub fn toggle_inventory(&mut self) {
-        self.show_inventory = !self.show_inventory;
+    pub fn open_inventory(&mut self, items: PlayerItems) {
+        self.inventory_menu = Some(InventoryMenu::new(self.aspect_ratio, items));
         self.update();
-        println!("inventory toggled to: {}", self.is_inventory_open());
+    }
+
+    /// Close inventory. This function may fail, because there are still items
+    /// in the crafting grid, and we do not want to loose them
+    pub fn close_inventory(&mut self) -> Option<PlayerItems> {
+        if self.inventory_menu.as_ref().unwrap().can_be_closed_safely() {
+            let items = self.inventory_menu.take().unwrap().take_items();
+            self.update();
+            
+            Some(items)
+        } else {
+            None
+        }        
+    }
+
+    /// If the inventory is open, forward it the event
+    pub fn maybe_forward_inventory_event(&mut self, event: InventoryEvent) {
+        let status = self.inventory_menu.as_mut().map(|inv| {
+            inv.handle_event(event)
+        }).unwrap_or(UpdateStatus::NoUpdate);
+        
+        if let UpdateStatus::Update = status {
+            self.update();
+        }
     }
 }
