@@ -14,13 +14,14 @@ impl CraftingManager {
     pub fn recipe(grid: &CraftingGrid) -> Option<Block> {
         let mut recipes: HashMap<CraftingGrid, Block> = HashMap::new();
 
+        // TODO the rows are in the wrong order, be careful
         recipes.insert(
             [
-                [None; 3],
-                [None, Some(Block::DIRT), None],
-                [None; 3]
+                [None, Some(Block::OAKLOG), None],
+                [None, Some(Block::COBBELSTONE), None],
+                [None, Some(Block::COBBELSTONE), None],
             ],
-            Block::COBBELSTONE
+            Block::SWORD
         );
         
         recipes.get(grid).copied()
