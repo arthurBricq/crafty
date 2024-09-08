@@ -8,7 +8,7 @@ use crate::block_kind::Block::GRASS;
 use crate::block_kind::Block::COBBELSTONE;
 use crate::block_kind::Block::OAKLOG;
 use crate::block_kind::Block::OAKLEAVES;
-use crate::chunk::Chunk;
+use crate::chunk::{self, Chunk};
 use crate::chunk::CHUNK_FLOOR;
 use crate::chunk::CHUNK_SIZE;
 use crate::primitives::vector::Vector3;
@@ -22,7 +22,7 @@ impl WorldGenerator {
     pub fn create_new_random_world(n_chunks: i32) -> World {
         //let mut noise = PerlinNoise::new(121, 32.);
         let seed: u64 = 42;
-        let mut noise = MultiscalePerlinNoise::new(seed, BIOMES[0].noise_config.clone());
+        let mut noise: MultiscalePerlinNoise = MultiscalePerlinNoise::new(seed, BIOMES[0].noise_config.clone());
 
         let s = CHUNK_SIZE as f32;
         let mut chunks = vec![];
@@ -32,50 +32,58 @@ impl WorldGenerator {
             for j in -n_chunks..n_chunks + 1 {
                 let x0 = i as f32 * s;
                 let z0 = j as f32 * s;
-                let mut chunk = Chunk::new([x0, z0]);
 
-                // get the height from the perlin noise for each block
-                for x in 0..8 {
-                    for z in 0..8 {
-                        let biome_t: u64 = BiomeGenerator::find_closest_biome(seed, x + x0 as i32, z + z0 as i32);
-                        
-                        let biome_config = &BIOMES[biome_t as usize];
-
-                        if SINGLE_NOISE_CONFIG {
-                            noise.change_config(BASE_BIOME_CONFIG);
-                        } else {
-                            noise.change_config(biome_config.noise_config.clone());
-                        }
-
-                        let height = biome_config.terrain_offset
-                            + biome_config.terrain_scale
-                                * noise.at([i as f32 * s + x as f32, j as f32 * s + z as f32]);
-
-                        let cube_height = height.floor() as i32;
-
-                        for y in 0..cube_height {
-                            let block_at_height = biome_config.get_block_at(cube_height - y - 1);
-
-                            if let Some(block) = block_at_height {
-                                chunk.add_cube(
-                                    Vector3::new(
-                                        i as f32 * s + x as f32,
-                                        y as f32,
-                                        j as f32 * s + z as f32,
-                                    ),
-                                    block,
-                                    0,
-                                );
-                            }
-                        }
-                    }
-                }
-
-                chunks.push(chunk);
+                chunks.push(WorldGenerator::create_random_chunk(seed, [x0, z0], &mut noise));
             }
         }
 
         World::new(chunks)
+    }
+
+    pub fn create_random_chunk(seed: u64, chunk_coord: [f32; 2], noise: &mut MultiscalePerlinNoise) -> Chunk {
+        let x0 = chunk_coord[0];
+        let z0 = chunk_coord[1];
+
+        let mut chunk = Chunk::new([x0, z0]);
+
+        // get the height from the perlin noise for each block
+        for x in 0..8 {
+            for z in 0..8 {
+                let biome_t: u64 = BiomeGenerator::find_closest_biome(seed, x + x0 as i32, z + z0 as i32);
+                
+                let biome_config = &BIOMES[biome_t as usize];
+
+                if SINGLE_NOISE_CONFIG {
+                    noise.change_config(BASE_BIOME_CONFIG);
+                } else {
+                    noise.change_config(biome_config.noise_config.clone());
+                }
+
+                let height = biome_config.terrain_offset
+                    + biome_config.terrain_scale
+                        * noise.at([(x as f32) + x0, (z as f32) + z0]);
+
+                let cube_height = height.floor() as i32;
+
+                for y in 0..cube_height {
+                    let block_at_height = biome_config.get_block_at(cube_height - y - 1);
+
+                    if let Some(block) = block_at_height {
+                        chunk.add_cube(
+                            Vector3::new(
+                                (x as f32) + x0,
+                                y as f32,
+                                (z as f32) + z0,
+                            ),
+                            block,
+                            0,
+                        );
+                    }
+                }
+            }
+        }
+
+        return chunk;
     }
 
     /// Creates a basic, flat world. For now this is a simple, flat
