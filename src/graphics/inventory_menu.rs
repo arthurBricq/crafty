@@ -233,9 +233,7 @@ impl InventoryMenu {
             }
 
             // carried item
-            dbg!("is there a carried_item");
             if let Some(block) = self.carried_item {
-                dbg!("there is a carried_item");
                 let (x, y, w, h) = Self::from_ui_to_ndc_rect(&self.ui_rect, &(self.cursor_pos.x,
                                                                               self.cursor_pos.y,
                                                                               item_size,
