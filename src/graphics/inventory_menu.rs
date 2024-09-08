@@ -132,7 +132,10 @@ impl InventoryMenu {
                             }
                         }
                         else {
-                            todo!("  ");
+                            // for inventory
+                            if self.items.put_inventory_item(col, carried_item) {
+                                self.carried_item = None;
+                            }
                         }
                     }
                 }
@@ -151,7 +154,10 @@ impl InventoryMenu {
                             }
                         }
                         else {
-                            todo!("  ");
+                            // for inventory
+                            if let Some(block) = self.items.take_inventory_item(col) {
+                                self.carried_item = Some(block);
+                            }
                         }
                     }
                 }
