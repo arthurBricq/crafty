@@ -10,6 +10,7 @@ use std::net::TcpStream;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
 use std::{io, thread};
+use crate::attack::EntityAttack;
 
 /// Function that handles the thread that
 /// - sends messages to server
@@ -102,6 +103,13 @@ impl Proxy for TcpProxy {
 
     fn on_new_action(&mut self, action: Action) {
         match self.updates_transmitter.send(MessageToServer::OnNewAction(action)) {
+            Ok(_) => {}
+            Err(err) => println!("Error while sending: {err}")
+        }
+    }
+    
+    fn on_new_attack(&mut self, attack: EntityAttack) {
+        match self.updates_transmitter.send(MessageToServer::Attack(attack)) {
             Ok(_) => {}
             Err(err) => println!("Error while sending: {err}")
         }

@@ -79,6 +79,10 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                                     println!("Client {client_id:?} has submitted an action: {action:?}");
                                     game.lock().unwrap().on_new_action(client_id.unwrap(), action);
                                 }
+                                MessageToServer::Attack(attack) => {
+                                    
+                                    
+                                }
                             };
                         }
                     }

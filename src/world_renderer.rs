@@ -13,29 +13,29 @@ use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
 use crate::fps::FpsManager;
 use crate::graphics::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
+use crate::player::Player;
 
 use crate::camera::perspective_matrix;
 use crate::graphics::color::Color;
 use crate::graphics::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER};
 use crate::graphics::font::GLChar;
 use crate::graphics::hud_renderer::HUDRenderer;
+use crate::graphics::inventory_event::InventoryEvent;
 use crate::graphics::menu_debug::DebugData;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
-use crate::graphics::inventory_event::InventoryEvent;
+use crate::input::MotionState;
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
+use crate::player::CLICK_TIME_TO_BREAK;
 use crate::player_items::PlayerItems;
 use crate::texture;
 use crate::world::World;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Surface};
-use winit::event::ElementState::{Pressed, Released};
-use winit::event_loop::ControlFlow;
-use crate::input::MotionState;
+use winit::event::ElementState::Pressed;
 use winit::event::{AxisId, ElementState, KeyEvent, MouseButton};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{CursorGrabMode, Fullscreen, Window, WindowBuilder};
-use crate::player::CLICK_TIME_TO_BREAK;
+use winit::window::{CursorGrabMode, Fullscreen, Window};
 
 
 /// 16ms => 60 FPS roughly
@@ -319,18 +319,18 @@ impl WorldRenderer {
                         }
 
                         // left click
-			if button == MouseButton::Left {
-			    self.hud_renderer.maybe_forward_inventory_event(InventoryEvent::Button(state))
-			}
-                    },
+                        if button == MouseButton::Left {
+                            self.hud_renderer.maybe_forward_inventory_event(InventoryEvent::Button(state))
+                        }
+                    }
                     winit::event::WindowEvent::KeyboardInput { device_id: _, event, is_synthetic: _ } => self.handle_key_event(event, &window),
-		    // Inventory requires us to deal with cursor events, not mouse events
-		    // TODO capture nicely the events for the inventory
-		    winit::event::WindowEvent::CursorMoved{ position, .. } => {
-			let x: f32 = -1. + 2. * position.x as f32 / window.inner_size().width as f32;
-			let y: f32 = 1. - 2. * position.y as f32 / window.inner_size().height as f32;
-			self.hud_renderer.maybe_forward_inventory_event(InventoryEvent::CursorMoved(x, y));
-		    }
+                    // Inventory requires us to deal with cursor events, not mouse events
+                    // TODO capture nicely the events for the inventory
+                    winit::event::WindowEvent::CursorMoved { position, .. } => {
+                        let x: f32 = -1. + 2. * position.x as f32 / window.inner_size().width as f32;
+                        let y: f32 = 1. - 2. * position.y as f32 / window.inner_size().height as f32;
+                        self.hud_renderer.maybe_forward_inventory_event(InventoryEvent::CursorMoved(x, y));
+                    }
                     _ => (),
                 },
                 winit::event::Event::AboutToWait => {
@@ -359,23 +359,23 @@ impl WorldRenderer {
     }
 
     fn handle_inventory_key_event(&mut self, event: KeyEvent, window: &Window) {
-	if event.state == Pressed {
-	    match event.physical_key {
-		PhysicalKey::Code(key) => {
-		    match key {
-			KeyCode::KeyE => {
+        if event.state == Pressed {
+            match event.physical_key {
+                PhysicalKey::Code(key) => {
+                    match key {
+                        KeyCode::KeyE => {
                             if let Some(items) = self.hud_renderer.close_inventory() {
                                 self.items = items;
-			        window.set_cursor_visible(false);
-			        self.update_items_bar();
+                                window.set_cursor_visible(false);
+                                self.update_items_bar();
                             }
-			},
-			_ => {}
-		    }
-		},
-		PhysicalKey::Unidentified(_) => {}
-	    }
-	}
+                        }
+                        _ => {}
+                    }
+                }
+                PhysicalKey::Unidentified(_) => {}
+            }
+        }
     }
 
     fn handle_game_key_event(&mut self, event: KeyEvent, window: &Window) {
@@ -405,13 +405,13 @@ impl WorldRenderer {
             match event.physical_key {
                 PhysicalKey::Code(key) => {
                     match key {
-			// Inventory
-			KeyCode::KeyE => {
-			    self.hud_renderer.open_inventory(self.items.clone());
-			    window.set_cursor_visible(true);
-			}
-			
-			// Item bar shortcuts
+                        // Inventory
+                        KeyCode::KeyE => {
+                            self.hud_renderer.open_inventory(self.items.clone());
+                            window.set_cursor_visible(true);
+                        }
+
+                        // Item bar shortcuts
                         KeyCode::Digit1 => {
                             self.items.set_current_item(0);
                             self.update_items_bar();
@@ -511,8 +511,9 @@ impl WorldRenderer {
             MouseButton::Left => {
                 if self.player.is_selecting_cube() {
                     self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
-                } else {
-                    self.entity_manager.attack(self.player.position().pos(), self.player.direction());
+                } else if let Some(attack) = self.entity_manager.attack(self.player.position().pos(), self.player.direction()) {
+                   // Forward the attack to the server
+                    self.proxy.lock().unwrap().on_new_attack(attack);
                 }
             }
             MouseButton::Right => {
@@ -523,7 +524,7 @@ impl WorldRenderer {
                         if let Some(block) = self.items.get_current_block() {
                             self.apply_action(Action::Add {
                                 at: touched_cube.position_to_add_new_cube(
-                                    self.player.position().pos(), 
+                                    self.player.position().pos(),
                                     self.player.direction()),
                                 block,
                             });
@@ -536,14 +537,14 @@ impl WorldRenderer {
     }
 
     fn handle_motion_event(&mut self, axis: AxisId, value: f64) {
-	// TODO make something cleaner
-	if !self.hud_renderer.is_inventory_open() {
-	    if axis == 0 {
-		self.player.mousemove(value as f32, 0.0, 0.005);
+        // TODO make something cleaner
+        if !self.hud_renderer.is_inventory_open() {
+            if axis == 0 {
+                self.player.mousemove(value as f32, 0.0, 0.005);
             } else {
-		self.player.mousemove(0.0, -value as f32, 0.005);
+                self.player.mousemove(0.0, -value as f32, 0.005);
             }
-	}
+        }
     }
 
     fn toggle_fullscreen(&mut self, window: &Window) {

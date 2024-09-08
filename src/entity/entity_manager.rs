@@ -1,24 +1,19 @@
+use crate::attack::EntityAttack;
+use crate::cube::Cube;
 use crate::entity::entity::{Entity, EntityKind};
 use crate::graphics::entity::EntityCube;
 use crate::primitives::position::Position;
-use std::collections::HashMap;
-use crate::cube::Cube;
 use crate::primitives::vector::Vector3;
-
-#[derive(PartialEq, Debug)]
-pub struct Attack {
-    attacked: u8
-}
-
+use std::collections::HashMap;
 
 /// Contain all the entities
 pub struct EntityManager {
-    entities: HashMap<u8, Entity>
+    entities: HashMap<u8, Entity>,
 }
 
 impl EntityManager {
     pub fn new() -> Self {
-        Self { 
+        Self {
             entities: HashMap::new(),
         }
     }
@@ -35,32 +30,32 @@ impl EntityManager {
     }
 
     /// Returns the list of OpenGL attributes to be rendered
-    pub fn get_opengl_entities (&self) -> Vec<EntityCube> {
+    pub fn get_opengl_entities(&self) -> Vec<EntityCube> {
         self.entities
             .iter()
             .map(|(_, entity)| entity.get_opengl_entities())
             .collect::<Vec<Vec<EntityCube>>>()
             .concat()
     }
-    
-    pub fn attack(&self, position: Vector3, direction: Vector3) -> Option<Attack> {
+
+    pub fn attack(&self, position: Vector3, direction: Vector3) -> Option<EntityAttack> {
         println!("Attacking !");
         if let Some((id, _)) = self.entities
             .iter()
-            .map(|(id, entity)| (id, entity.aabb().faces())) 
-            .find(|(id, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some()) 
+            .map(|(id, entity)| (id, entity.aabb().faces()))
+            .find(|(id, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
         {
             println!("Player {id} was hit !");
-            return Some(Attack{attacked: *id});
+            return Some(EntityAttack { attacked: *id });
         }
         None
     }
-
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::entity::entity_manager::{Attack, EntityManager};
+    use crate::attack::EntityAttack;
+    use crate::entity::entity_manager::EntityManager;
     use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
 
@@ -82,8 +77,8 @@ mod tests {
 
         // Add a player at the origin
         mgr.register_new_player(0, Position::from_pos(Vector3::empty()));
-        
-        assert_eq!(Some(Attack {attacked: 0}), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
+
+        assert_eq!(Some(EntityAttack { attacked: 0 }), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_x()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_y()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_z()));

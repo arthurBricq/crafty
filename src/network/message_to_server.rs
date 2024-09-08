@@ -1,9 +1,9 @@
-use std::str;
 use crate::actions::Action;
-use crate::network::message_to_server::MessageToServer::{Login, OnNewAction, OnNewPosition};
+use crate::network::message_to_server::MessageToServer::{Attack, Login, OnNewAction, OnNewPosition};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 use crate::primitives::position::Position;
 use std::str::from_utf8;
+use crate::attack::EntityAttack;
 
 /// List of message that can be exchanged between to the server from the client
 #[derive(Debug, PartialEq)]
@@ -12,6 +12,7 @@ pub enum MessageToServer {
     Login(String),
     OnNewPosition(Position),
     OnNewAction(Action),
+    Attack(EntityAttack),
 }
 
 impl TcpSerialize for MessageToServer {
@@ -19,7 +20,8 @@ impl TcpSerialize for MessageToServer {
         match self {
             Login(_) => 0,
             OnNewPosition(_) => 1,
-            OnNewAction(_) => 2
+            OnNewAction(_) => 2,
+            Attack(_) => 3
         }
     }
 
@@ -28,6 +30,7 @@ impl TcpSerialize for MessageToServer {
             Login(name) => name.clone().into_bytes(),
             OnNewPosition(pos) => pos.to_bytes(),
             OnNewAction(action) => action.to_bytes(),
+            Attack(attack) => attack.to_bytes()
         }
     }
 }
@@ -38,6 +41,7 @@ impl TcpDeserialize for MessageToServer {
             0 => Login(from_utf8(bytes_to_parse).unwrap().to_string()),
             1 => OnNewPosition(Position::from_bytes(bytes_to_parse)),
             2 => OnNewAction(Action::from_str(from_utf8(bytes_to_parse).unwrap())),
+            3 => Attack(EntityAttack::from_bytes(bytes_to_parse)),
             _ => panic!("Cannot build message to server from code {code}")
         }
     }
@@ -66,7 +70,7 @@ mod tests {
     }
 
     fn test_multiple_messages(messages: &[MessageToServer]) {
-        let bytes  = messages
+        let bytes = messages
             .iter()
             .map(|m| to_tcp_repr(m))
             .collect::<Vec<Vec<u8>>>()

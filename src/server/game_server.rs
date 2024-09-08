@@ -9,6 +9,7 @@ use crate::world::World;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use crate::attack::EntityAttack;
 
 /// Main function of the thread in charge of entities
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
@@ -123,6 +124,10 @@ impl GameServer {
                 self.server_updates_buffer.get_mut(&i).unwrap().push(SendAction(action.clone()))
             }
         }
+    }
+    
+    pub fn on_new_attack(&mut self, attack: EntityAttack) {
+        
     }
 
     /// Returns the list of updates that the server sends to the client.

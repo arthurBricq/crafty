@@ -1,4 +1,5 @@
 use crate::actions::Action;
+use crate::attack::EntityAttack;
 use crate::server::game_server::GameServer;
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
@@ -31,6 +32,10 @@ impl Proxy for SinglePlayerProxy {
 
     fn on_new_action(&mut self, action: Action) {
         self.server.on_new_action(self.client_id, action);
+    }
+    
+    fn on_new_attack(&mut self, attack: EntityAttack) {
+        self.server.on_new_attack(attack);
     }
 
     fn consume_server_updates(&mut self) -> Vec<ServerUpdate> {
