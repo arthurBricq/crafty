@@ -46,7 +46,7 @@ impl EntityManager {
             .find(|(id, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
         {
             println!("Player {id} was hit !");
-            return Some(EntityAttack { attacked: *id });
+            return Some(EntityAttack::new(*id));
         }
         None
     }
@@ -78,7 +78,7 @@ mod tests {
         // Add a player at the origin
         mgr.register_new_player(0, Position::from_pos(Vector3::empty()));
 
-        assert_eq!(Some(EntityAttack { attacked: 0 }), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
+        assert_eq!(Some(EntityAttack::new(0)), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_x()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_y()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_z()));

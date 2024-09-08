@@ -1,4 +1,4 @@
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct EntityAttack{
     attacked: u8,
     strength: u8
@@ -25,5 +25,13 @@ impl EntityAttack {
 
     pub fn set_strength(&mut self, strength: u8) {
         self.strength = strength;
+    }
+
+    pub fn strength(&self) -> u8 {
+        self.strength
+    }
+
+    pub fn victim_id(&self) -> u8 {
+        self.attacked
     }
 }

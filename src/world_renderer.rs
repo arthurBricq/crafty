@@ -573,6 +573,9 @@ impl WorldRenderer {
                     self.entity_manager.register_new_player(id, pos)
                 }
                 ServerUpdate::UpdatePosition(id, pos) => self.entity_manager.set_position(id, pos),
+                ServerUpdate::Attack(attack) => {
+                    println!("Oh no, I was attacked... By amount: {}", attack.strength())
+                }
             }
         }
     }

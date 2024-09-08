@@ -1,9 +1,10 @@
 use crate::actions::Action;
 use crate::chunk::Chunk;
-use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
+use crate::network::server_update::ServerUpdate::{Attack, LoadChunk, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
 use std::str::from_utf8;
+use crate::attack::EntityAttack;
 use crate::primitives::position::Position;
 
 pub const RESPONSE_OK: u8 = 100;
@@ -21,7 +22,9 @@ pub enum ServerUpdate {
     /// Tell the client that a new player is part of the game
     RegisterEntity(u8, Position),
     /// Update the position of an existing entity
-    UpdatePosition(u8, Position)
+    UpdatePosition(u8, Position),
+    /// Attack to suffer... :(
+    Attack(EntityAttack)
 }
 
 impl ServerUpdate {
@@ -39,7 +42,8 @@ impl TcpSerialize for ServerUpdate {
             LoggedIn(_, _) => 1,
             SendAction(_) => 2,
             RegisterEntity(_, _) => 3,
-            UpdatePosition(_, _) => 4
+            UpdatePosition(_, _) => 4,
+            Attack(_) => 5
         }
     }
 
@@ -53,6 +57,7 @@ impl TcpSerialize for ServerUpdate {
                 bytes.extend_from_slice(&pos.to_bytes());
                 bytes
             }
+            Attack(attack) => attack.to_bytes()
         }
     }
 }
@@ -81,6 +86,9 @@ impl TcpDeserialize for ServerUpdate {
             }
             4 => {
                 UpdatePosition(bytes_to_parse[0], Position::from_bytes(&bytes_to_parse[1..]))
+            }
+            5 => {
+                Attack(EntityAttack::from_bytes(bytes_to_parse))
             }
             _ => panic!("Cannot build server update from code {code}")
         }

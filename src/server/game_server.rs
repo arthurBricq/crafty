@@ -1,6 +1,6 @@
 use crate::actions::Action;
 use crate::network::server_update::ServerUpdate;
-use crate::network::server_update::ServerUpdate::{LoggedIn, RegisterEntity, SendAction, UpdatePosition};
+use crate::network::server_update::ServerUpdate::{Attack, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::primitives::position::Position;
 use crate::server::monster_manager::MonsterManager;
 use crate::server::server_state::ServerState;
@@ -127,7 +127,14 @@ impl GameServer {
     }
     
     pub fn on_new_attack(&mut self, attack: EntityAttack) {
-        
+        let victim = attack.victim_id();
+        // Communicate the attack to the player !
+        for i in 0..self.state.n_players_connected() {
+            if i as u8 == victim {
+                self.server_updates_buffer.get_mut(&i).unwrap().push(Attack(attack));
+                return;
+            }
+        }
     }
 
     /// Returns the list of updates that the server sends to the client.
@@ -143,6 +150,7 @@ impl GameServer {
 
 #[cfg(test)]
 mod tests {
+    use crate::attack::EntityAttack;
     use crate::network::server_update::ServerUpdate;
     use crate::server::game_server::GameServer;
     use crate::world::World;
@@ -176,6 +184,31 @@ mod tests {
         assert_eq!(2, updates.len());
         assert!(matches!(updates[0], ServerUpdate::LoggedIn(_, _)));
         assert!(matches!(updates[1], ServerUpdate::RegisterEntity(_, _)));
+    }
+    
+    #[test]
+    fn test_attack_broacasting() {
+        
+        // Create a server with an empty world
+        let mut server = GameServer::new(World::empty());
+
+        let id1 = server.login("arthur".to_string());
+        let id2 = server.login("johan".to_string());
+        let id3 = server.login("arnaud".to_string());
+        
+        // consumes all updates
+        server.consume_updates(id1);
+        server.consume_updates(id2);
+        server.consume_updates(id3);
+        
+        // johan attacks arnaud
+        server.on_new_attack(EntityAttack::new(id3 as u8));
+        
+        // only arnaud is supposed to receive a message
+        assert_eq!(0, server.consume_updates(id1).len());
+        assert_eq!(0, server.consume_updates(id2).len());
+        assert_eq!(1, server.consume_updates(id3).len());
+        
     }
 
 }
