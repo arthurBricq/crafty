@@ -117,7 +117,6 @@ impl Proxy for TcpProxy {
         while let Some(update) = self.pending_updates.pop_front() {
             tmp.push(update);
         }
-        println!("Received {} messages", tmp.len());
         tmp
     }
 

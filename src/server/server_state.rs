@@ -26,8 +26,13 @@ impl ServerState {
         if !self.players.contains_key(&name) {
             self.players.insert(name.clone(), PlayerState { id: 0, pos: Position::spawn_position() });
         }
-        let a = self.players.get(&name).unwrap();
-        a.clone()
+        self.players.get_mut(&name).map(|player| player.pos.raise());
+        self.players.get(&name).unwrap().clone()
+    }
+
+    pub fn logout(&mut self, id: usize) {
+        let name = self.players.iter().find(|(_, v)| v.id == id).unwrap().0;
+        self.connected.remove(name);
     }
 
     pub fn connected_players(&self) -> impl Iterator<Item = &PlayerState> {

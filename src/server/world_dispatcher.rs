@@ -33,6 +33,10 @@ impl WorldDispatcher {
         self.player_current_chunk.push((-10, -10))
     }
 
+    pub fn logout(&mut self, id: usize) {
+        self.player_chunks[id] = HashSet::new();
+    }
+
     /// Updates the position and returns a list of new chunks to be loaded
     pub fn update_position(&mut self, id: usize, pos: (f32, f32)) -> Option<(HashSet<(i32, i32)>, HashSet<(i32, i32)>)> {
         // Compute the current chunk

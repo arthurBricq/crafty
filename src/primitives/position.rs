@@ -22,7 +22,7 @@ impl Position {
     
     pub fn spawn_position() -> Self {
         Self {
-            pos: Vector3::new(0., 3. * CHUNK_FLOOR as f32, 0.),
+            pos: Vector3::new(0., CHUNK_FLOOR as f32 + 3., 0.),
             yaw: 0.,
             pitch: 0.
         }
@@ -38,6 +38,11 @@ impl Position {
 
     pub fn from_pos(pos: Vector3) -> Self {
         Self { pos, yaw: 0., pitch: 0. }
+    }
+    
+    /// Send the player in the air
+    pub fn raise(&mut self) {
+        self.pos[1] += 2. * CHUNK_FLOOR as f32;
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {

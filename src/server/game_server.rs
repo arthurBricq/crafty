@@ -1,15 +1,14 @@
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
 use crate::actions::Action;
-use crate::chunk::CHUNK_FLOOR;
 use crate::network::server_update::ServerUpdate;
 use crate::network::server_update::ServerUpdate::{LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
 use crate::server::monster_manager::MonsterManager;
 use crate::server::server_state::ServerState;
-use crate::world::World;
 use crate::server::world_dispatcher::WorldDispatcher;
+use crate::world::World;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 /// Main function of the thread in charge of entities
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
@@ -30,7 +29,7 @@ pub struct GameServer {
     world_dispatcher: WorldDispatcher,
 
     /// Buffer of updates to be sent to each player
-    server_updates_buffer: Vec<Vec<ServerUpdate>>,
+    server_updates_buffer: HashMap<usize, Vec<ServerUpdate>>,
 
     /// In charge of handling the entities
     entity_server: MonsterManager,
@@ -45,7 +44,7 @@ impl GameServer {
         Self {
             world: Arc::clone(&ref_to_world),
             world_dispatcher: WorldDispatcher::new(),
-            server_updates_buffer: Vec::new(),
+            server_updates_buffer: HashMap::new(),
             entity_server: MonsterManager::new(ref_to_world),
             state: ServerState::new()
         }
@@ -57,7 +56,8 @@ impl GameServer {
         // Create the new ID
         let player = self.state.login(name.clone());
         println!("[SERVER] New player registered: {name} (ID={}, pos={:?})", player.id, player.pos);
-
+        println!("Connected players: {}", self.state.n_players_connected());
+        
         // Create a new buffer of updates for this client, 
         let mut initial_updates = vec![LoggedIn(player.id as u8, player.pos.clone())];
 
@@ -67,17 +67,24 @@ impl GameServer {
                 initial_updates.push(RegisterEntity(i as u8, player.pos.clone()))
             }
         }
-        self.server_updates_buffer.push(initial_updates);
+        
+        self.server_updates_buffer.insert(player.id, initial_updates);
 
         // Register the player in the dispatcher
         self.world_dispatcher.register_player(player.id);
 
         // Register the new player to other players of the game.
         for i in 0..self.state.n_players_connected() - 1 {
-            self.server_updates_buffer[i].push(RegisterEntity(player.id as u8, player.pos.clone()));
+            self.server_updates_buffer.get_mut(&i).unwrap().push(RegisterEntity(player.id as u8, player.pos.clone()));
         }
 
         player.id
+    }
+
+    pub fn logout(&mut self, id: usize) {
+        // The world dispatcher must be informed that this client loose all of its chunks
+        self.state.logout(id);
+        self.world_dispatcher.logout(id);
     }
 
     // Implementation of the 'callbacks': entry points of the server
@@ -86,11 +93,10 @@ impl GameServer {
     pub fn on_new_position_update(&mut self, player_id: usize, position: Position) {
         // Update the world dispatcher. to compute if the player needs to be sent new chunks
         if let Some((chunks_to_send, _chunks_to_delete)) = self.world_dispatcher.update_position(player_id, (position.x(), position.z())) {
-            let buffer = &mut self.server_updates_buffer[player_id];
             for corner in chunks_to_send {
                 // Find the correct chunk
                 if let Some(to_send) = self.world.lock().unwrap().get_chunk(corner) {
-                    buffer.push(ServerUpdate::LoadChunk(to_send))
+                    self.server_updates_buffer.get_mut(&player_id).unwrap().push(ServerUpdate::LoadChunk(to_send))
                 } else {
                     // TODO generate chunk !!!
                 }
@@ -100,7 +106,7 @@ impl GameServer {
         // Update other players
         for i in 0..self.state.n_players_connected() {
             if i != player_id {
-                self.server_updates_buffer[i].push(UpdatePosition(player_id as u8, position.clone()))
+                self.server_updates_buffer.get_mut(&i).unwrap().push(UpdatePosition(player_id as u8, position.clone()))
             }
         }
 
@@ -114,16 +120,15 @@ impl GameServer {
         // Forward the action to all OTHER clients
         for i in 0..self.state.n_players_connected() {
             if i != player_id {
-                self.server_updates_buffer[i].push(SendAction(action.clone()))
+                self.server_updates_buffer.get_mut(&i).unwrap().push(SendAction(action.clone()))
             }
         }
     }
 
     /// Returns the list of updates that the server sends to the client.
     pub fn consume_updates(&mut self, player_id: usize) -> Vec<ServerUpdate> {
-        // if player_id < self.n_players {return vec![]}
-        let mut updates_for_player = self.server_updates_buffer[player_id].clone();
-        self.server_updates_buffer[player_id] = Vec::new();
+        let mut updates_for_player = self.server_updates_buffer.insert(player_id, Vec::new()).unwrap();
+        // Add to these updates the ones that the entity manager also provides
         // TODO use the position of the player in the server state
         updates_for_player.extend_from_slice(&self.entity_server.get_server_updates(Position::empty()));
         updates_for_player

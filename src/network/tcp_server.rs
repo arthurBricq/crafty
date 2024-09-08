@@ -69,7 +69,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                             match message {
                                 MessageToServer::Login(name) => {
                                     let id = game.lock().unwrap().login(name) as u8;
-                                    // The thread memorizes 
+                                    // The thread memorizes
                                     client_id = Some(id as usize);
                                 }
                                 MessageToServer::OnNewPosition(new_pos) => {
@@ -83,10 +83,14 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                         }
                     }
                     Err(_) => {
-                        println!("Error while communicating with client: {client_id:?}. Trying to gracefully shutdown.");
+                        println!("Error while communicating with client: {client_id:?}");
+                        if let Some(id) = client_id {
+                            game.lock().unwrap().logout(id)
+                        }
+                        println!("Trying to safely shutdown...");
                         match stream.shutdown(Shutdown::Write) {
-                            Ok(_) => println!("Shutdown successfull"),
-                            Err(err) => println!("Error while closing socket: {err}")
+                            Ok(_) =>          println!("   ... Shutdown successfull"),
+                            Err(err) => println!("   ... Error while closing socket: {err}")
                         }
                         return;
                     }
