@@ -349,10 +349,29 @@ impl WorldRenderer {
     }
 
     fn handle_key_event(&mut self, event: KeyEvent, window: &Window) {
+        self.handle_general_key_event(&event, window);
+        
         if self.hud_renderer.is_inventory_open() {
             self.handle_inventory_key_event(event, window)
         } else {
             self.handle_game_key_event(event, window)
+        }
+    }
+
+    /// Deal with the events that needs to be taken care of both in the
+    /// inventory and in the game
+    fn handle_general_key_event(&mut self, event: &KeyEvent, window: &Window) {
+        if event.state == Pressed {
+            match event.physical_key {
+                PhysicalKey::Code(key) => {
+                    match key {
+                        KeyCode::F11 => self.toggle_fullscreen(&window),
+                        KeyCode::Escape => std::process::exit(1),
+                        _ => {}
+                    }
+                }
+                PhysicalKey::Unidentified(_) => {}
+            }
         }
     }
 
@@ -453,10 +472,8 @@ impl WorldRenderer {
                             self.player.debug();
                         }
                         KeyCode::F10 => self.world.save_to_file("map.json"),
-                        KeyCode::F11 => self.toggle_fullscreen(&window),
                         KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
                         KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
-                        KeyCode::Escape => std::process::exit(1),
                         _ => {}
                     }
                 }
