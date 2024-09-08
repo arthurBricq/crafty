@@ -98,6 +98,19 @@ impl InventoryMenu {
         self.items
     }
 
+    /// Inventory can be closed safely if there is no item in the crafting grid
+    pub fn can_be_closed_safely(&self) -> bool {
+        for row in 0..3 {
+            for col in 0..3 {
+                if self.crafting_items[row][col].is_some() {
+                    return false
+                }
+            }
+        }
+        
+        true
+    }
+    
     pub fn handle_event(&mut self, event: InventoryEvent) -> UpdateStatus {
         match event {
             InventoryEvent::CursorMoved(x, y) => {

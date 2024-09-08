@@ -363,9 +363,11 @@ impl WorldRenderer {
 		PhysicalKey::Code(key) => {
 		    match key {
 			KeyCode::KeyE => {
-			    self.items = self.hud_renderer.close_inventory();
-			    window.set_cursor_visible(false);
-			    self.update_items_bar();
+                            if let Some(items) = self.hud_renderer.close_inventory() {
+                                self.items = items;
+			        window.set_cursor_visible(false);
+			        self.update_items_bar();
+                            }
 			},
 			_ => {}
 		    }

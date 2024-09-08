@@ -158,11 +158,17 @@ impl HUDRenderer {
         self.update();
     }
 
-    pub fn close_inventory(&mut self) -> PlayerItems {
-        let items = self.inventory_menu.take().unwrap().take_items();
-        self.update();
-        
-        items
+    /// Close inventory. This function may fail, because there are still items
+    /// in the crafting grid, and we do not want to loose them
+    pub fn close_inventory(&mut self) -> Option<PlayerItems> {
+        if self.inventory_menu.as_ref().unwrap().can_be_closed_safely() {
+            let items = self.inventory_menu.take().unwrap().take_items();
+            self.update();
+            
+            Some(items)
+        } else {
+            None
+        }        
     }
 
     /// If the inventory is open, forward it the event
