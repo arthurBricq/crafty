@@ -1,7 +1,10 @@
 use crate::actions::Action;
+use crate::chunk::CHUNK_FLOOR;
+use crate::entity::entity::EntityKind;
 use crate::network::server_update::ServerUpdate;
 use crate::network::server_update::ServerUpdate::{Attack, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::primitives::position::Position;
+use crate::primitives::vector::Vector3;
 use crate::server::monster_manager::MonsterManager;
 use crate::server::server_state::ServerState;
 use crate::server::world_dispatcher::WorldDispatcher;
@@ -15,6 +18,8 @@ use crate::attack::EntityAttack;
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
     let sleep_time = Duration::from_millis(20);
 
+    server.lock().unwrap().entity_server.spawn_new_monster(Vector3::new(0., 12., 0.), EntityKind::Monster1);
+    
     loop {
         server.lock().unwrap().entity_server.step(sleep_time);
         std::thread::sleep(sleep_time)
@@ -69,6 +74,9 @@ impl GameServer {
             }
         }
         
+        let monster_entry = self.entity_server.get_monsters();
+        initial_updates.append(&mut monster_entry.clone());
+
         self.server_updates_buffer.insert(player.id, initial_updates);
 
         // Register the player in the dispatcher

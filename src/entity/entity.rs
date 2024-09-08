@@ -4,13 +4,12 @@ use crate::entity::humanoid;
 use crate::entity::humanoid::humanoid_aabb;
 use crate::primitives::position::Position;
 
-
-
 #[derive(Debug, PartialEq)]
 /// Enum for the different types of entity
 pub enum EntityKind {
     Player,
-    Monster1
+    Monster1,
+    Monster2
 }
 
 /// Contain the data of an entity
@@ -50,6 +49,7 @@ impl Entity {
         match self.entity_type {
             EntityKind::Player => humanoid::get_opengl_entities(self.position.clone()),
             EntityKind::Monster1 => humanoid::get_opengl_entities(self.position.clone()),
+            EntityKind::Monster2 => humanoid::get_opengl_entities(self.position.clone()),
         }
     }
 
