@@ -103,15 +103,10 @@ impl WorldRenderer {
 
         window.set_cursor_visible(false);
 
-        // Add some damn items
-        for _ in 0..50 {
-            self.items.collect(COBBELSTONE);
-            self.items.collect(OAKLEAVES);
-            self.items.collect(DIRT);
-            self.items.collect(GRASS);
-            self.items.collect(OAKLOG);
-            self.items.collect(SWORD);
-        }
+        // Add a few items
+        self.items.collect(SWORD);
+        for _ in 0..16 { self.items.collect(COBBELSTONE); }
+        for _ in 0..8 { self.items.collect(OAKLOG); }
 
         // Try to lock the mouse to the window, this doen't work for all OS
         let lock_mouse = window
