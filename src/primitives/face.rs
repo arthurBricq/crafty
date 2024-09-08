@@ -59,7 +59,5 @@ mod tests {
         assert_eq!(Some(10.), P.face_intersection(Vector3::new(0.001, 0.999, 10.), Vector3::unit_z().opposite()));
         assert_eq!(None, P.face_intersection(Vector3::new(0.001, 1.999, 10.), Vector3::unit_z().opposite()));
         assert_eq!(None, P.face_intersection(Vector3::new(1.001, 0.5, 10.), Vector3::unit_z().opposite()));
-        
     }
-    
 }

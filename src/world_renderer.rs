@@ -512,7 +512,7 @@ impl WorldRenderer {
                 if self.player.is_selecting_cube() {
                     self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
                 } else {
-                    self.entity_manager.attack(self.player.position().pos(), self.player.direction())
+                    self.entity_manager.attack(self.player.position().pos(), self.player.direction());
                 }
             }
             MouseButton::Right => {

@@ -5,6 +5,12 @@ use std::collections::HashMap;
 use crate::cube::Cube;
 use crate::primitives::vector::Vector3;
 
+#[derive(PartialEq, Debug)]
+pub struct Attack {
+    attacked: u8
+}
+
+
 /// Contain all the entities
 pub struct EntityManager {
     entities: HashMap<u8, Entity>
@@ -37,7 +43,7 @@ impl EntityManager {
             .concat()
     }
     
-    pub fn attack(&self, position: Vector3, direction: Vector3) {
+    pub fn attack(&self, position: Vector3, direction: Vector3) -> Option<Attack> {
         println!("Attacking !");
         if let Some((id, _)) = self.entities
             .iter()
@@ -45,14 +51,16 @@ impl EntityManager {
             .find(|(id, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some()) 
         {
             println!("Player {id} was hit !");
+            return Some(Attack{attacked: *id});
         }
+        None
     }
 
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::entity::entity_manager::EntityManager;
+    use crate::entity::entity_manager::{Attack, EntityManager};
     use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
 
@@ -66,5 +74,18 @@ mod tests {
 
         mgr.register_new_player(3, Position::from_pos(Vector3::unit_x()));
         assert_eq!(12, mgr.get_opengl_entities().len());
+    }
+
+    #[test]
+    fn test_attack() {
+        let mut mgr = EntityManager::new();
+
+        // Add a player at the origin
+        mgr.register_new_player(0, Position::from_pos(Vector3::empty()));
+        
+        assert_eq!(Some(Attack {attacked: 0}), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
+        assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_x()));
+        assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_y()));
+        assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_z()));
     }
 }
