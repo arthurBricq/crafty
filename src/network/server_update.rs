@@ -1,5 +1,6 @@
 use crate::actions::Action;
 use crate::chunk::Chunk;
+use crate::entity::entity::EntityKind;
 use crate::network::server_update::ServerUpdate::{Attack, LoadChunk, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
@@ -20,7 +21,7 @@ pub enum ServerUpdate {
     /// The server forwards to the client an action to be executed
     SendAction(Action),
     /// Tell the client that a new player is part of the game
-    RegisterEntity(u8, Position),
+    RegisterEntity(u8, EntityKind, Position),
     /// Update the position of an existing entity
     UpdatePosition(u8, Position),
     /// Attack to suffer... :(
@@ -41,7 +42,7 @@ impl TcpSerialize for ServerUpdate {
             LoadChunk(_) => 0,
             LoggedIn(_, _) => 1,
             SendAction(_) => 2,
-            RegisterEntity(_, _) => 3,
+            RegisterEntity(_, _, _) => 3,
             UpdatePosition(_, _) => 4,
             Attack(_) => 5
         }
@@ -52,8 +53,14 @@ impl TcpSerialize for ServerUpdate {
         match self {
             LoadChunk(chunk) => chunk.to_json().into_bytes(),
             SendAction(action) => action.to_bytes(),
-            LoggedIn(id, pos) | RegisterEntity(id, pos) | UpdatePosition(id, pos)=> {
+            LoggedIn(id, pos) | UpdatePosition(id, pos)=> {
                 let mut bytes = vec![*id];
+                bytes.extend_from_slice(&pos.to_bytes());
+                bytes
+            }
+            RegisterEntity(id, entity_kind, pos) => {
+                let mut bytes = vec![*id];
+                bytes.push(entity_kind.to_u8());
                 bytes.extend_from_slice(&pos.to_bytes());
                 bytes
             }
@@ -82,7 +89,7 @@ impl TcpDeserialize for ServerUpdate {
                 SendAction(action)
             }
             3 => {
-                RegisterEntity(bytes_to_parse[0], Position::from_bytes(&bytes_to_parse[1..]))
+                RegisterEntity(bytes_to_parse[0], EntityKind::from_u8(bytes_to_parse[1]), Position::from_bytes(&bytes_to_parse[2..]))
             }
             4 => {
                 UpdatePosition(bytes_to_parse[0], Position::from_bytes(&bytes_to_parse[1..]))
@@ -141,7 +148,7 @@ mod tests {
         let update_1 = LoadChunk(chunk1);
         let update_2 = LoadChunk(chunk2);
         let update_3 = LoggedIn(113, Position::empty());
-        let update_4 = RegisterEntity(113, Position::from_pos(Vector3::new(-3., 2., 34.532)));
+        let update_4 = RegisterEntity(113, crate::entity::entity::EntityKind::Monster1, Position::from_pos(Vector3::new(-3., 2., 34.532)));
 
         let mut bytes1 = to_tcp_repr(&update_1);
         let mut bytes2 = to_tcp_repr(&update_2);
@@ -172,9 +179,10 @@ mod tests {
         }
 
         match (&update_4, &parsed[3]) {
-            (RegisterEntity(id1, pos1), RegisterEntity(id2, pos2)) => {
+            (RegisterEntity(id1, entity_kind1, pos1), RegisterEntity(id2, entity_kind2, pos2)) => {
                 assert_eq!(id1, id2);
                 assert_eq!(pos1, pos2);
+                assert_eq!(entity_kind1, entity_kind2);
             },
             (_, _) => assert!(false)
         }

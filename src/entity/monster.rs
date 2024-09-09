@@ -106,6 +106,10 @@ impl<T> Monster<T> where T: TransitionState {
         self.id
     }
 
+    pub fn entity_type(&self) -> &EntityKind {
+        &self.entity_type
+    }
+
         /// Integrate the velocity to move the camera, with collision. Returns the
     /// dt (in seconds), which can be smaller than `dt` if there is a collision.
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {

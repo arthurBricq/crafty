@@ -25,12 +25,11 @@ impl MonsterManager {
         }
     }
 
-    pub fn spawn_new_monster(&mut self, at: Vector3, kind: EntityKind) -> usize {
+    pub fn spawn_new_monster(&mut self, pos: Position, kind: EntityKind) -> usize {
         let id = self.generate_id();
-        let pos = Position::from_pos(at);
-        self.monsters.push(Monster::new(id, kind, pos.clone()));
+        self.monsters.push(Monster::new(id, kind.clone(), pos.clone()));
         // Inform the player that a new entity has spawn
-        self.buffer_update.push(ServerUpdate::RegisterEntity(id as u8, pos));
+        self.buffer_update.push(ServerUpdate::RegisterEntity(id as u8, kind,  pos));
         id
     }
 
@@ -69,7 +68,7 @@ impl MonsterManager {
     pub fn get_monsters(&self) -> Vec<ServerUpdate> {
         let mut vec_update = Vec::new();
         for monster in &self.monsters {
-            vec_update.push(ServerUpdate::RegisterEntity(monster.id() as u8, monster.position().clone()));
+            vec_update.push(ServerUpdate::RegisterEntity(monster.id() as u8, monster.entity_type().clone(), monster.position().clone()));
         }
         vec_update
     }
@@ -89,14 +88,16 @@ mod test {
     use crate::world::World;
     use crate::network::server_update::ServerUpdate;
     use super::MonsterManager;
-    use crate::primitives::position::{self, Position};
+    use crate::primitives::position::Position;
+    use crate::entity::entity::EntityKind;
 
     #[test]
     fn test_add_monster() {
         let world = Arc::new(Mutex::new(World::empty()));
         let mut monster_manager = MonsterManager::new(world);
+        let pos = Position::new(Vector3::empty(), 0., 0.);
 
-        let id0 = monster_manager.spawn_new_monster(Vector3::new(0., 0., 0.), crate::entity::entity::EntityKind::Monster1);
+        let id0 = monster_manager.spawn_new_monster(pos.clone(), EntityKind::Monster1);
     
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 1);
@@ -104,7 +105,7 @@ mod test {
         let updates = monster_manager.get_server_updates(Position::new(Vector3::new(0., 0., 0.), 0., 0.));
         assert_eq!(updates.len(), 1);
         
-        let id1 = monster_manager.spawn_new_monster(Vector3::new(0., 0., 0.), crate::entity::entity::EntityKind::Monster1);
+        let id1 = monster_manager.spawn_new_monster(pos, EntityKind::Monster1);
         
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 2);
@@ -117,13 +118,14 @@ mod test {
     fn test_rm_monster() {
         let world = Arc::new(Mutex::new(World::empty()));
         let mut monster_manager = MonsterManager::new(world);
+        let pos = Position::new(Vector3::empty(), 0., 0.);
 
-        let id = monster_manager.spawn_new_monster(Vector3::new(0., 0., 0.), crate::entity::entity::EntityKind::Monster1);
+        let id = monster_manager.spawn_new_monster(pos.clone(), crate::entity::entity::EntityKind::Monster1);
     
         monster_manager.get_server_updates(Position::new(Vector3::new(0., 0., 0.), 0., 0.));
 
         monster_manager.remove_monster(id);
-        let monsters_update =monster_manager.get_monsters();
+        let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 0);
 
         let updates = monster_manager.get_server_updates(Position::new(Vector3::new(0., 0., 0.), 0., 0.));
@@ -136,14 +138,16 @@ mod test {
     fn test_get_monsters() {
         let world = Arc::new(Mutex::new(World::empty()));
         let mut monster_manager = MonsterManager::new(world);
-
-        let id0 = monster_manager.spawn_new_monster(Vector3::new(0., 0., 0.), crate::entity::entity::EntityKind::Monster1);
-        let monsters_update = monster_manager.get_monsters();
         let position0 = Position::new(Vector3::new(0., 0., 0.), 0., 0.);
+        let entity_type0 = EntityKind::Monster1;
+
+        let id0 = monster_manager.spawn_new_monster(position0.clone(), entity_type0.clone());
+        let monsters_update = monster_manager.get_monsters();
         match &monsters_update[0] {
-            ServerUpdate::RegisterEntity(id, position) => {
+            ServerUpdate::RegisterEntity(id, entity_pos1, position1) => {
                 assert_eq!(id0, *id as usize);
-                assert_eq!(position0, *position)
+                assert_eq!(position0, *position1);
+                assert_eq!(entity_type0, *entity_pos1);
             },
             _ => assert!(false)
         }

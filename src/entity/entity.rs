@@ -4,12 +4,33 @@ use crate::entity::humanoid;
 use crate::entity::humanoid::humanoid_aabb;
 use crate::primitives::position::Position;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 /// Enum for the different types of entity
 pub enum EntityKind {
     Player,
     Monster1,
     Monster2
+}
+
+impl EntityKind {
+    pub fn to_u8(&self) -> u8 {
+        match self {
+            Self::Player => 0,
+            Self::Monster1 => 1,
+            Self::Monster2 => 2,
+        }
+    }
+
+    pub fn from_u8(entity_code: u8) -> Self {
+        match entity_code {
+            0 => Self::Player,
+            1 => Self::Monster1,
+            2 => Self::Monster2,
+            _ => Self::Monster1,
+            
+        }
+    }
+    
 }
 
 /// Contain the data of an entity

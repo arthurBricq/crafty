@@ -20,7 +20,9 @@ use super::server_state::PlayerState;
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
     let sleep_time = Duration::from_millis(5);
 
-    server.lock().unwrap().entity_server.spawn_new_monster(Vector3::new(0., 16., 0.), EntityKind::Monster1);
+
+    let pos = Position::new(Vector3::new(0., 16., 0.), 0., 0.);
+    server.lock().unwrap().entity_server.spawn_new_monster(pos, EntityKind::Monster1);
     let mut t = Instant::now();
     let mut dt = 0.;
     loop {
@@ -80,7 +82,7 @@ impl GameServer {
         // Initialize it directly with a LoggedIn message and the position of the other players
         for (i, connected) in self.state.connected_players().enumerate() {
             if connected.id != player.id {
-                initial_updates.push(RegisterEntity(i as u8, player.pos.clone()))
+                initial_updates.push(RegisterEntity(i as u8, EntityKind::Player, player.pos.clone()))
             }
         }
         
@@ -94,7 +96,7 @@ impl GameServer {
 
         // Register the new player to other players of the game.
         for i in 0..self.state.n_players_connected() - 1 {
-            self.server_updates_buffer.get_mut(&i).unwrap().push(RegisterEntity(player.id as u8, player.pos.clone()));
+            self.server_updates_buffer.get_mut(&i).unwrap().push(RegisterEntity(player.id as u8, EntityKind::Player, player.pos.clone()));
         }
 
         player.id
@@ -195,13 +197,13 @@ mod tests {
         // We expect 1 new update for the first player: the register message
         let updates = server.consume_updates(id1);
         assert_eq!(1, updates.len());
-        assert!(matches!(updates[0], ServerUpdate::RegisterEntity(_, _)));
+        assert!(matches!(updates[0], ServerUpdate::RegisterEntity(_, _, _)));
 
         // The second player must have 2 messages: LoggedIn and Register
         let updates = server.consume_updates(id2);
         assert_eq!(2, updates.len());
         assert!(matches!(updates[0], ServerUpdate::LoggedIn(_, _)));
-        assert!(matches!(updates[1], ServerUpdate::RegisterEntity(_, _)));
+        assert!(matches!(updates[1], ServerUpdate::RegisterEntity(_, _, _)));
     }
     
     #[test]
