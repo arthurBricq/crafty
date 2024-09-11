@@ -47,9 +47,9 @@ impl Entity {
     /// Draw the entity and return a Vec of EntityCube
     pub fn get_opengl_entities(&self) -> Vec<EntityCube> {
         match self.entity_type {
-            EntityKind::Player => humanoid::get_opengl_entities(self.position.clone()),
-            EntityKind::Monster1 => humanoid::get_opengl_entities(self.position.clone()),
-            EntityKind::Monster2 => humanoid::get_opengl_entities(self.position.clone()),
+            EntityKind::Player => humanoid::get_opengl_entities(self.position.clone(), 0),
+            EntityKind::Monster1 => humanoid::get_opengl_entities(self.position.clone(), 1),
+            EntityKind::Monster2 => humanoid::get_opengl_entities(self.position.clone(), 2),
         }
     }
 

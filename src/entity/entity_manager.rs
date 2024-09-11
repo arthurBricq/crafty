@@ -22,7 +22,7 @@ impl EntityManager {
     pub fn register_new_player(&mut self, id: u8, pos: Position) {
         println!("New player has joined the game: {id}");
         let entity = Entity::new(id as usize, EntityKind::Player, pos);
-        self.entities.insert(id, entity);
+        self.entities.insert(id, entity);        
     }
 
     pub fn set_position(&mut self, id: u8, position: Position) {

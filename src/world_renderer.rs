@@ -140,17 +140,14 @@ impl WorldRenderer {
             &display,
         );
 
-        // Textures for the player
-        let player_texture = humanoid::load_humanoid_textures(
-            std::fs::read("./resources/entity/player.png")
-                .unwrap()
-                .as_slice(),
-            &display,
-        );
-        let player_texture_sample = player_texture
+        // Textures for entities
+        let humanoid_texture = humanoid::load_humanoid_textures(
+            "./resources/entity/", &display);
+        let humanoid_texture_sample = humanoid_texture
             .sampled()
             .magnify_filter(MagnifySamplerFilter::Nearest)
             .minify_filter(MinifySamplerFilter::Nearest);
+
 
         // Build the shader programs
         let cube_program =
@@ -166,7 +163,6 @@ impl WorldRenderer {
             None,
         )
             .unwrap();
-
         // Start rendering by creating a new frame
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
@@ -281,7 +277,7 @@ impl WorldRenderer {
                         let entity_uniforms = uniform! {
                             view: self.player.view_matrix(),
                             perspective: perspective_matrix(target.get_dimensions()),
-                            textures: player_texture_sample
+                            entity_textures: humanoid_texture_sample,
                         };
 
                         // Prepare the entity buffer to send to the gpu
