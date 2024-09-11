@@ -1,5 +1,4 @@
 use std::{io, thread};
-use std::error::Error;
 use std::io::{Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
@@ -80,7 +79,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                                     game.lock().unwrap().on_new_action(client_id.unwrap(), action);
                                 }
                                 MessageToServer::Attack(attack) => {
-                                    game.lock().unwrap().on_new_attack(attack);
+                                    game.lock().unwrap().on_new_attack(attack, client_id.unwrap());
                                 }
                             };
                         }

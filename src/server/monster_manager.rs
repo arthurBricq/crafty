@@ -1,11 +1,10 @@
 use std::sync::{Arc, Mutex};
-use crate::entity::walker_in_circle::WalkInCercle;
+
 use crate::entity::chaser::Chaser;
 use crate::entity::entity::EntityKind;
 use crate::entity::monster::Monster;
 use crate::network::server_update::ServerUpdate;
 use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
 use crate::world::World;
 
 use super::server_state::PlayerState;
@@ -64,7 +63,7 @@ impl MonsterManager {
     }
 
     /// Return the ServerUpdate with all entities
-    /// Used to register all the monster to a ew player
+    /// Used to register all the monster to a new player
     pub fn get_monsters(&self) -> Vec<ServerUpdate> {
         let mut vec_update = Vec::new();
         for monster in &self.monsters {
@@ -82,7 +81,6 @@ impl MonsterManager {
 #[cfg(test)]
 mod test {
     use std::sync::{Arc, Mutex};
-    use std::time::Duration;
 
     use crate::primitives::vector::Vector3;
     use crate::world::World;
@@ -97,20 +95,20 @@ mod test {
         let mut monster_manager = MonsterManager::new(world);
         let pos = Position::new(Vector3::empty(), 0., 0.);
 
-        let id0 = monster_manager.spawn_new_monster(pos.clone(), EntityKind::Monster1);
+        monster_manager.spawn_new_monster(pos.clone(), EntityKind::Monster1);
     
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 1);
 
-        let updates = monster_manager.get_server_updates(Position::new(Vector3::new(0., 0., 0.), 0., 0.));
+        let updates = monster_manager.get_server_updates();
         assert_eq!(updates.len(), 1);
         
-        let id1 = monster_manager.spawn_new_monster(pos, EntityKind::Monster1);
+        monster_manager.spawn_new_monster(pos, EntityKind::Monster1);
         
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 2);
 
-        let updates = monster_manager.get_server_updates(Position::new(Vector3::new(0., 0., 0.), 0., 0.));
+        let updates = monster_manager.get_server_updates();
         assert_eq!(updates.len(), 1);
     }
     
@@ -122,13 +120,13 @@ mod test {
 
         let id = monster_manager.spawn_new_monster(pos.clone(), crate::entity::entity::EntityKind::Monster1);
     
-        monster_manager.get_server_updates(Position::new(Vector3::new(0., 0., 0.), 0., 0.));
+        monster_manager.get_server_updates();
 
         monster_manager.remove_monster(id);
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 0);
 
-        let updates = monster_manager.get_server_updates(Position::new(Vector3::new(0., 0., 0.), 0., 0.));
+        let updates = monster_manager.get_server_updates();
         // When adding a message to client to remove the monster, set 0 to 1
         assert_eq!(updates.len(), 0);
 

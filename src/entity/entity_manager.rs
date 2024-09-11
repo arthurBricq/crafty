@@ -25,6 +25,14 @@ impl EntityManager {
         self.entities.insert(id, entity);        
     }
 
+    /// Remove an entity from the Manager
+    pub fn remove_entity(&mut self, id: u8) {
+        if !self.entities.contains_key(&id) {
+            panic!("Trying to remove an id that do not exist")
+        }
+        self.entities.remove(&id);
+    }
+
     pub fn set_position(&mut self, id: u8, position: Position) {
         self.entities.get_mut(&id).map(|entity| entity.set_position(position));
     }
@@ -40,13 +48,13 @@ impl EntityManager {
 
     pub fn attack(&self, position: Vector3, direction: Vector3) -> Option<EntityAttack> {
         println!("Attacking !");
-        if let Some((id, _)) = self.entities
+        if let Some((id, entity_kind, _)) = self.entities
             .iter()
-            .map(|(id, entity)| (id, entity.aabb().faces()))
-            .find(|(id, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
+            .map(|(id, entity)| (id, entity.entity_type(), entity.aabb().faces()))
+            .find(|(id, entity_kind, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
         {
             println!("Player {id} was hit !");
-            return Some(EntityAttack::new(*id));
+            return Some(EntityAttack::new(*id, entity_kind.clone()));
         }
         None
     }
@@ -77,11 +85,27 @@ mod tests {
         let mut mgr = EntityManager::new();
 
         // Add a player at the origin
-        mgr.register_new_entity(0, EntityKind::Monster1, Position::from_pos(Vector3::empty()));
+        mgr.register_new_entity(0, EntityKind::Player, Position::from_pos(Vector3::empty()));
 
-        assert_eq!(Some(EntityAttack::new(0)), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
+        assert_eq!(Some(EntityAttack::new(0, EntityKind::Player)), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_x()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_y()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_z()));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_remove() {
+        let mut mgr = EntityManager::new();
+        assert_eq!(0, mgr.get_opengl_entities().len());
+
+        mgr.register_new_entity(2, EntityKind::Monster2, Position::from_pos(Vector3::unit_x()));
+        assert_eq!(6, mgr.get_opengl_entities().len());
+
+        mgr.remove_entity(2);
+        assert_eq!(0, mgr.get_opengl_entities().len());
+
+        mgr.remove_entity(5);
+
     }
 }

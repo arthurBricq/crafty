@@ -35,7 +35,7 @@ impl Proxy for SinglePlayerProxy {
     }
     
     fn on_new_attack(&mut self, attack: EntityAttack) {
-        self.server.on_new_attack(attack);
+        self.server.on_new_attack(attack, self.client_id);
     }
 
     fn consume_server_updates(&mut self) -> Vec<ServerUpdate> {

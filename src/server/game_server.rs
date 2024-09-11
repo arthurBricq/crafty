@@ -1,8 +1,7 @@
 use crate::actions::Action;
-use crate::chunk::CHUNK_FLOOR;
 use crate::entity::entity::EntityKind;
 use crate::network::server_update::ServerUpdate;
-use crate::network::server_update::ServerUpdate::{Attack, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
+use crate::network::server_update::ServerUpdate::{Attack, LoggedIn, RegisterEntity, SendAction, UpdatePosition, RemoveEntity};
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::server::monster_manager::MonsterManager;
@@ -13,8 +12,6 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use crate::attack::EntityAttack;
 use std::time::{Duration, Instant};
-
-use super::server_state::PlayerState;
 
 /// Main function of the thread in charge of entities
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
@@ -31,6 +28,7 @@ pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
         
         let player_list = server.lock().unwrap().state.connected_players().cloned().collect();
         server.lock().unwrap().entity_server.step(dt, player_list);
+        server.lock().unwrap().update_buffers();
         std::thread::sleep(sleep_time);
 
 
@@ -146,24 +144,49 @@ impl GameServer {
         }
     }
     
-    pub fn on_new_attack(&mut self, attack: EntityAttack) {
+    pub fn on_new_attack(&mut self, attack: EntityAttack, player_id: usize) {
         let victim = attack.victim_id();
-        // Communicate the attack to the player !
+        match attack.entity_kind() {
+            EntityKind::Player => {
+                // Communicate the attack to the player !
+                for i in 0..self.state.n_players_connected() {
+                    if i as u8 == victim {
+                        self.server_updates_buffer.get_mut(&i).unwrap().push(Attack(attack));
+                        return;
+                    }
+                }
+            }
+            _ => {
+                self.entity_server.remove_monster(victim as usize);
+                for i in 0..self.state.n_players_connected() {
+                    if i != player_id {
+                        self.server_updates_buffer.get_mut(&i).unwrap().push(RemoveEntity(victim as u32));
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn remove_monster(&mut self, id: u32, player_id: usize) {
+        self.entity_server.remove_monster(id as usize);
         for i in 0..self.state.n_players_connected() {
-            if i as u8 == victim {
-                self.server_updates_buffer.get_mut(&i).unwrap().push(Attack(attack));
-                return;
+            if i != player_id {
+                self.server_updates_buffer.get_mut(&i).unwrap().push(RemoveEntity(id));
             }
         }
     }
 
     /// Returns the list of updates that the server sends to the client.
     pub fn consume_updates(&mut self, player_id: usize) -> Vec<ServerUpdate> {
-        let mut updates_for_player = self.server_updates_buffer.insert(player_id, Vec::new()).unwrap();
+        let updates_for_player = self.server_updates_buffer.insert(player_id, Vec::new()).unwrap();
+        updates_for_player
+    }
+
+    fn update_buffers(&mut self) {
+        let monster_updates = self.entity_server.get_server_updates().clone();
         // Add to these updates the ones that the entity manager also provides
         // TODO use the position of the player in the server state
-        updates_for_player.extend_from_slice(&self.entity_server.get_server_updates(Position::empty()));
-        updates_for_player
+        self.server_updates_buffer.iter_mut().for_each(|(_, buffer)| buffer.append(&mut monster_updates.clone()));
     }
 }
 
@@ -174,6 +197,7 @@ mod tests {
     use crate::network::server_update::ServerUpdate;
     use crate::server::game_server::GameServer;
     use crate::world::World;
+    use crate::entity::entity::EntityKind;
 
     #[test]
     fn test_two_clients_connecting() {
@@ -222,7 +246,7 @@ mod tests {
         server.consume_updates(id3);
         
         // johan attacks arnaud
-        server.on_new_attack(EntityAttack::new(id3 as u8));
+        server.on_new_attack(EntityAttack::new(id3 as u8, EntityKind::Player), id2);
         
         // only arnaud is supposed to receive a message
         assert_eq!(0, server.consume_updates(id1).len());

@@ -30,6 +30,13 @@ impl EntityKind {
             
         }
     }
+
+    pub fn is_player(&self) -> bool {
+        match self {
+        Self::Player => true,
+        _ => false
+        }
+    }
     
 }
 
