@@ -1,11 +1,15 @@
+use crate::collidable::{Collidable, CollisionData};
 use crate::server::server_state::PlayerState;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 use crate::entity::entity::EntityKind;
+use crate::player::{JUMP_VELOCITY, PLAYER_MARGIN};
 
-const MONSTER1_SPEED: f32 = 0.1;
-const MONSTER1_ROTATION_SPEED: f32 = 0.02;
+use super::humanoid::humanoid_aabb;
+const MONSTER1_SPEED: f32 = 2.;
+const MONSTER1_ROTATION_SPEED: f32 = 0.10;
+pub const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 2. * 9.81, 0.);
 
 #[derive(Clone)]
 /// Action that the monster can realize
@@ -32,7 +36,9 @@ pub struct Monster<T> {
     id: usize,
     entity_type: EntityKind,
     position: Position,
-    transition: T
+    transition: T,
+    in_air: bool,
+    velocity: Vector3
 }
 
 impl<T> Monster<T> where T: TransitionState {
@@ -42,6 +48,9 @@ impl<T> Monster<T> where T: TransitionState {
             entity_type,
             position,
             transition: TransitionState::new(),
+            in_air: true,
+            velocity: Vector3::empty()
+
         }
     }
 
@@ -51,18 +60,38 @@ impl<T> Monster<T> where T: TransitionState {
         self.transition.update(dt, &self.position, world, player_list);
 
         // Apply the action return by transition
-        self.apply_action(self.transition.action());
+        self.apply_action(self.transition.action(), dt, world);
 
     }
 
     /// Apply the action of the monster
-    fn apply_action(&mut self, action: MonsterAction) {
+    fn apply_action(&mut self, action: MonsterAction, mut dt:f32, world: &World) {
+        self.velocity = Vector3::empty();
         match action {
-            MonsterAction::Forward => self.position.set_position(self.position.pos() +  Vector3::new(MONSTER1_SPEED, 0., 0.).rotation_y(self.position.yaw())),
+            MonsterAction::Forward => self.velocity = Vector3::new(MONSTER1_SPEED, 0., 0.).rotation_y(self.position.yaw()),
             MonsterAction::LeftRot => self.position.rotate_yaw(MONSTER1_ROTATION_SPEED),
             MonsterAction::RightRot => self.position.rotate_yaw(-MONSTER1_ROTATION_SPEED),
+            MonsterAction::Jump => self.jump(),
             _ => ()
         }
+
+        if self.in_air {
+            self.velocity += GRAVITY_ACCELERATION_VECTOR * dt;
+        }
+
+
+        loop {
+            dt = dt - self.move_with_collision(dt, world);
+            if dt <= 0. {
+                break;
+            }
+        }
+
+        // update in_air
+        let displacement = Vector3::new(0., -2.0 * PLAYER_MARGIN, 0.);
+        self.in_air = !world.collides(&humanoid_aabb(&(&self.position + displacement)));
+
+
     }
         
     fn set_position(&mut self, position: Position) {
@@ -76,37 +105,48 @@ impl<T> Monster<T> where T: TransitionState {
     pub fn id(&self) -> usize {
         self.id
     }
-}
 
-#[cfg(test)]
-mod test {
-    use crate::{entity::entity::EntityKind, primitives::vector::Vector3};
-    use crate::primitives::position::Position;
-    use super::{MONSTER1_SPEED,MONSTER1_ROTATION_SPEED};
+        /// Integrate the velocity to move the camera, with collision. Returns the
+    /// dt (in seconds), which can be smaller than `dt` if there is a collision.
+    fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
+        let target = humanoid_aabb(&(&self.position + self.velocity * dt));
 
-    use super::Monster;
-    use crate::entity::walker_in_circle::WalkInCercle;
+        let collision = world
+            .collision_time(&humanoid_aabb(&self.position), &target, &self.velocity)
+            .unwrap_or(CollisionData {
+                time: f32::MAX,
+                normal: Vector3::empty(),
+            });
 
+        if collision.time >= dt {
+            // TO DO : do we also want a margin here ???????????
 
+            // can move straight away
+            self.position += self.velocity * dt;
 
-    #[test]
-    fn test_apply_action() {
-        let mut monster = Monster::<WalkInCercle>::new(0, EntityKind::Monster1, Position::empty());
-        monster.apply_action(super::MonsterAction::Forward);
-        assert_eq!(monster.position().pos(), Vector3::new(MONSTER1_SPEED, 0., 0.));
-        assert_eq!(monster.position().yaw(), 0.);
-        assert_eq!(monster.position().pitch(), 0.);
+            dt
+        } else {
+            // The margin is between the player and the block we colide with
+            // need the projection of velocity onto the normal
+            let mut dtmargin: f32 = 0.0;
+            if (self.velocity.norm() >= 1e-10) {
+                dtmargin = PLAYER_MARGIN / collision.normal.dot(&self.velocity).abs();
+            }
+            // we want to put a margin, to avoid collision even with floats rounding
+            self.position += self.velocity * (collision.time - dtmargin);
+            
+            // remove component of velocity along the normal
+            let vnormal = collision.normal * collision.normal.dot(&self.velocity);
+            self.velocity = self.velocity - vnormal;
 
-        let mut monster = Monster::<WalkInCercle>::new(0, EntityKind::Monster1, Position::empty());
-        monster.apply_action(super::MonsterAction::LeftRot);
-        assert_eq!(monster.position().pos(), Vector3::new(0., 0., 0.));
-        assert_eq!(monster.position().yaw(), MONSTER1_ROTATION_SPEED);
-        assert_eq!(monster.position().pitch(), 0.);
-
-        let mut monster = Monster::<WalkInCercle>::new(0, EntityKind::Monster1, Position::empty());
-        monster.apply_action(super::MonsterAction::RightRot);
-        assert_eq!(monster.position().pos(), Vector3::new(0., 0., 0.));
-        assert_eq!(monster.position().yaw(), -MONSTER1_ROTATION_SPEED);
-        assert_eq!(monster.position().pitch(), 0.);
+            collision.time
+        }
     }
+
+    pub fn jump(&mut self) {
+        if !self.in_air {
+            self.velocity[1] = JUMP_VELOCITY;
+        }
+    }
+
 }

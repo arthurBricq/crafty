@@ -55,7 +55,8 @@ impl Entity {
 
     pub fn aabb(&self) -> AABB {
         match self.entity_type {
-            EntityKind::Player | EntityKind::Monster1 => humanoid_aabb(&self.position)
+            EntityKind::Player | EntityKind::Monster1 | EntityKind::Monster2 => humanoid_aabb(&self.position)
+        
         }
     }
 }

@@ -1,5 +1,4 @@
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 use crate::entity::walker_in_circle::WalkInCercle;
 use crate::entity::chaser::Chaser;
 use crate::entity::entity::EntityKind;
@@ -13,7 +12,7 @@ use super::server_state::PlayerState;
 
 pub struct MonsterManager {
     world: Arc<Mutex<World>>,
-    monsters: Vec<Monster<WalkInCercle>>,
+    monsters: Vec<Monster<Chaser>>,
     buffer_update: Vec<ServerUpdate>,
 }
 
@@ -48,10 +47,10 @@ impl MonsterManager {
     }
 
     /// Ask the monster to move
-    pub fn step(&mut self, dt: Duration, player_list: Vec<PlayerState>) {
+    pub fn step(&mut self, dt: f32, player_list: Vec<PlayerState>) {
         self.monsters.iter_mut()
         .for_each(|monster | {
-            monster.update(&self.world.lock().unwrap(), dt.as_secs_f32(), player_list.clone());
+            monster.update(&self.world.lock().unwrap(), dt, player_list.clone());
             // Inform the players that the monster has moved
             self.buffer_update.push(ServerUpdate::UpdatePosition(monster.id() as u8, monster.position().clone()));
         } );

@@ -11,28 +11,28 @@ use crate::server::world_dispatcher::WorldDispatcher;
 use crate::world::World;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 use crate::attack::EntityAttack;
+use std::time::{Duration, Instant};
 
 use super::server_state::PlayerState;
 
 /// Main function of the thread in charge of entities
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
-    let sleep_time = Duration::from_millis(20);
+    let sleep_time = Duration::from_millis(5);
 
-    // server.lock().unwrap().entity_server.spawn_new_monster(Vector3::new(0., 12., 0.), EntityKind::Monster1);
-    let mut t = 0.;
+    server.lock().unwrap().entity_server.spawn_new_monster(Vector3::new(0., 16., 0.), EntityKind::Monster1);
+    let mut t = Instant::now();
+    let mut dt = 0.;
     loop {
+        dt = t.elapsed().as_secs_f32();
+        t = Instant::now();
+        
+        let player_list = server.lock().unwrap().state.connected_players().cloned().collect();
+        server.lock().unwrap().entity_server.step(dt, player_list);
+        std::thread::sleep(sleep_time);
 
-        // Spwan a new monster every n sec
-        t += sleep_time.as_millis() as f32 / 1000.;
-        if t > 5. {
-            t = -1000.;
-            server.lock().unwrap().entity_server.spawn_new_monster(Vector3::new(0., 12., 0.), EntityKind::Monster1);
-        }
-        let a = server.lock().unwrap().state.connected_players().cloned().collect();
-        server.lock().unwrap().entity_server.step(sleep_time, a);
-        std::thread::sleep(sleep_time)
+
+
     }
 }
 
