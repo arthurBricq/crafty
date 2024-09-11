@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use crate::entity::walker_in_circle::WalkInCercle;
+use crate::entity::chaser::Chaser;
 use crate::entity::entity::EntityKind;
 use crate::entity::monster::Monster;
 use crate::network::server_update::ServerUpdate;
