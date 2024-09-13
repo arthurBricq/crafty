@@ -1,6 +1,6 @@
 use crate::actions::Action;
 use crate::chunk::Chunk;
-use crate::network::server_update::ServerUpdate::{Attack, LoadChunk, LoggedIn, RegisterEntity, SendAction, UpdatePosition};
+use crate::network::server_update::ServerUpdate::{Attack, LoadChunk, LoggedIn, LoggedOut, RegisterEntity, SendAction, UpdatePosition};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
 use std::str::from_utf8;
@@ -17,6 +17,8 @@ pub enum ServerUpdate {
     LoadChunk(Chunk),
     /// The server forwards to the client his client id
     LoggedIn(u8, Position),
+    /// Informs other players that one player left the server
+    LoggedOut(u8),
     /// The server forwards to the client an action to be executed
     SendAction(Action),
     /// Tell the client that a new player is part of the game
@@ -43,7 +45,8 @@ impl TcpSerialize for ServerUpdate {
             SendAction(_) => 2,
             RegisterEntity(_, _) => 3,
             UpdatePosition(_, _) => 4,
-            Attack(_) => 5
+            Attack(_) => 5,
+            LoggedOut(_) => 6
         }
     }
 
@@ -57,7 +60,8 @@ impl TcpSerialize for ServerUpdate {
                 bytes.extend_from_slice(&pos.to_bytes());
                 bytes
             }
-            Attack(attack) => attack.to_bytes()
+            Attack(attack) => attack.to_bytes(),
+            LoggedOut(id) => vec![*id],
         }
     }
 }
@@ -89,6 +93,9 @@ impl TcpDeserialize for ServerUpdate {
             }
             5 => {
                 Attack(EntityAttack::from_bytes(bytes_to_parse))
+            }
+            6 => {
+                LoggedOut(bytes_to_parse[0])
             }
             _ => panic!("Cannot build server update from code {code}")
         }

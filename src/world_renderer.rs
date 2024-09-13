@@ -591,6 +591,9 @@ impl WorldRenderer {
                     self.health.damage(attack.strength());
                     self.hud_renderer.set_health(&self.health);
                 }
+                ServerUpdate::LoggedOut(id) => {
+                    self.entity_manager.unregister_player(id)
+                }
             }
         }
     }
