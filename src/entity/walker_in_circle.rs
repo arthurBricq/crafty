@@ -32,7 +32,7 @@ impl TransitionState for WalkInCercle {
             MonsterStateEnum::Forward => MonsterAction::Forward,
             MonsterStateEnum::TurnLeft => MonsterAction::LeftRot,
             _ => MonsterAction::Idle
-            
+
         }
     }
 
@@ -52,7 +52,7 @@ impl TransitionState for WalkInCercle {
                     self.timer = 2.;
                 }
                 _ => ()
-                
+
             }
         } else {
             self.timer -= dt;

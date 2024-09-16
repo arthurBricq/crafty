@@ -20,8 +20,8 @@ pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
     server.lock().unwrap().monster_manager
         .spawn_new_monster(Position::new(Vector3::new(-5., 16., 0.), 0., 0.), EntityKind::Monster1);
 
-    server.lock().unwrap().monster_manager
-        .spawn_new_monster(Position::new(Vector3::new(5., 16., 0.), 0., 0.), EntityKind::Monster1);
+    // server.lock().unwrap().monster_manager
+    //     .spawn_new_monster(Position::new(Vector3::new(5., 16., 0.), 0., 0.), EntityKind::Monster1);
     
     // server.lock().unwrap().monster_manager
     //     .spawn_new_monster(Position::new(Vector3::new(10., 16., 0.), 0., 0.), EntityKind::Monster1);

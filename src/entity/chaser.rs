@@ -13,19 +13,19 @@ pub enum MonsterStateEnum {
     Forward,
     TurnLeft,
     TurnRight,
-    Attack
+    Attack,
 }
 
 pub struct Chaser {
     state: MonsterStateEnum,
-    target: Vector3
+    chasing: Option<usize>,
 }
 
 impl TransitionState for Chaser {
     fn new() -> Self {
         Self {
             state: MonsterStateEnum::Idle,
-            target: Vector3::empty()
+            chasing: None,
         }
     }
     fn action(&self) -> MonsterAction {
@@ -35,31 +35,30 @@ impl TransitionState for Chaser {
             MonsterStateEnum::TurnRight => MonsterAction::RightRot,
             MonsterStateEnum::Attack => MonsterAction::Attack,
             _ => MonsterAction::Idle
-            
         }
     }
 
     fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: &Vec<PlayerState>) {
-        if player_list.len() > 0 {
-            // Try to find the closest player
-            let mut index_closest: Option<usize> = Option::None;
-            let mut closest_norm = 10.;
-            let mut norm = 0.;
-            for i in 0..player_list.len() {
-                norm = (player_list[i].pos.pos() - position.pos()).norm();
-                if  norm < CHASING_DISTANCE && norm < closest_norm {
-                    closest_norm = norm;
-                    index_closest = Some(i);
+        // If we have a lock, then keep pursuing the current locked player
+        if let Some(player_id) = self.chasing {
+            if let Some(player_pos) = player_list.iter().find(|p| p.id == player_id).map(|p| p.pos.pos()) {
+                // Condition to leave the lock: too far from player
+                if player_pos.distance_to(&position.pos()) > CHASING_DISTANCE {
+                    self.chasing = None
                 }
+                else {
+                    self.go_to_target(position, player_pos)
+                }
+            } else {
+                self.chasing = None
             }
-            match index_closest {
-                    // A player is close enought, target it
-                Some(index) => {
-                    self.target = player_list[index].pos.pos();
-                    self.go_to_target(position)
-                },
-                // No player is close enought
-                _ => self.state = MonsterStateEnum::Idle
+        } 
+        
+        // Find a new lock
+        if self.chasing.is_none() && player_list.len() > 0 {
+            // Try to find any player that is in range
+            if let Some(next_target) = player_list.iter().find(|player| player.pos.distance_to(&position.pos()) < CHASING_DISTANCE) {
+                self.chasing = Some(next_target.id);
             }
         }
     }
@@ -68,12 +67,11 @@ impl TransitionState for Chaser {
 
 impl Chaser {
     // Go to a target position by first rotating then going forward
-    fn go_to_target(&mut self, position: &Position) {
-
+    fn go_to_target(&mut self, position: &Position, target: Vector3) {
         let forward = Vector3::unit_x().rotation_y(position.yaw());
         // Vector on the side of the player
         let side = Vector3::unit_z().rotation_y(position.yaw());
-        let mut direction_target = self.target - position.pos();
+        let mut direction_target = target - position.pos();
         // Quit if close enought and try to attack
         if direction_target.norm() < 1. {
             self.state = MonsterStateEnum::Attack;
@@ -87,7 +85,7 @@ impl Chaser {
         if sangle.abs() > 0.1 {
             if sangle > 0. {
                 self.state = MonsterStateEnum::TurnLeft;
-            } else { 
+            } else {
                 self.state = MonsterStateEnum::TurnRight;
             }
         } else {
