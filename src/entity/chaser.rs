@@ -39,7 +39,7 @@ impl TransitionState for Chaser {
         }
     }
 
-    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: Vec<PlayerState>) {
+    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: &Vec<PlayerState>) {
         if player_list.len() > 0 {
             // Try to find the closest player
             let mut index_closest: Option<usize> = Option::None;

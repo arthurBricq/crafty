@@ -36,7 +36,7 @@ impl TransitionState for WalkInCercle {
         }
     }
 
-    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: Vec<PlayerState>) {
+    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: &Vec<PlayerState>) {
         if self.timer - dt < 0. {
             match self.state {
                 MonsterStateEnum::Idle => {

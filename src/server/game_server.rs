@@ -20,9 +20,9 @@ pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
     server.lock().unwrap().monster_manager
         .spawn_new_monster(Position::new(Vector3::new(-5., 16., 0.), 0., 0.), EntityKind::Monster1);
 
-    // server.lock().unwrap().monster_manager
-    //     .spawn_new_monster(Position::new(Vector3::new(5., 16., 0.), 0., 0.), EntityKind::Monster1);
-    // 
+    server.lock().unwrap().monster_manager
+        .spawn_new_monster(Position::new(Vector3::new(5., 16., 0.), 0., 0.), EntityKind::Monster1);
+    
     // server.lock().unwrap().monster_manager
     //     .spawn_new_monster(Position::new(Vector3::new(10., 16., 0.), 0., 0.), EntityKind::Monster1);
 
@@ -33,7 +33,7 @@ pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
         t = Instant::now();
         
         let player_list = server.lock().unwrap().state.connected_players().cloned().collect();
-        server.lock().unwrap().monster_manager.step(dt, player_list);
+        server.lock().unwrap().monster_manager.step(dt, &player_list);
         server.lock().unwrap().update_buffers();
         std::thread::sleep(sleep_time);
     }

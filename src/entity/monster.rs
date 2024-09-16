@@ -27,7 +27,7 @@ pub trait TransitionState {
     /// Return the monster's action
     fn action(&self) -> MonsterAction;
     /// Change the internal state of the machine 
-    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: Vec<PlayerState>);
+    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: &Vec<PlayerState>);
     fn new() -> Self;
 }
 
@@ -55,7 +55,7 @@ impl<T> Monster<T> where T: TransitionState {
     }
 
     /// Update the state of the monster and do an action (move, attack)
-    pub fn update(&mut self, world: &World, dt: f32, player_list: Vec<PlayerState>) {
+    pub fn update(&mut self, world: &World, dt: f32, player_list: &Vec<PlayerState>) {
         // Update the internal state of transition
         self.transition.update(dt, &self.position, world, player_list);
 

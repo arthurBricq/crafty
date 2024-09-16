@@ -45,10 +45,10 @@ impl MonsterManager {
     }
 
     /// Ask the monster to move
-    pub fn step(&mut self, dt: f32, player_list: Vec<PlayerState>) {
+    pub fn step(&mut self, dt: f32, players: &Vec<PlayerState>) {
         self.monsters.iter_mut()
             .for_each(|monster| {
-                monster.update(&self.world.lock().unwrap(), dt, player_list.clone());
+                monster.update(&self.world.lock().unwrap(), dt, players);
                 // Inform the players that the monster has moved
                 self.buffer_update.push(ServerUpdate::UpdatePosition(monster.id() as u8, monster.position().clone()));
             });
