@@ -17,8 +17,15 @@ use std::time::{Duration, Instant};
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
     let sleep_time = Duration::from_millis(5);
 
-    let pos = Position::new(Vector3::new(0., 16., 0.), 0., 0.);
-    server.lock().unwrap().monster_manager.spawn_new_monster(pos, EntityKind::Monster1);
+    server.lock().unwrap().monster_manager
+        .spawn_new_monster(Position::new(Vector3::new(-5., 16., 0.), 0., 0.), EntityKind::Monster1);
+
+    // server.lock().unwrap().monster_manager
+    //     .spawn_new_monster(Position::new(Vector3::new(5., 16., 0.), 0., 0.), EntityKind::Monster1);
+    // 
+    // server.lock().unwrap().monster_manager
+    //     .spawn_new_monster(Position::new(Vector3::new(10., 16., 0.), 0., 0.), EntityKind::Monster1);
+
     let mut t = Instant::now();
     let mut dt = 0.;
     loop {
@@ -89,8 +96,9 @@ impl GameServer {
         self.world_dispatcher.register_player(player.id);
 
         // Register the new player to other players of the game.
-        for i in 0..self.state.n_players_connected() - 1 {
-            self.server_updates_buffer.get_mut(&i).unwrap().push(RegisterEntity(player.id as u8, EntityKind::Player, player.pos.clone()));
+        for player in self.state.connected_players() {
+            self.server_updates_buffer.get_mut(&player.id).unwrap()
+                .push(RegisterEntity(player.id as u8, EntityKind::Player, player.pos.clone()));
         }
 
         player.id
@@ -119,9 +127,9 @@ impl GameServer {
         }
 
         // Update other players
-        for i in 0..self.state.n_players_connected() {
-            if i != player_id {
-                self.server_updates_buffer.get_mut(&i).unwrap().push(UpdatePosition(player_id as u8, position.clone()))
+        for player in self.state.connected_players() {
+            if player.id != player_id {
+                self.server_updates_buffer.get_mut(&player.id).unwrap().push(UpdatePosition(player_id as u8, position.clone()))
             }
         }
 
@@ -132,30 +140,30 @@ impl GameServer {
     pub fn on_new_action(&mut self, player_id: usize, action: Action) {
         // Edit the world of the server
         self.world.lock().unwrap().apply_action(&action);
-        
+
         // Forward the action to all the other connected players
         for player in self.state.connected_players() {
             if player.id != player_id {
                 self.server_updates_buffer.get_mut(&player.id).unwrap().push(SendAction(action.clone()))
             }
         }
-        
+
     }
 
     pub fn on_new_attack(&mut self, attack: EntityAttack) {
         println!("Attacked received: {attack:?}");
         let victim = attack.victim_id() as usize;
-        
+
         // Communicate the attack to victim, if the victim is a player.
         for player in self.state.connected_players() {
             if player.id == victim {
                 if let Some(buf) = self.server_updates_buffer.get_mut(&player.id) {
                     buf.push(Attack(attack));
                     return;
-                } 
+                }
             }
         }
-        
+
         // If we arrive here, it means the victim is not one of the connected player.
         // Therefore, it must be a monster.
 
@@ -166,7 +174,7 @@ impl GameServer {
         for player in self.state.connected_players() {
             self.server_updates_buffer.get_mut(&player.id).unwrap().push(RemoveEntity(victim as u32));
         }
-        
+
     }
 
     /// Returns the list of updates that the server sends to the client.
