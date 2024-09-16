@@ -45,19 +45,19 @@ impl EntityManager {
             .collect::<Vec<Vec<EntityCube>>>()
             .concat()
     }
-
+    
     pub fn attack(&self, position: Vector3, direction: Vector3) -> Option<EntityAttack> {
-        println!("Attacking !");
-        if let Some((id, entity_kind, _)) = self.entities
+        if let Some((id, _)) = self.entities
             .iter()
-            .map(|(id, entity)| (id, entity.entity_type(), entity.aabb().faces()))
-            .find(|(id, entity_kind, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
+            .map(|(id, entity)| (id, entity.aabb().faces()))
+            .find(|(id, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
         {
             println!("Player {id} was hit !");
-            return Some(EntityAttack::new(*id, entity_kind.clone()));
+            return Some(EntityAttack::new(*id));
         }
         None
     }
+
 }
 
 #[cfg(test)]
@@ -87,7 +87,7 @@ mod tests {
         // Add a player at the origin
         mgr.register_new_entity(0, EntityKind::Player, Position::from_pos(Vector3::empty()));
 
-        assert_eq!(Some(EntityAttack::new(0, EntityKind::Player)), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
+        assert_eq!(Some(EntityAttack::new(0)), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_x()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_y()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_z()));

@@ -79,7 +79,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                                     game.lock().unwrap().on_new_action(client_id.unwrap(), action);
                                 }
                                 MessageToServer::Attack(attack) => {
-                                    game.lock().unwrap().on_new_attack(attack, client_id.unwrap());
+                                    game.lock().unwrap().on_new_attack(attack);
                                 }
                             };
                         }

@@ -20,7 +20,7 @@ impl MonsterManager {
         Self {
             world,
             monsters: Vec::new(),
-            buffer_update: Vec::new()
+            buffer_update: Vec::new(),
         }
     }
 
@@ -28,7 +28,7 @@ impl MonsterManager {
         let id = self.generate_id();
         self.monsters.push(Monster::new(id, kind.clone(), pos.clone()));
         // Inform the player that a new entity has spawn
-        self.buffer_update.push(ServerUpdate::RegisterEntity(id as u8, kind,  pos));
+        self.buffer_update.push(ServerUpdate::RegisterEntity(id as u8, kind, pos));
         id
     }
 
@@ -47,13 +47,13 @@ impl MonsterManager {
     /// Ask the monster to move
     pub fn step(&mut self, dt: f32, player_list: Vec<PlayerState>) {
         self.monsters.iter_mut()
-        .for_each(|monster | {
-            monster.update(&self.world.lock().unwrap(), dt, player_list.clone());
-            // Inform the players that the monster has moved
-            self.buffer_update.push(ServerUpdate::UpdatePosition(monster.id() as u8, monster.position().clone()));
-        } );
+            .for_each(|monster| {
+                monster.update(&self.world.lock().unwrap(), dt, player_list.clone());
+                // Inform the players that the monster has moved
+                self.buffer_update.push(ServerUpdate::UpdatePosition(monster.id() as u8, monster.position().clone()));
+            });
     }
-    
+
     /// Return the updated position of the monsters
     pub fn get_server_updates(&mut self) -> Vec<ServerUpdate> {
         // TODO update the player only if monster is close enought
@@ -75,7 +75,6 @@ impl MonsterManager {
     fn generate_id(&self) -> usize {
         50 + self.monsters.len()
     }
-
 }
 
 #[cfg(test)]
@@ -96,22 +95,22 @@ mod test {
         let pos = Position::new(Vector3::empty(), 0., 0.);
 
         monster_manager.spawn_new_monster(pos.clone(), EntityKind::Monster1);
-    
+
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 1);
 
         let updates = monster_manager.get_server_updates();
         assert_eq!(updates.len(), 1);
-        
+
         monster_manager.spawn_new_monster(pos, EntityKind::Monster1);
-        
+
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 2);
 
         let updates = monster_manager.get_server_updates();
         assert_eq!(updates.len(), 1);
     }
-    
+
     #[test]
     fn test_rm_monster() {
         let world = Arc::new(Mutex::new(World::empty()));
@@ -119,7 +118,7 @@ mod test {
         let pos = Position::new(Vector3::empty(), 0., 0.);
 
         let id = monster_manager.spawn_new_monster(pos.clone(), crate::entity::entity::EntityKind::Monster1);
-    
+
         monster_manager.get_server_updates();
 
         monster_manager.remove_monster(id);
@@ -129,7 +128,6 @@ mod test {
         let updates = monster_manager.get_server_updates();
         // When adding a message to client to remove the monster, set 0 to 1
         assert_eq!(updates.len(), 0);
-
     }
 
     #[test]
@@ -146,10 +144,8 @@ mod test {
                 assert_eq!(id0, *id as usize);
                 assert_eq!(position0, *position1);
                 assert_eq!(entity_type0, *entity_pos1);
-            },
+            }
             _ => assert!(false)
         }
     }
-
-
 }
