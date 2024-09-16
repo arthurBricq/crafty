@@ -83,15 +83,9 @@ impl GameServer {
     }
 
     pub fn logout(&mut self, id: usize) {
+        // The world dispatcher must be informed that this client loose all of its chunks
         self.state.logout(id);
         self.world_dispatcher.logout(id);
-        // Inform the other players
-        for player in self.state.connected_players() {
-            self.server_updates_buffer
-                .get_mut(&player.id)
-                .unwrap()
-                .push(RegisterEntity(player.id as u8, player.pos.clone()));
-        }
     }
 
     // Implementation of the 'callbacks': entry points of the server

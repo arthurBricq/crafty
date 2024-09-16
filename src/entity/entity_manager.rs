@@ -6,11 +6,8 @@ use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use std::collections::HashMap;
 
-/// Contain all the entities to be rendered on the screen.
-/// 
-/// An entity is either a player or a monster.
+/// Contain all the entities
 pub struct EntityManager {
-    /// Entities are keyed by their id, provided by the server
     entities: HashMap<u8, Entity>,
 }
 
@@ -26,10 +23,6 @@ impl EntityManager {
         println!("New player has joined the game: {id}");
         let entity = Entity::new(id as usize, EntityKind::Player, pos);
         self.entities.insert(id, entity);
-    }
-    
-    pub fn unregister_player(&mut self, id: u8) {
-        self.entities.remove(&id);
     }
 
     pub fn set_position(&mut self, id: u8, position: Position) {
