@@ -45,15 +45,14 @@ impl TransitionState for Chaser {
                 // Condition to leave the lock: too far from player
                 if player_pos.distance_to(&position.pos()) > CHASING_DISTANCE {
                     self.chasing = None
-                }
-                else {
+                } else {
                     self.go_to_target(position, player_pos)
                 }
             } else {
                 self.chasing = None
             }
-        } 
-        
+        }
+
         // Find a new lock
         if self.chasing.is_none() && player_list.len() > 0 {
             // Try to find any player that is in range

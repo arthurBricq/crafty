@@ -22,7 +22,7 @@ pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
 
     // server.lock().unwrap().monster_manager
     //     .spawn_new_monster(Position::new(Vector3::new(5., 16., 0.), 0., 0.), EntityKind::Monster1);
-    
+
     // server.lock().unwrap().monster_manager
     //     .spawn_new_monster(Position::new(Vector3::new(10., 16., 0.), 0., 0.), EntityKind::Monster1);
 
@@ -31,7 +31,7 @@ pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
     loop {
         dt = t.elapsed().as_secs_f32();
         t = Instant::now();
-        
+
         let player_list = server.lock().unwrap().state.connected_players().cloned().collect();
         server.lock().unwrap().monster_manager.step(dt, &player_list);
         server.lock().unwrap().update_buffers();
@@ -52,9 +52,9 @@ pub struct GameServer {
 
     /// In charge of handling the entities
     monster_manager: MonsterManager,
-    
+
     /// Internal state of the server (expect the entities)
-    state: ServerState
+    state: ServerState,
 }
 
 impl GameServer {
@@ -65,7 +65,7 @@ impl GameServer {
             world_dispatcher: WorldDispatcher::new(),
             server_updates_buffer: HashMap::new(),
             monster_manager: MonsterManager::new(ref_to_world),
-            state: ServerState::new()
+            state: ServerState::new(),
         }
     }
 
@@ -76,7 +76,7 @@ impl GameServer {
         let player = self.state.login(name.clone());
         println!("[SERVER] New player registered: {name} (ID={}, pos={:?})", player.id, player.pos);
         println!("Connected players: {}", self.state.n_players_connected());
-        
+
         // Create a new buffer of updates for this client, 
         let mut initial_updates = vec![LoggedIn(player.id as u8, player.pos.clone())];
 
@@ -86,7 +86,7 @@ impl GameServer {
                 initial_updates.push(RegisterEntity(i as u8, EntityKind::Player, player.pos.clone()))
             }
         }
-        
+
         let monster_entry = self.monster_manager.get_monsters();
         initial_updates.append(&mut monster_entry.clone());
 
@@ -147,7 +147,6 @@ impl GameServer {
                 self.server_updates_buffer.get_mut(&player.id).unwrap().push(SendAction(action.clone()))
             }
         }
-
     }
 
     pub fn on_new_attack(&mut self, attack: EntityAttack) {
@@ -174,7 +173,6 @@ impl GameServer {
         for player in self.state.connected_players() {
             self.server_updates_buffer.get_mut(&player.id).unwrap().push(RemoveEntity(victim as u32));
         }
-
     }
 
     /// Returns the list of updates that the server sends to the client.
@@ -227,30 +225,28 @@ mod tests {
         assert!(matches!(updates[0], ServerUpdate::LoggedIn(_, _)));
         assert!(matches!(updates[1], ServerUpdate::RegisterEntity(_, _, _)));
     }
-    
+
     #[test]
     fn test_attack_broacasting() {
-        
+
         // Create a server with an empty world
         let mut server = GameServer::new(World::empty());
 
         let id1 = server.login("arthur".to_string());
         let id2 = server.login("johan".to_string());
         let id3 = server.login("arnaud".to_string());
-        
+
         // consumes all updates
         server.consume_updates(id1);
         server.consume_updates(id2);
         server.consume_updates(id3);
-        
+
         // johan attacks arnaud
         server.on_new_attack(EntityAttack::new(id3 as u8));
-        
+
         // only arnaud is supposed to receive a message
         assert_eq!(0, server.consume_updates(id1).len());
         assert_eq!(0, server.consume_updates(id2).len());
         assert_eq!(1, server.consume_updates(id3).len());
-        
     }
-
 }

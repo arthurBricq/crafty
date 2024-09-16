@@ -1,12 +1,11 @@
-use std::env;
-use std::env::Args;
-use crafty::server::game_server::{handle_entity_thread, GameServer};
+use crafty::network::proxy::Proxy;
 use crafty::network::single_player_proxy::SinglePlayerProxy;
+use crafty::server::game_server::{handle_entity_thread, GameServer};
 use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;
 use crafty::{player::Player, world_generation::world_generator::WorldGenerator};
+use std::env;
 use std::sync::{Arc, Mutex};
-use crafty::network::proxy::Proxy;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -22,14 +21,11 @@ impl WorldInitializer {
         println!("args = {args:?}");
         if args.contains(&"--random".to_string()) {
             Self::RANDOM
-        }
-        else if args.contains(&"--flat".to_string()) {
+        } else if args.contains(&"--flat".to_string()) {
             Self::FLAT
-        }
-        else if args.contains(&"--disk".to_string()) {
+        } else if args.contains(&"--disk".to_string()) {
             Self::DISK
-        }
-        else {
+        } else {
             Self::RANDOM
         }
     }

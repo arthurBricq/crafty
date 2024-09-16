@@ -16,7 +16,7 @@ pub enum MonsterStateEnum {
 pub struct WalkInCercle {
     state: MonsterStateEnum,
     timer: f32,
-    target: Vector3
+    target: Vector3,
 }
 
 impl TransitionState for WalkInCercle {
@@ -24,7 +24,7 @@ impl TransitionState for WalkInCercle {
         Self {
             state: MonsterStateEnum::Idle,
             timer: 0.,
-            target: Vector3::new(10., 15., 10.)
+            target: Vector3::new(10., 15., 10.),
         }
     }
     fn action(&self) -> MonsterAction {
@@ -32,7 +32,6 @@ impl TransitionState for WalkInCercle {
             MonsterStateEnum::Forward => MonsterAction::Forward,
             MonsterStateEnum::TurnLeft => MonsterAction::LeftRot,
             _ => MonsterAction::Idle
-
         }
     }
 
@@ -52,7 +51,6 @@ impl TransitionState for WalkInCercle {
                     self.timer = 2.;
                 }
                 _ => ()
-
             }
         } else {
             self.timer -= dt;

@@ -10,14 +10,14 @@ pub struct PlayerState {
 /// Persistent state of the server
 pub struct ServerState {
     players: HashMap<String, PlayerState>,
-    connected: HashSet<String>
+    connected: HashSet<String>,
 }
 
 impl ServerState {
     pub fn new() -> Self {
         Self {
             players: HashMap::new(),
-            connected: HashSet::new()
+            connected: HashSet::new(),
         }
     }
 
@@ -35,16 +35,16 @@ impl ServerState {
         self.connected.remove(name);
     }
 
-    pub fn connected_players(&self) -> impl Iterator<Item = &PlayerState> {
+    pub fn connected_players(&self) -> impl Iterator<Item=&PlayerState> {
         self.players.iter()
             .filter(|(k, v)| self.connected.contains(*k))
             .map(|(k, v)| v)
     }
-    
+
     pub fn n_players_connected(&self) -> usize {
         self.connected.len()
     }
-    
+
     pub fn set_player_pos(&mut self, id: usize, pos: Position) {
         if let Some(player_state) = self.players.iter_mut()
             .find(|(k, v)| v.id == id)
@@ -52,8 +52,6 @@ impl ServerState {
             player_state.pos = pos;
         }
     }
-    
-
 }
 
 #[cfg(test)]
@@ -71,7 +69,7 @@ mod tests {
         let p2 = state.login("johan".to_string());
         assert_eq!(2, state.n_players_connected());
         assert_eq!(1, p2.id);
-        
+
         state.logout(0);
         assert_eq!(1, state.n_players_connected());
         let connected: Vec<&PlayerState> = state.connected_players().collect();

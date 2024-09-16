@@ -22,7 +22,7 @@ impl EntityManager {
     pub fn register_new_entity(&mut self, id: u8, entity_kind: EntityKind, pos: Position) {
         println!("New player has joined the game: {id}");
         let entity = Entity::new(id as usize, entity_kind, pos.clone());
-        self.entities.insert(id, entity);        
+        self.entities.insert(id, entity);
     }
 
     /// Remove an entity from the Manager
@@ -45,7 +45,7 @@ impl EntityManager {
             .collect::<Vec<Vec<EntityCube>>>()
             .concat()
     }
-    
+
     pub fn attack(&self, position: Vector3, direction: Vector3) -> Option<EntityAttack> {
         if let Some((id, _)) = self.entities
             .iter()
@@ -57,16 +57,15 @@ impl EntityManager {
         }
         None
     }
-
 }
 
 #[cfg(test)]
 mod tests {
     use crate::attack::EntityAttack;
+    use crate::entity::entity::EntityKind;
     use crate::entity::entity_manager::EntityManager;
     use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
-    use crate::entity::entity::EntityKind;
 
     #[test]
     fn test_basic_functionality() {
@@ -106,6 +105,5 @@ mod tests {
         assert_eq!(0, mgr.get_opengl_entities().len());
 
         mgr.remove_entity(5);
-
     }
 }

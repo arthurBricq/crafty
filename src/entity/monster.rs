@@ -19,7 +19,7 @@ pub enum MonsterAction {
     RightRot,
     Attack,
     Jump,
-    Idle   
+    Idle,
 }
 
 /// This trait implement a state machine for the internal logic of monster
@@ -38,19 +38,21 @@ pub struct Monster<T> {
     position: Position,
     transition: T,
     in_air: bool,
-    velocity: Vector3
+    velocity: Vector3,
 }
 
-impl<T> Monster<T> where T: TransitionState {
-    pub fn new(id: usize, entity_type: EntityKind, position: Position) -> Self {      
-        Self { 
+impl<T> Monster<T>
+where
+    T: TransitionState,
+{
+    pub fn new(id: usize, entity_type: EntityKind, position: Position) -> Self {
+        Self {
             id,
             entity_type,
             position,
             transition: TransitionState::new(),
             in_air: true,
-            velocity: Vector3::empty()
-
+            velocity: Vector3::empty(),
         }
     }
 
@@ -61,11 +63,10 @@ impl<T> Monster<T> where T: TransitionState {
 
         // Apply the action return by transition
         self.apply_action(self.transition.action(), dt, world);
-
     }
 
     /// Apply the action of the monster
-    fn apply_action(&mut self, action: MonsterAction, mut dt:f32, world: &World) {
+    fn apply_action(&mut self, action: MonsterAction, mut dt: f32, world: &World) {
         self.velocity = Vector3::empty();
         match action {
             MonsterAction::Forward => self.velocity = Vector3::new(MONSTER1_SPEED, 0., 0.).rotation_y(self.position.yaw()),
@@ -90,10 +91,8 @@ impl<T> Monster<T> where T: TransitionState {
         // update in_air
         let displacement = Vector3::new(0., -2.0 * PLAYER_MARGIN, 0.);
         self.in_air = !world.collides(&humanoid_aabb(&(&self.position + displacement)));
-
-
     }
-        
+
     fn set_position(&mut self, position: Position) {
         self.position = position;
     }
@@ -101,7 +100,7 @@ impl<T> Monster<T> where T: TransitionState {
     pub fn position(&self) -> &Position {
         &self.position
     }
-    
+
     pub fn id(&self) -> usize {
         self.id
     }
@@ -110,7 +109,7 @@ impl<T> Monster<T> where T: TransitionState {
         &self.entity_type
     }
 
-        /// Integrate the velocity to move the camera, with collision. Returns the
+    /// Integrate the velocity to move the camera, with collision. Returns the
     /// dt (in seconds), which can be smaller than `dt` if there is a collision.
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
         let target = humanoid_aabb(&(&self.position + self.velocity * dt));
@@ -138,7 +137,7 @@ impl<T> Monster<T> where T: TransitionState {
             }
             // we want to put a margin, to avoid collision even with floats rounding
             self.position += self.velocity * (collision.time - dtmargin);
-            
+
             // remove component of velocity along the normal
             let vnormal = collision.normal * collision.normal.dot(&self.velocity);
             self.velocity = self.velocity - vnormal;
@@ -152,5 +151,4 @@ impl<T> Monster<T> where T: TransitionState {
             self.velocity[1] = JUMP_VELOCITY;
         }
     }
-
 }
