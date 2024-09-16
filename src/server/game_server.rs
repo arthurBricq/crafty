@@ -17,15 +17,6 @@ use std::time::{Duration, Instant};
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
     let sleep_time = Duration::from_millis(15);
 
-    server.lock().unwrap().monster_manager
-        .spawn_new_monster(Position::new(Vector3::new(-5., 30., 0.), 0., 0.), EntityKind::Monster1);
-
-    server.lock().unwrap().monster_manager
-        .spawn_new_monster(Position::new(Vector3::new(5., 30., 0.), 0., 0.), EntityKind::Monster1);
-
-    server.lock().unwrap().monster_manager
-        .spawn_new_monster(Position::new(Vector3::new(10., 30., 0.), 0., 0.), EntityKind::Monster1);
-
     let mut t = Instant::now();
     let mut dt = 0.;
     loop {
@@ -176,6 +167,10 @@ impl GameServer {
         for player in self.state.connected_players() {
             self.server_updates_buffer.get_mut(&player.id).unwrap().push(RemoveEntity(victim as u32));
         }
+    }
+    
+    pub fn spawn_monster(&mut self, position: Position) {
+        self.monster_manager.spawn_new_monster(position, EntityKind::Monster1);
     }
 
     /// Returns the list of updates that the server sends to the client.

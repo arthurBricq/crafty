@@ -467,6 +467,13 @@ impl WorldRenderer {
                             println!("=================");
                             self.player.debug();
                         }
+                        KeyCode::KeyX => {
+                            println!("Ask to spawn a monster");
+                            let mut monster_pos = self.player.position().clone();
+                            monster_pos.small_raise();
+                            self.proxy.lock().unwrap().request_to_spawn(monster_pos);
+                            
+                        }
                         KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
                         KeyCode::F12 => self.hud_renderer.toggle_help_menu(),

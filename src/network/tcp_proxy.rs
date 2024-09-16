@@ -115,6 +115,13 @@ impl Proxy for TcpProxy {
         }
     }
 
+    fn request_to_spawn(&mut self, position: Position) {
+        match self.updates_transmitter.send(MessageToServer::SpawnRequest(position)) {
+            Ok(_) => {}
+            Err(err) => println!("Error while sending: {err}")
+        }
+    }
+
     fn consume_server_updates(&mut self) -> Vec<ServerUpdate> {
         // TODO change the API to get something that complies more with the circular buffer
         //      for instance returning an iterator that consumes the front of the queue ?

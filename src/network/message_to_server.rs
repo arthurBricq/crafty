@@ -1,5 +1,5 @@
 use crate::actions::Action;
-use crate::network::message_to_server::MessageToServer::{Attack, Login, OnNewAction, OnNewPosition};
+use crate::network::message_to_server::MessageToServer::{Attack, Login, OnNewAction, OnNewPosition, SpawnRequest};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 use crate::primitives::position::Position;
 use std::str::from_utf8;
@@ -13,6 +13,7 @@ pub enum MessageToServer {
     OnNewPosition(Position),
     OnNewAction(Action),
     Attack(EntityAttack),
+    SpawnRequest(Position),
 }
 
 impl TcpSerialize for MessageToServer {
@@ -21,14 +22,15 @@ impl TcpSerialize for MessageToServer {
             Login(_) => 0,
             OnNewPosition(_) => 1,
             OnNewAction(_) => 2,
-            Attack(_) => 3
+            Attack(_) => 3,
+            SpawnRequest(_) => 4,
         }
     }
 
     fn to_bytes_representation(&self) -> Vec<u8> {
         match self {
             Login(name) => name.clone().into_bytes(),
-            OnNewPosition(pos) => pos.to_bytes(),
+            OnNewPosition(pos) | SpawnRequest(pos) => pos.to_bytes(),
             OnNewAction(action) => action.to_bytes(),
             Attack(attack) => attack.to_bytes()
         }
@@ -42,6 +44,7 @@ impl TcpDeserialize for MessageToServer {
             1 => OnNewPosition(Position::from_bytes(bytes_to_parse)),
             2 => OnNewAction(Action::from_str(from_utf8(bytes_to_parse).unwrap())),
             3 => Attack(EntityAttack::from_bytes(bytes_to_parse)),
+            4 => SpawnRequest(Position::from_bytes(bytes_to_parse)),
             _ => panic!("Cannot build message to server from code {code}")
         }
     }

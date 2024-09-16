@@ -81,6 +81,9 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                                 MessageToServer::Attack(attack) => {
                                     game.lock().unwrap().on_new_attack(attack);
                                 }
+                                MessageToServer::SpawnRequest(position) => {
+                                    game.lock().unwrap().spawn_monster(position);
+                                }
                             };
                         }
                     }

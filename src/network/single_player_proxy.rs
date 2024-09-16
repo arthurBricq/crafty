@@ -39,6 +39,10 @@ impl Proxy for SinglePlayerProxy {
         self.server.lock().unwrap().on_new_attack(attack);
     }
 
+    fn request_to_spawn(&mut self, position: Position) {
+        self.server.lock().unwrap().spawn_monster(position);
+    }
+
     fn consume_server_updates(&mut self) -> Vec<ServerUpdate> {
         self.server.lock().unwrap().consume_updates(self.client_id)
     }
