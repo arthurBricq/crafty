@@ -96,9 +96,12 @@ impl GameServer {
         self.world_dispatcher.register_player(player.id);
 
         // Register the new player to other players of the game.
-        for player in self.state.connected_players() {
-            self.server_updates_buffer.get_mut(&player.id).unwrap()
-                .push(RegisterEntity(player.id as u8, EntityKind::Player, player.pos.clone()));
+        for other_player in self.state.connected_players() {
+            if player.id != other_player.id {
+                self.server_updates_buffer.get_mut(&other_player.id).unwrap()
+                    .push(RegisterEntity(player.id as u8, EntityKind::Player, player.pos.clone()));
+                
+            }
         }
 
         player.id
