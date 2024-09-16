@@ -15,16 +15,16 @@ use std::time::{Duration, Instant};
 
 /// Main function of the thread in charge of entities
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
-    let sleep_time = Duration::from_millis(5);
+    let sleep_time = Duration::from_millis(15);
 
     server.lock().unwrap().monster_manager
-        .spawn_new_monster(Position::new(Vector3::new(-5., 16., 0.), 0., 0.), EntityKind::Monster1);
+        .spawn_new_monster(Position::new(Vector3::new(-5., 30., 0.), 0., 0.), EntityKind::Monster1);
 
-    // server.lock().unwrap().monster_manager
-    //     .spawn_new_monster(Position::new(Vector3::new(5., 16., 0.), 0., 0.), EntityKind::Monster1);
+    server.lock().unwrap().monster_manager
+        .spawn_new_monster(Position::new(Vector3::new(5., 30., 0.), 0., 0.), EntityKind::Monster1);
 
-    // server.lock().unwrap().monster_manager
-    //     .spawn_new_monster(Position::new(Vector3::new(10., 16., 0.), 0., 0.), EntityKind::Monster1);
+    server.lock().unwrap().monster_manager
+        .spawn_new_monster(Position::new(Vector3::new(10., 30., 0.), 0., 0.), EntityKind::Monster1);
 
     let mut t = Instant::now();
     let mut dt = 0.;

@@ -41,7 +41,6 @@ impl MonsterManager {
                 return;
             }
         }
-        panic!("Try to remove monster with id {}, not found ", id)
     }
 
     /// Ask the monster to move

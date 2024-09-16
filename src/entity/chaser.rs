@@ -1,7 +1,7 @@
+use super::monster::{MonsterAction, TransitionState};
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::{server::server_state::PlayerState, world::World};
-use crate::primitives::position::{self, Position};
-use super::monster::{MonsterAction, TransitionState};
 
 const CHASING_DISTANCE: f32 = 10.;
 
@@ -22,12 +22,6 @@ pub struct Chaser {
 }
 
 impl TransitionState for Chaser {
-    fn new() -> Self {
-        Self {
-            state: MonsterStateEnum::Idle,
-            chasing: None,
-        }
-    }
     fn action(&self) -> MonsterAction {
         match self.state {
             MonsterStateEnum::Forward => MonsterAction::Forward,
@@ -37,7 +31,6 @@ impl TransitionState for Chaser {
             _ => MonsterAction::Idle
         }
     }
-
     fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: &Vec<PlayerState>) {
         // If we have a lock, then keep pursuing the current locked player
         if let Some(player_id) = self.chasing {
@@ -61,6 +54,13 @@ impl TransitionState for Chaser {
             }
         }
     }
+
+    fn new() -> Self {
+        Self {
+            state: MonsterStateEnum::Idle,
+            chasing: None,
+        }
+    }
 }
 
 
@@ -68,19 +68,20 @@ impl Chaser {
     // Go to a target position by first rotating then going forward
     fn go_to_target(&mut self, position: &Position, target: Vector3) {
         let forward = Vector3::unit_x().rotation_y(position.yaw());
-        // Vector on the side of the player
         let side = Vector3::unit_z().rotation_y(position.yaw());
         let mut direction_target = target - position.pos();
+
         // Quit if close enought and try to attack
         if direction_target.norm() < 1. {
             self.state = MonsterStateEnum::Attack;
             return;
         }
-        direction_target.normalize();
+
         // Compute the dot product between the direction and the side
+        direction_target.normalize();
         let sangle = direction_target.dot(&side);
 
-        // If the monster does not face the targer, rotate
+        // If the monster does not face the target, rotate
         if sangle.abs() > 0.1 {
             if sangle > 0. {
                 self.state = MonsterStateEnum::TurnLeft;
