@@ -1,14 +1,13 @@
 use crate::aabb::AABB;
 use crate::actions::Action;
 use crate::block_kind::Block;
-use crate::block_kind::Block::{DIRT, GRASS};
-use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
+use crate::chunk::{Chunk, CHUNK_SIZE};
 use crate::collidable::{Collidable, CollisionData};
 use crate::cube::Cube;
 use crate::cubes_to_draw::CubesToDraw;
 use crate::graphics::cube::CubeInstance;
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
-use crate::world_generation::perlin::{MultiscalePerlinNoise, PerlinNoise};
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, VertexBuffer};
@@ -54,7 +53,7 @@ impl World {
     pub fn cubes_near_player(&self, pos: Vector3) -> impl Iterator<Item = &Option<Cube>> {
         self.chunks
             .iter()
-            .filter(move |chunk| chunk.is_near_player(pos))
+            .filter(move |chunk| chunk.is_near_player(&pos))
             .flat_map(|chunk| chunk.cubes_iter())
     }
 
@@ -396,6 +395,7 @@ impl Collidable for World {
     // now returns collision time; f32::MAX if no collision
     fn collision_time(
         &self,
+        position: &Position,
         aabb: &AABB,
         target: &AABB,
         velocity: &Vector3,
@@ -406,12 +406,14 @@ impl Collidable for World {
 
         // TODO be smarter
         for chunk in &self.chunks {
-            if let Some(CollisionData { time, normal }) =
-                chunk.collision_time(aabb, target, velocity)
-            {
-                if time < acc_time {
-                    acc_time = time;
-                    acc_normal = normal;
+            if chunk.is_near_player(&position.pos()) {
+                if let Some(CollisionData { time, normal }) =
+                    chunk.collision_time(position, aabb, target, velocity)
+                {
+                    if time < acc_time {
+                        acc_time = time;
+                        acc_normal = normal;
+                    }
                 }
             }
         }
@@ -433,9 +435,13 @@ mod tests {
     use crate::block_kind::Block;
     use crate::block_kind::Block::GRASS;
     use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
+    use crate::collidable::Collidable;
+    use crate::entity::humanoid::humanoid_aabb;
+    use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
     use crate::world::World;
     use crate::world_generation::world_generator::WorldGenerator;
+    use std::time::Instant;
 
     #[test]
     fn test_chunk_collision_1() {
@@ -622,5 +628,30 @@ mod tests {
 
         let count = world.cubes_near_player(Vector3::empty()).filter(|c| c.is_some()).count();
         assert_eq!(count, CHUNK_SIZE * CHUNK_SIZE)
+    }
+
+    #[test]
+    fn benchmark_collision() {
+        let world = World::from_file("benchmark_map.json").unwrap();
+
+
+        let t0 = Instant::now();
+        for i in 0..100 {
+            let pos = Position::new(Vector3::new(0., 100., 2.), 0., 0.); 
+            let from = humanoid_aabb(&pos);
+            let velocity = Vector3::unit_x();
+            let dt = 0.01;
+            let target = humanoid_aabb(&(&pos + velocity * dt));
+
+            let collision = world.collision_time(
+                &pos, 
+                &from,
+                &target,
+                &velocity
+            );
+            
+        }
+        println!("Elasped = {:?}", t0.elapsed());
+
     }
 }

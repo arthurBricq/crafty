@@ -246,13 +246,18 @@ impl Player {
         self.touched_cube = current_best.map(|(_, cube)| cube)
     }
     
-        /// Integrate the velocity to move the camera, with collision. Returns the
+    /// Integrate the velocity to move the camera, with collision. Returns the
     /// dt (in seconds), which can be smaller than `dt` if there is a collision.
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
         let target = humanoid_aabb(&(&self.position + self.velocity * dt));
 
         let collision = world
-            .collision_time(&humanoid_aabb(&self.position), &target, &self.velocity)
+            .collision_time(
+                &self.position,
+                &humanoid_aabb(&self.position),
+                &target,
+                &self.velocity
+            )
             .unwrap_or(CollisionData {
                 time: f32::MAX,
                 normal: Vector3::empty(),

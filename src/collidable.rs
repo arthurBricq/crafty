@@ -1,4 +1,5 @@
 use crate::aabb::AABB;
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 
 /// Informations about a collision
@@ -22,7 +23,11 @@ pub trait Collidable {
     ///
     /// Note that the implementor of this trait can assume that `aabb` is not
     /// colliding already, and can panic if it does.
-    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
-                          -> Option<CollisionData>;
+    fn collision_time(&self,
+                      position: &Position,
+                      aabb: &AABB,
+                      target: &AABB,
+                      velocity: &Vector3
+    ) -> Option<CollisionData>;
 
 }

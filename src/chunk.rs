@@ -6,6 +6,7 @@ use crate::primitives::vector::Vector3;
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use strum::IntoEnumIterator;
 use crate::aabb::AABB;
+use crate::primitives::position::Position;
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 pub type CubeIndex = (usize, usize, usize);
@@ -51,7 +52,7 @@ impl Chunk {
     }
 
     /// Returns true if this chunk is considered near the player
-    pub fn is_near_player(&self, pos: Vector3) -> bool {
+    pub fn is_near_player(&self, pos: &Vector3) -> bool {
         let dist2 = (self.corner[0] - pos[0]).powi(2) + (self.corner[1] - pos[2]).powi(2);
         dist2 < (2. * CHUNK_SIZE as f32).powi(2)
     }
@@ -280,7 +281,12 @@ impl Collidable for Chunk {
         false
     }
 
-    fn collision_time(&self, aabb: &AABB, target: &AABB, velocity: &Vector3)
+    fn collision_time(&self,
+                      position: &Position,
+                      aabb: &AABB,
+                      target: &AABB,
+                      velocity: &Vector3
+    )
                           -> Option<CollisionData> {
         // TODO do it the dumb way for now, i.e. loop on all the cubes
         let mut acc_time = f32::MAX;
@@ -290,13 +296,16 @@ impl Collidable for Chunk {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if let Some(cube) = self.cubes[k][i][j] {
-                        if let Some(CollisionData { time, normal })
-                            = cube.collision_time(aabb, target, velocity) {
+                        let cube_pos = cube.position().distance_to(&position.pos());
+                        if cube_pos < 5.0 {
+                            if let Some(CollisionData { time, normal })
+                                = cube.collision_time(position, aabb, target, velocity) {
                                 if time < acc_time {
                                     acc_time = time;
                                     acc_normal = normal;
                                 }
                             }
+                        }
                     }
                 }
             }

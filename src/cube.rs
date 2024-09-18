@@ -2,6 +2,7 @@ use crate::aabb::AABB;
 use crate::block_kind::Block;
 use crate::collidable::{Collidable, CollisionData};
 use crate::primitives::face::Plane3;
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 
 /// Model of a cube in the 3D world.
@@ -142,6 +143,7 @@ impl Collidable for Cube {
 
     fn collision_time(
         &self,
+        position: &Position,
         aabb: &AABB,
         target: &AABB,
         velocity: &Vector3,

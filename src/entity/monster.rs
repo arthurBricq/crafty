@@ -115,7 +115,7 @@ where
         let target = humanoid_aabb(&(&self.position + self.velocity * dt));
 
         let collision = world
-            .collision_time(&humanoid_aabb(&self.position), &target, &self.velocity)
+            .collision_time(&self.position, &humanoid_aabb(&self.position), &target, &self.velocity)
             .unwrap_or(CollisionData {
                 time: f32::MAX,
                 normal: Vector3::empty(),
