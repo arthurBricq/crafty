@@ -127,7 +127,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                     stream.flush().unwrap();
 
                     if update.is_heavy() {
-                        thread::sleep(Duration::from_millis(20));
+                        thread::sleep(Duration::from_millis(50));
                     }
                 }
             }
