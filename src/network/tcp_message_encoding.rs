@@ -93,8 +93,17 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
     let mut to_return = vec![];
     let mut start = 0;
     loop {
+        // 
+        // if context.remaining_length_to_read() == 0 {
+        //     println!("Early stopping condition");
+        //     break;
+        // }
         
-        if context.is_empty() && bytes.len() > 5 {
+        if bytes.len() < 5 {
+            break;
+        }
+        
+        if context.is_empty() {
             // It means it's a new message to be read.
             // Read the header
             // - type of the enum
@@ -102,6 +111,7 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
             let length_bytes: [u8; 4] = bytes.get(start + 1..start + 5).ok_or(TcpError::LengthError)?.try_into()?;
             let len = u32::from_le_bytes(length_bytes) as usize;
             let code = bytes[start];
+            println!("New context: {start}, len = {len}, size = {}", bytes.len());
             context.set_code(code);
             context.set_message_len(len);
             start += 5;
@@ -110,7 +120,7 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
         let remaining = context.remaining_length_to_read();
 
         // This line is interesting for debugging.
-        // println!("[TCP] start = {start}, len = {}, size = {}, remaining = {}, code = {}", context.len, bytes.len(), remaining, context.code);
+        println!("[TCP] start = {start}, len = {}, size = {}, remaining = {}, code = {}", context.len, bytes.len(), remaining, context.code);
 
         if start + remaining > bytes.len() {
             // This means that the message sent was too small to be sent over 1 byte
@@ -128,6 +138,7 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
         // Depending on the type of the enum, parse correctly the content
         let parsed = T::parse_bytes_representation(context.code, &context.bytes);
         to_return.push(parsed);
+        println!("Parsed");
         context.flush();
 
         // Increase the counter, in the case that there are several messaages to be parsed
