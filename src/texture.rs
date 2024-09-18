@@ -1,7 +1,7 @@
 use glium::{glutin::surface::WindowSurface, Texture2d};
 use glium::texture::Texture2dArray;
 use glium::Display;
-use image::GenericImageView;
+use image::{GenericImageView, ImageBuffer, Rgba};
 
 use crate::block_kind::Block;
 use crate::primitives::math;
@@ -42,24 +42,38 @@ pub fn load_texture(bytes: &[u8], display: &Display<WindowSurface>) -> Texture2d
 /// returns a Texture2dArray with these images.
 /// ImageCut is in the format \[x, y, height, width\] (u,v) coord,
 /// (0, 0) is top left and x, y, height and width are in fraction of the image.
-pub fn load_texture_cut(bytes: &[u8], display: &Display<WindowSurface>, cut: &[ImageCut]) -> Texture2dArray {
-    let image = image::load(std::io::Cursor::new(bytes),
-                            image::ImageFormat::Png).unwrap().to_rgba8();
-    let mut source = Vec::new();
-    // Set a scaling factor which is a common multiplier for every texture
+pub fn load_texture_cut(root : &str, all_textures_name: Vec<&str>, display: &Display<WindowSurface>, cut: &[ImageCut]) -> Texture2dArray {
     let mut lcm_x: u32 = 1;
     let mut lcm_y: u32 = 1;
-    let dim_x = image.width() as f32;
-    let dim_y = image.height() as f32;
-    for cut_pos in cut {
-        lcm_x = math::lcm(lcm_x, (dim_x * cut_pos[2]) as u32);
-        lcm_y = math::lcm(lcm_y, (dim_y * cut_pos[3]) as u32);
-    }
-    // Load image, rescale it and create a glium texture
-    for cut_pos in cut {
-        let sub_image = image.view((dim_x * cut_pos[0]) as u32, (dim_y * cut_pos[1]) as u32, (dim_x * cut_pos[2]) as u32, (dim_y * cut_pos[3]) as u32).to_image();
-        let sub_image = image::imageops::resize(&sub_image, lcm_x, lcm_y, image::imageops::FilterType::Nearest);
-        source.push(glium::texture::RawImage2d::from_raw_rgba_reversed(&sub_image.into_raw(), (lcm_x, lcm_y)));
-    }
-    Texture2dArray::new(display, source).unwrap()
+    let mut source: Vec<ImageBuffer<Rgba<u8>,Vec<u8>>> = all_textures_name.iter()
+        .map(|name| {
+            println!(" Adding texture {} into texture array",root.to_string() + name);
+            let data = std::fs::read(root.to_string() + name).unwrap();
+            let image = image::load(std::io::Cursor::new(data),                  
+                               image::ImageFormat::Png).unwrap().to_rgba8();
+            // Set a scaling factor which is a common multiplier for every texture
+            let dim_x = image.width() as f32;
+            let dim_y = image.height() as f32;
+            for cut_pos in cut {
+                lcm_x = math::lcm(lcm_x, (dim_x * cut_pos[2]) as u32);
+                lcm_y = math::lcm(lcm_y, (dim_y * cut_pos[3]) as u32);
+            }
+            image
+        })
+        .collect();
+    let texture_2d_vec= source.iter()
+        .map(|image| {
+            let mut sub_image_array = Vec::new();
+            for cut_pos in cut {
+                let dim_x = image.width() as f32;
+                let dim_y = image.height() as f32;
+                let sub_image = image.view((dim_x * cut_pos[0]) as u32, (dim_y * cut_pos[1]) as u32, (dim_x * cut_pos[2]) as u32, (dim_y * cut_pos[3]) as u32).to_image();
+                let sub_image = image::imageops::resize(&sub_image, lcm_x, lcm_y, image::imageops::FilterType::Nearest);
+                sub_image_array.push(glium::texture::RawImage2d::from_raw_rgba_reversed(&sub_image.into_raw(), (lcm_x, lcm_y)));
+            }
+            sub_image_array})
+        .flatten()
+        .collect();
+    
+    Texture2dArray::new(display, texture_2d_vec).unwrap()
 }

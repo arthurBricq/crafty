@@ -17,12 +17,12 @@ const SPEED: f32 = 4.0;
 // is wrong, or yet again the collision ?
 
 /// Velocity [cube/s] added when jumping
-const JUMP_VELOCITY: f32 = 7.;
+pub const JUMP_VELOCITY: f32 = 7.;
 
 // TODO same problem
-const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
+pub const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.);
 
-const PLAYER_MARGIN: f32 = 1e-5;
+pub const PLAYER_MARGIN: f32 = 1e-5;
 
 
 pub const PLAYER_HEIGHT: f32 = 1.8;

@@ -140,17 +140,14 @@ impl WorldRenderer {
             &display,
         );
 
-        // Textures for the player
-        let player_texture = humanoid::load_humanoid_textures(
-            std::fs::read("./resources/entity/player.png")
-                .unwrap()
-                .as_slice(),
-            &display,
-        );
-        let player_texture_sample = player_texture
+        // Textures for entities
+        let humanoid_texture = humanoid::load_humanoid_textures(
+            "./resources/entity/", &display);
+        let humanoid_texture_sample = humanoid_texture
             .sampled()
             .magnify_filter(MagnifySamplerFilter::Nearest)
             .minify_filter(MinifySamplerFilter::Nearest);
+
 
         // Build the shader programs
         let cube_program =
@@ -166,7 +163,6 @@ impl WorldRenderer {
             None,
         )
             .unwrap();
-
         // Start rendering by creating a new frame
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
@@ -281,7 +277,7 @@ impl WorldRenderer {
                         let entity_uniforms = uniform! {
                             view: self.player.view_matrix(),
                             perspective: perspective_matrix(target.get_dimensions()),
-                            textures: player_texture_sample
+                            entity_textures: humanoid_texture_sample,
                         };
 
                         // Prepare the entity buffer to send to the gpu
@@ -471,6 +467,13 @@ impl WorldRenderer {
                             println!("=================");
                             self.player.debug();
                         }
+                        KeyCode::KeyX => {
+                            println!("Ask to spawn a monster");
+                            let mut monster_pos = self.player.position().clone();
+                            monster_pos.small_raise();
+                            self.proxy.lock().unwrap().request_to_spawn(monster_pos);
+                            
+                        }
                         KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
                         KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
@@ -583,17 +586,15 @@ impl WorldRenderer {
                     self.player.set_position(position)
                 }
                 ServerUpdate::SendAction(action) => self.world.apply_action(&action),
-                ServerUpdate::RegisterEntity(id, pos) => {
-                    self.entity_manager.register_new_player(id, pos)
+                ServerUpdate::RegisterEntity(id, entity_kind, pos) => {
+                    self.entity_manager.register_new_entity(id, entity_kind, pos)
                 }
                 ServerUpdate::UpdatePosition(id, pos) => self.entity_manager.set_position(id, pos),
                 ServerUpdate::Attack(attack) => {
                     self.health.damage(attack.strength());
                     self.hud_renderer.set_health(&self.health);
                 }
-                ServerUpdate::LoggedOut(id) => {
-                    self.entity_manager.unregister_player(id)
-                }
+                ServerUpdate::RemoveEntity(id) => self.entity_manager.remove_entity(id as u8)
             }
         }
     }

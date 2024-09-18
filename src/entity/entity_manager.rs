@@ -6,11 +6,8 @@ use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use std::collections::HashMap;
 
-/// Contain all the entities to be rendered on the screen.
-/// 
-/// An entity is either a player or a monster.
+/// Contain all the entities
 pub struct EntityManager {
-    /// Entities are keyed by their id, provided by the server
     entities: HashMap<u8, Entity>,
 }
 
@@ -22,13 +19,17 @@ impl EntityManager {
     }
 
     /// Register another player, provided its id and initial position
-    pub fn register_new_player(&mut self, id: u8, pos: Position) {
+    pub fn register_new_entity(&mut self, id: u8, entity_kind: EntityKind, pos: Position) {
         println!("New player has joined the game: {id}");
-        let entity = Entity::new(id as usize, EntityKind::Player, pos);
+        let entity = Entity::new(id as usize, entity_kind, pos.clone());
         self.entities.insert(id, entity);
     }
-    
-    pub fn unregister_player(&mut self, id: u8) {
+
+    /// Remove an entity from the Manager
+    pub fn remove_entity(&mut self, id: u8) {
+        if !self.entities.contains_key(&id) {
+            panic!("Trying to remove an id that do not exist")
+        }
         self.entities.remove(&id);
     }
 
@@ -46,7 +47,6 @@ impl EntityManager {
     }
 
     pub fn attack(&self, position: Vector3, direction: Vector3) -> Option<EntityAttack> {
-        println!("Attacking !");
         if let Some((id, _)) = self.entities
             .iter()
             .map(|(id, entity)| (id, entity.aabb().faces()))
@@ -62,6 +62,7 @@ impl EntityManager {
 #[cfg(test)]
 mod tests {
     use crate::attack::EntityAttack;
+    use crate::entity::entity::EntityKind;
     use crate::entity::entity_manager::EntityManager;
     use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
@@ -71,10 +72,10 @@ mod tests {
         let mut mgr = EntityManager::new();
         assert_eq!(0, mgr.get_opengl_entities().len());
 
-        mgr.register_new_player(2, Position::from_pos(Vector3::unit_x()));
+        mgr.register_new_entity(2, EntityKind::Monster2, Position::from_pos(Vector3::unit_x()));
         assert_eq!(6, mgr.get_opengl_entities().len());
 
-        mgr.register_new_player(3, Position::from_pos(Vector3::unit_x()));
+        mgr.register_new_entity(3, EntityKind::Monster1, Position::from_pos(Vector3::unit_x()));
         assert_eq!(12, mgr.get_opengl_entities().len());
     }
 
@@ -83,11 +84,26 @@ mod tests {
         let mut mgr = EntityManager::new();
 
         // Add a player at the origin
-        mgr.register_new_player(0, Position::from_pos(Vector3::empty()));
+        mgr.register_new_entity(0, EntityKind::Player, Position::from_pos(Vector3::empty()));
 
         assert_eq!(Some(EntityAttack::new(0)), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_x()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_y()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_z()));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_remove() {
+        let mut mgr = EntityManager::new();
+        assert_eq!(0, mgr.get_opengl_entities().len());
+
+        mgr.register_new_entity(2, EntityKind::Monster2, Position::from_pos(Vector3::unit_x()));
+        assert_eq!(6, mgr.get_opengl_entities().len());
+
+        mgr.remove_entity(2);
+        assert_eq!(0, mgr.get_opengl_entities().len());
+
+        mgr.remove_entity(5);
     }
 }

@@ -1,5 +1,7 @@
+use crate::entity::{self, entity::EntityKind};
+
 #[derive(PartialEq, Debug, Clone)]
-pub struct EntityAttack{
+pub struct EntityAttack{    
     attacked: u8,
     strength: u8
 }
@@ -34,4 +36,5 @@ impl EntityAttack {
     pub fn victim_id(&self) -> u8 {
         self.attacked
     }
+
 }

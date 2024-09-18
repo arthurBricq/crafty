@@ -44,6 +44,10 @@ impl Position {
     pub fn raise(&mut self) {
         self.pos[1] += 5. * CHUNK_FLOOR as f32;
     }
+    
+    pub fn small_raise(&mut self) {
+        self.pos[1] += CHUNK_FLOOR as f32;
+    }
 
     pub fn to_bytes(&self) -> Vec<u8> {
         format!("{},{},{},{},{}", self.pos.x(), self.pos.y(), self.pos.z(), self.yaw, self.pitch).into_bytes()

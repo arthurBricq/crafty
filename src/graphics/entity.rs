@@ -22,6 +22,9 @@ pub const ENTITY_VERTEX_SHADER: &str = r#"
         in vec2 tex_coords;
         out vec2 v_tex_coords;
 
+        in int monster_type;
+        flat out int monster_type_s;
+
         uniform mat4 perspective;
         uniform mat4 view;
 
@@ -30,6 +33,7 @@ pub const ENTITY_VERTEX_SHADER: &str = r#"
             v_tex_coords = tex_coords;
             face_s = face;
             body_part_id_s = body_part_id;
+            monster_type_s = monster_type;
         }
     "#;
 
@@ -40,16 +44,18 @@ pub const ENTITY_FRAGMENT_SHADER: &str = r#"
         // passed-through the vertex shader
         flat in int face_s;
         flat in int body_part_id_s;
+        flat in int monster_type_s;
         in vec2 v_tex_coords;
 
         out vec4 color ;
 
-        uniform sampler2DArray textures;
+        uniform sampler2DArray entity_textures;
         
         void main() {
             // Each block has 6 types of faces
-            int idx = body_part_id_s * 6;
-            color = texture(textures, vec3(v_tex_coords, idx + face_s));
+            // There is 4 different block building a monster
+            int idx = face_s + body_part_id_s * 6 + monster_type_s * 4 * 6;
+            color = texture(entity_textures, vec3(v_tex_coords, idx));
          }
     "#;
 
@@ -58,9 +64,10 @@ pub const ENTITY_FRAGMENT_SHADER: &str = r#"
 pub struct EntityCube {
     world_matrix: [[f32; 4]; 4],
     body_part_id: u8,
+    monster_type: u8,
 }
 
-implement_vertex!(EntityCube, world_matrix, body_part_id);
+implement_vertex!(EntityCube, world_matrix, body_part_id, monster_type);
 
 impl EntityCube {
     /// Build a rendered cube center around position (and not around position + (0.5,0.5,0.5) as for CubeAttr !!!!)
@@ -68,20 +75,22 @@ impl EntityCube {
     /// A Yaw rotation is applied (first component of rot)
     /// A Pitch roation is then apllied (second component of rot)
     // Maybe implement roll one day ?
-    pub fn new(position: &Position, body_part_id: u8, scale: [f32; 3]) -> Self {
+    pub fn new(position: &Position, body_part_id: u8, monster_type: u8, scale: [f32; 3]) -> Self {
         Self { 
             world_matrix: Self::model_matrix_rot_yx(position, scale),
             // body part_id correspond to the [6*body_part_id,6*body_part_id+5] texture loaded
             body_part_id,
+            monster_type
         }
     }
 
     /// Build a rendered cube without pitch rotation
-    pub fn new_only_yaw(position: &Position, body_part_id: u8, scale: [f32; 3]) -> Self {
+    pub fn new_only_yaw(position: &Position, body_part_id: u8, monster_type: u8, scale: [f32; 3]) -> Self {
         Self { 
             world_matrix: Self::model_matrix_rot_y(position, scale),
             // body part_id correspond to the [6*body_part_id,6*body_part_id+5] texture loaded
             body_part_id,
+            monster_type
         }
     }
 
