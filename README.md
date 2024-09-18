@@ -40,17 +40,21 @@ But the `main` branch is supposed to run !
 
 ### Single Player
 
-To run in **single player**, use
+To run in **single player**, use:
 
 ```console
-cargo run --bin crafty -- INIT_MODE
+cargo run --bin crafty --release -- INIT_MODE
 ```
+
+(*You need to run in release*)
 
 For `INIT_MODE`, you can use
 - `--random`: generates a random world using our world creation
 - `--flat`  : generates a flat world
 - `--disk`  : tries to load the `map.json` on the disk
 - If put nothing, will use `--random`
+
+Press `x` to spawn some monsters above you !
 
 ### Multi Player
 
@@ -63,7 +67,7 @@ cargo run --bin server -- --server "YOUR.IP"
 Then, every client can connect like this: 
 
 ```console
-cargo run --bin client -- --server "YOUR.IP" -- name "UNIQUE_IDENTIFIER"
+cargo run --bin client --release -- --server "YOUR.IP" --port "PORT" -- name "UNIQUE_IDENTIFIER"
 ```
 
 ## Crafting recipes (for now)

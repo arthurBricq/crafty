@@ -1,23 +1,17 @@
 use crafty::args::Args;
 use crafty::network::tcp_server::TcpServer;
-use crafty::world::World;
+use crafty::world::{World, WorldInitializer};
 use crafty::world_generation::world_generator::WorldGenerator;
 use std::sync::{Arc, Mutex};
 use crafty::server::game_server::{handle_entity_thread, GameServer};
 
-#[allow(dead_code)]
-enum WorldInitializer {
-    RANDOM,
-    FLAT,
-    DISK,
-}
 
 fn main() {
     let args = Args::from_args();
     let url = args.url();
 
     // Create the initial world
-    let init = WorldInitializer::FLAT;
+    let init = WorldInitializer::from_args();
     println!("[Server] Creating a world ...");
     let world = match init {
         WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(10),

@@ -1,3 +1,4 @@
+use std::env;
 use crate::aabb::AABB;
 use crate::actions::Action;
 use crate::block_kind::Block;
@@ -653,5 +654,29 @@ mod tests {
         }
         println!("Elasped = {:?}", t0.elapsed());
 
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+pub enum WorldInitializer {
+    RANDOM,
+    FLAT,
+    DISK,
+}
+
+impl WorldInitializer {
+    pub fn from_args() -> Self {
+        let args: Vec<String> = env::args().collect();
+        println!("args = {args:?}");
+        if args.contains(&"--random".to_string()) {
+            Self::RANDOM
+        } else if args.contains(&"--flat".to_string()) {
+            Self::FLAT
+        } else if args.contains(&"--disk".to_string()) {
+            Self::DISK
+        } else {
+            Self::RANDOM
+        }
     }
 }

@@ -1,35 +1,11 @@
 use crafty::network::proxy::Proxy;
 use crafty::network::single_player_proxy::SinglePlayerProxy;
 use crafty::server::game_server::{handle_entity_thread, GameServer};
-use crafty::world::World;
+use crafty::world::{World, WorldInitializer};
 use crafty::world_renderer::WorldRenderer;
 use crafty::{player::Player, world_generation::world_generator::WorldGenerator};
-use std::env;
 use std::sync::{Arc, Mutex};
 
-#[allow(dead_code)]
-#[derive(Debug)]
-enum WorldInitializer {
-    RANDOM,
-    FLAT,
-    DISK,
-}
-
-impl WorldInitializer {
-    fn from_args() -> Self {
-        let args: Vec<String> = env::args().collect();
-        println!("args = {args:?}");
-        if args.contains(&"--random".to_string()) {
-            Self::RANDOM
-        } else if args.contains(&"--flat".to_string()) {
-            Self::FLAT
-        } else if args.contains(&"--disk".to_string()) {
-            Self::DISK
-        } else {
-            Self::RANDOM
-        }
-    }
-}
 
 fn main() {
     // Create the initial world
