@@ -94,7 +94,7 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
     let mut start = 0;
     loop {
         
-        if context.is_empty()  {
+        if context.is_empty() && bytes.len() > 5 {
             // It means it's a new message to be read.
             // Read the header
             // - type of the enum
@@ -107,12 +107,12 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
             start += 5;
         }
 
+        let remaining = context.remaining_length_to_read();
+
         // This line is interesting for debugging.
-        // println!("start = {start}, len = {}, end = {}, size = {size}", len + 5, start + 5 + len);
+        // println!("[TCP] start = {start}, len = {}, size = {}, remaining = {}, code = {}", context.len, bytes.len(), remaining, context.code);
 
-        let len = context.remaining_length_to_read();
-
-        if start + len > bytes.len() {
+        if start + remaining > bytes.len() {
             // This means that the message sent was too small to be sent over 1 byte
             // So we have to wait for the next message
             context.store(&bytes[start..]);
@@ -120,7 +120,7 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
             // Wait for next message
             break;
         } else {
-            context.store(&bytes[start..start+len]);
+            context.store(&bytes[start..start + remaining]);
         }
 
         // Once we arrive here, we know that we can parse 1 message.
@@ -132,7 +132,7 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
 
         // Increase the counter, in the case that there are several messaages to be parsed
         // in the current packet.
-        start += len;
+        start += remaining;
         if start >= bytes.len() {
             break;
         }
