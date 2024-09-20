@@ -1,10 +1,33 @@
 # Crafty
 
-A multiplayer MineCraft clone coded from craft, fully in Rust (without any game engine or any multiplayer framework)
+A MineCraft clone coded from craft, fully in Rust (without any game engine or any multiplayer framework)
 
-![](demo/ms1.png)
+![](demo/demo1.jpg)
 
-![](demo/first_text.png)
+That works in multiplayer, and with monsters.
+
+![](demo/demo3.jpg)
+
+And that allows you to craft and to mine ! 
+
+![](demo/demo2.jpg)
+
+## In action
+
+Here are some `GIF` to show a little the gameplay... (**In multiplayer !**)
+
+*A player moving through different biomes*
+
+![](demo/gif1.gif)
+
+*A player running away from a monster*
+
+![](demo/gif2.gif)
+
+*A player placing blocks while jumping*
+
+![](demo/gif3.gif)
+
 
 ## Current list of features
 
@@ -19,15 +42,13 @@ A multiplayer MineCraft clone coded from craft, fully in Rust (without any game 
 - **Minecraft Gameplay**
     - Edition of the world like in minecraft: you can add cubes, collect cubes.
     - A **crafting framework** (press 'E' and you will see for yourself !). Craft a sword to attack your friends.
-    - An **attack system** with lifes.
     - **Items** displayed on the screen, exactly like in Minecraft.
-    - Automatic **monsters** which walk over the world and will try to kill you...
+    - An **attack system** with life points for each players.
+    - Automatic **monsters** which walk over the world and will try to kill you ! Click `x` when playing to spawn monsters, they will fall from the air above you.
 - A smart **world creation** system
     - Persistent world: loading and saving the world to the disk by pressing `F10` (singleplayer)
     - Randomized map creation, using **Perlin noise** to have some randomness and with different **biomes** to look super beautiful !
-
-And finally, probably the most advanced feature of this repo: 
-
+    - Different **biomes**
 - A **Multiplayer Game** ! 
     - A **multithreaded TCP server** is in charge of (1) the game logic (map, monsters, etc...) (2) synchronizing all players by receiving `MessageToServer` and dispatching `ServerUpdates`
     - An reusable architecture using `Trait` that abstracts to the client (`WorldRenderer`) whether he is in single player or in multiplayer.
@@ -61,8 +82,11 @@ Press `x` to spawn some monsters above you !
 To run in **multiplayer**, first launch a server like this:
 
 ```console
-cargo run --bin server --release -- --server "YOUR.IP"  --port "PORT"
+cargo run --bin server --release -- --server "YOUR.IP"  --port "PORT" --init random
 ```
+
+- You need to write your IP address when running the server...
+- You don't need to specify which world initializer to use, by default it will be the random one
 
 Then, every client can connect like this: 
 
@@ -70,7 +94,10 @@ Then, every client can connect like this:
 cargo run --bin client --release -- --server "YOUR.IP" --port "PORT" -- name "UNIQUE_IDENTIFIER"
 ```
 
+- Each client needs to specify his name, and it needs to be different than the other players.
+
 ## Crafting recipes (for now)
+
 Stone word:
 ```
 _c_
@@ -79,11 +106,17 @@ _o_
 ```
 where `c` is a cobblestone block, and `o` is an oak log. 
 
-## Missing features (short term milestones)
+## Next steps
+
+This project works quite well, but... There is still a lot to do.
+
+### Missing features
 
 - Infinite map creation (*almost there*)
-- Entities: finalize monsters logic
 
-And of course ...
+### Problems
 
-- Stabilization of all the bugs that we find...
+- The collision often crashes.
+- The multiplayer architecture should be improved.
+- There is a bunch of corner cases with multiplayer.
+- The performances are quite bad.
