@@ -1,21 +1,24 @@
+use crafty::args::WorldInitializer;
 use crafty::network::proxy::Proxy;
 use crafty::network::single_player_proxy::SinglePlayerProxy;
 use crafty::server::game_server::{handle_entity_thread, GameServer};
-use crafty::world::{World, WorldInitializer};
+use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;
 use crafty::{player::Player, world_generation::world_generator::WorldGenerator};
 use std::sync::{Arc, Mutex};
 
-
 fn main() {
     // Create the initial world
     let init = WorldInitializer::from_args();
+    
     println!("Loading world using : {:?}", init);
+    println!("[Server] Creating a world ...");
     let world = match init {
         WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(5),
         WorldInitializer::FLAT => WorldGenerator::create_new_flat_world(10),
         WorldInitializer::DISK => World::from_file("map.json").unwrap_or(WorldGenerator::create_new_random_world(10)),
     };
+    println!("                          ... Finished !");
 
     // The server holds the 'full' world
     let server = Arc::new(Mutex::new(GameServer::new(world)));

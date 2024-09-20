@@ -1,10 +1,37 @@
-use clap::Parser;
+use std::env;
+use clap::{Parser, ValueEnum};
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, ValueEnum)]
+pub enum WorldInitializer {
+    RANDOM,
+    FLAT,
+    DISK,
+}
+
+impl WorldInitializer {
+    pub fn from_args() -> Self {
+        let args: Vec<String> = env::args().collect();
+        println!("args = {args:?}");
+        if args.contains(&"--random".to_string()) {
+            Self::RANDOM
+        } else if args.contains(&"--flat".to_string()) {
+            Self::FLAT
+        } else if args.contains(&"--disk".to_string()) {
+            Self::DISK
+        } else {
+            Self::RANDOM
+        }
+    }
+}
 
 const ABOUT: &str = r#"
-   Welcome to the Crafty Game
-   ==========================
+
+  |==========================|   
+  |Welcome to the Crafty Game|  
+  |==========================| 
  
-It is a minecraft clone, fully coded in Rust
+It is a minecraft clone, fully coded in Rust.
 
 "#;
 
@@ -13,15 +40,18 @@ It is a minecraft clone, fully coded in Rust
 #[command(version = "0.1", about = ABOUT, long_about = None)]
 pub struct Args {
     /// Name of the person to greet
-    #[arg(short, long, default_value_t = String::from("localhost"))]
+    #[arg(short, long, default_value_t = String::from("localhost"), help = "IP address of the server")]
     pub server: String,
 
     /// Number of times to greet
-    #[arg(short, long, default_value_t = String::from("3333"))]
+    #[arg(short, long, help = "IP port of the server", default_value_t = String::from("3333"))]
     pub port: String,
 
-    #[arg(short, long, default_value_t = String::new())]
-    pub name: String
+    #[arg(short, long, help = "Name of the player", default_value_t = String::new())]
+    pub name: String,
+    
+    #[arg(value_enum, short, long, help = "How to initialize the world", default_value = "random")]
+    pub init: WorldInitializer
 }
 
 impl Args {
