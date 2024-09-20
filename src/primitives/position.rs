@@ -49,6 +49,14 @@ impl Position {
         self.pos[1] += CHUNK_FLOOR as f32;
     }
 
+    pub fn ground_direction_forward(&self) -> Vector3 {
+        Vector3::new(self.yaw.cos(), 0., self.yaw.sin())
+    }
+
+    pub fn ground_direction_right(&self) -> Vector3 {
+        Vector3::new(self.yaw.sin(), 0., -self.yaw.cos())
+    }
+
     pub fn to_bytes(&self) -> Vec<u8> {
         format!("{},{},{},{},{}", self.pos.x(), self.pos.y(), self.pos.z(), self.yaw, self.pitch).into_bytes()
     }

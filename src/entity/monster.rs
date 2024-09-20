@@ -1,15 +1,15 @@
+use crate::attack::EntityAttack;
 use crate::collidable::{Collidable, CollisionData};
 use crate::server::server_state::PlayerState;
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world::World;
 use crate::entity::entity::EntityKind;
-use crate::player::{JUMP_VELOCITY, PLAYER_MARGIN};
+use crate::player::{JUMP_VELOCITY, GRAVITY_ACCELERATION_VECTOR, PLAYER_MARGIN};
 
 use super::humanoid::humanoid_aabb;
 const MONSTER1_SPEED: f32 = 2.;
 const MONSTER1_ROTATION_SPEED: f32 = 0.10;
-pub const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 2. * 9.81, 0.);
 
 #[derive(Clone)]
 /// Action that the monster can realize
@@ -17,7 +17,7 @@ pub enum MonsterAction {
     Forward,
     LeftRot,
     RightRot,
-    Attack,
+    Attack(usize),
     Jump,
     Idle,
 }
@@ -39,6 +39,8 @@ pub struct Monster<T> {
     transition: T,
     in_air: bool,
     velocity: Vector3,
+    /// If the monster is attacking, if so give the id of the victim
+    attack: Option<EntityAttack>
 }
 
 impl<T> Monster<T>
@@ -53,6 +55,7 @@ where
             transition: TransitionState::new(),
             in_air: true,
             velocity: Vector3::empty(),
+            attack: None,
         }
     }
 
@@ -67,12 +70,25 @@ where
 
     /// Apply the action of the monster
     fn apply_action(&mut self, action: MonsterAction, mut dt: f32, world: &World) {
-        self.velocity = Vector3::empty();
+        self.attack = None;
         match action {
-            MonsterAction::Forward => self.velocity = Vector3::new(MONSTER1_SPEED, 0., 0.).rotation_y(self.position.yaw()),
+            MonsterAction::Forward => {
+                let velocity_hor = self.position.ground_direction_forward() * MONSTER1_SPEED;
+                self.velocity[0] = velocity_hor[0];
+                self.velocity[2] = velocity_hor[2];
+            }
             MonsterAction::LeftRot => self.position.rotate_yaw(MONSTER1_ROTATION_SPEED),
             MonsterAction::RightRot => self.position.rotate_yaw(-MONSTER1_ROTATION_SPEED),
             MonsterAction::Jump => self.jump(),
+            MonsterAction::Idle => {
+                self.velocity[0] = 0.;
+                self.velocity[2] = 0.;
+             }
+             MonsterAction::Attack(attacked) => {
+                self.attack = Some(EntityAttack::new(attacked as u8));
+                self.velocity[0] = 0.;
+                self.velocity[2] = 0.;
+            }
             _ => ()
         }
 
@@ -107,6 +123,10 @@ where
 
     pub fn entity_type(&self) -> &EntityKind {
         &self.entity_type
+    }
+
+    pub fn attack(&self) -> &Option<EntityAttack> {
+        &self.attack
     }
 
     /// Integrate the velocity to move the camera, with collision. Returns the

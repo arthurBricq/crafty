@@ -3,7 +3,6 @@ use crate::entity::entity::EntityKind;
 use crate::network::server_update::ServerUpdate;
 use crate::network::server_update::ServerUpdate::{Attack, LoggedIn, RegisterEntity, SendAction, UpdatePosition, RemoveEntity};
 use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
 use crate::server::monster_manager::MonsterManager;
 use crate::server::server_state::ServerState;
 use crate::server::world_dispatcher::WorldDispatcher;
@@ -18,14 +17,14 @@ pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
     let sleep_time = Duration::from_millis(15);
 
     let mut t = Instant::now();
-    let mut dt = 0.;
+    let mut dt;
     loop {
         dt = t.elapsed().as_secs_f32();
         t = Instant::now();
 
         let player_list = server.lock().unwrap().state.connected_players().cloned().collect();
         server.lock().unwrap().monster_manager.step(dt, &player_list);
-        server.lock().unwrap().update_buffers();
+        server.lock().unwrap().add_monster_updates();
         std::thread::sleep(sleep_time);
     }
 }
@@ -186,10 +185,13 @@ impl GameServer {
         self.server_updates_buffer.insert(player_id, Vec::new()).unwrap()
     }
 
-    fn update_buffers(&mut self) {
+    fn add_monster_updates(&mut self) {
         // Add to these updates the ones that the entity manager also provides
         let monster_updates = self.monster_manager.get_server_updates().clone();
         self.server_updates_buffer.iter_mut().for_each(|(_, buffer)| buffer.append(&mut monster_updates.clone()));
+        
+        let attack_buffer = self.monster_manager.get_attack_buffer();
+        attack_buffer.iter().for_each(|attack | self.on_new_attack(attack.clone()));
     }
 }
 
