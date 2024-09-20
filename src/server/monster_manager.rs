@@ -60,17 +60,12 @@ impl MonsterManager {
     }
 
     /// Return the updated position of the monsters
-    pub fn get_server_updates(&mut self) -> Vec<ServerUpdate> {
-        // TODO update the player only if monster is close enought
-        let buffer = self.buffer_update.clone();
-        self.buffer_update = Vec::new();
-        buffer
+    pub fn take_server_updates(&mut self) -> Vec<ServerUpdate> {
+        std::mem::take(&mut self.buffer_update)
     }
 
-    pub fn get_attack_buffer(&mut self) -> Vec<EntityAttack> {
-        let attack_buffer = self.attack_buffer.clone();
-        self.attack_buffer = Vec::new();
-        attack_buffer
+    pub fn take_attack_buffer(&mut self) -> Vec<EntityAttack> {
+        std::mem::take(&mut self.attack_buffer)
     }
 
     /// Return the ServerUpdate with all entities
@@ -110,7 +105,7 @@ mod test {
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 1);
 
-        let updates = monster_manager.get_server_updates();
+        let updates = monster_manager.take_server_updates();
         assert_eq!(updates.len(), 1);
 
         monster_manager.spawn_new_monster(pos, EntityKind::Monster1);
@@ -118,7 +113,7 @@ mod test {
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 2);
 
-        let updates = monster_manager.get_server_updates();
+        let updates = monster_manager.take_server_updates();
         assert_eq!(updates.len(), 1);
     }
 
@@ -130,13 +125,13 @@ mod test {
 
         let id = monster_manager.spawn_new_monster(pos.clone(), crate::entity::entity::EntityKind::Monster1);
 
-        monster_manager.get_server_updates();
+        monster_manager.take_server_updates();
 
         monster_manager.remove_monster(id);
         let monsters_update = monster_manager.get_monsters();
         assert_eq!(monsters_update.len(), 0);
 
-        let updates = monster_manager.get_server_updates();
+        let updates = monster_manager.take_server_updates();
         // When adding a message to client to remove the monster, set 0 to 1
         assert_eq!(updates.len(), 0);
     }
