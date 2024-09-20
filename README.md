@@ -61,7 +61,7 @@ Press `x` to spawn some monsters above you !
 To run in **multiplayer**, first launch a server like this:
 
 ```console
-cargo run --bin server -- --server "YOUR.IP" 
+cargo run --bin server --release -- --server "YOUR.IP"  --port "PORT"
 ```
 
 Then, every client can connect like this: 
