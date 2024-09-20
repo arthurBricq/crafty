@@ -22,9 +22,12 @@ pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
         dt = t.elapsed().as_secs_f32();
         t = Instant::now();
 
-        let player_list = server.lock().unwrap().state.connected_players().cloned().collect();
-        server.lock().unwrap().monster_manager.step(dt, &player_list);
-        server.lock().unwrap().add_monster_updates();
+        if let Ok(mut server) = server.lock() {
+            let player_list = server.state.connected_players().cloned().collect();
+            server.monster_manager.step(dt, &player_list);
+            server.add_monster_updates();
+        }
+
         std::thread::sleep(sleep_time);
     }
 }
