@@ -190,13 +190,14 @@ impl GameServer {
 
     fn add_monster_updates(&mut self) {
         // Add to these updates the ones that the entity manager also provides
-        let monster_updates = self.monster_manager.take_server_updates().clone();
-        self.server_updates_buffer.iter_mut().for_each(|(_, buffer)| buffer.append(&mut monster_updates.clone()));
+        let monster_updates = self.monster_manager.take_server_updates();
+        self.server_updates_buffer
+            .iter_mut()
+            .for_each(|(_, buffer)| buffer.append(&mut monster_updates.clone()));
         
-        let attack_buffer = self.monster_manager.take_attack_buffer();
-        attack_buffer.iter().for_each(|attack | self.on_new_attack(attack.clone()));
-        
-        
+        for attack in self.monster_manager.take_attack_buffer() {
+            self.on_new_attack(attack)
+        }
     }
 }
 
