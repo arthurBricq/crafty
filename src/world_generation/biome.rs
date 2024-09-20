@@ -315,8 +315,8 @@ use crate::world_generation::biome::*;
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, ];
-        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, layers, num_layer);
-
+        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, layers, num_layer, 0.);
+    
         let cube_height = 20;
         for i in 0..cube_height {
             let block_at_height = config.get_block_at(i);
@@ -342,7 +342,7 @@ use crate::world_generation::biome::*;
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, ];
-        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, search_in, num_layer);
+        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, search_in, num_layer, 0.);
 
         let y = 9;
 
