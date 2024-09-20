@@ -26,6 +26,7 @@ use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
 use crate::player::{Player, CLICK_TIME_TO_BREAK};
 use crate::player_items::PlayerItems;
+use crate::primitives::position::Position;
 use crate::texture;
 use crate::world::World;
 use crate::health::Health;
@@ -469,7 +470,7 @@ impl WorldRenderer {
                         }
                         KeyCode::KeyX => {
                             println!("Ask to spawn a monster");
-                            let mut monster_pos = self.player.position().clone();
+                            let mut monster_pos = Position::new(self.player.position().pos().clone(), 0., 0.);
                             monster_pos.small_raise();
                             self.proxy.lock().unwrap().request_to_spawn(monster_pos);
                             
@@ -529,10 +530,12 @@ impl WorldRenderer {
             MouseButton::Left => {
                 if self.player.is_selecting_cube() {
                     self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
-                } else if let Some(mut attack) = self.entity_manager.attack(self.player.position().pos(), self.player.direction()) {
-                    // Forward the attack to the server
-                    attack.set_strength(self.items.attack_strength());
-                    self.proxy.lock().unwrap().on_new_attack(attack);
+                } else if state.is_pressed() {
+                    if let Some(mut attack) = self.entity_manager.attack(self.player.position().pos(), self.player.direction()) {
+                        // Forward the attack to the server
+                        attack.set_strength(self.items.attack_strength());
+                        self.proxy.lock().unwrap().on_new_attack(attack);
+                    }
                 }
             }
             MouseButton::Right => {

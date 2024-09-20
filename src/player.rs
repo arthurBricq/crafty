@@ -201,8 +201,8 @@ impl Player {
     /// Returns the velocity vector due to the controls purely (ignoring
     /// collisions or gravity)
     fn controls_velocity(&self) -> Vector3 {
-        let f = self.ground_direction_forward();
-        let l = self.ground_direction_right();
+        let f = self.position.ground_direction_forward();
+        let l = self.position.ground_direction_right();
 
         let mut displacement = Vector3::empty();
         if self.input_status.forward() {
@@ -297,13 +297,6 @@ impl Player {
         )
     }
 
-    fn ground_direction_forward(&self) -> Vector3 {
-        Vector3::new(self.position.yaw().cos(), 0., self.position.yaw().sin())
-    }
-
-    fn ground_direction_right(&self) -> Vector3 {
-        Vector3::new(self.position.yaw().sin(), 0., -self.position.yaw().cos())
-    }
 
     /// Returns true if the player is asking to break a cube
     pub fn is_time_to_break_over(&mut self, dt: f32) -> bool {

@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use crate::attack::EntityAttack;
 use crate::entity::chaser::Chaser;
 use crate::entity::entity::EntityKind;
 use crate::entity::monster::Monster;
@@ -13,6 +14,7 @@ pub struct MonsterManager {
     world: Arc<Mutex<World>>,
     monsters: Vec<Monster<Chaser>>,
     buffer_update: Vec<ServerUpdate>,
+    attack_buffer: Vec<EntityAttack>,
 }
 
 impl MonsterManager {
@@ -21,6 +23,7 @@ impl MonsterManager {
             world,
             monsters: Vec::new(),
             buffer_update: Vec::new(),
+            attack_buffer: Vec::new()
         }
     }
 
@@ -50,6 +53,9 @@ impl MonsterManager {
                 monster.update(&self.world.lock().unwrap(), dt, players);
                 // Inform the players that the monster has moved
                 self.buffer_update.push(ServerUpdate::UpdatePosition(monster.id() as u8, monster.position().clone()));
+                if let Some(att) = monster.attack() {
+                    self.attack_buffer.push(att.clone());
+                }
             });
     }
 
@@ -59,6 +65,12 @@ impl MonsterManager {
         let buffer = self.buffer_update.clone();
         self.buffer_update = Vec::new();
         buffer
+    }
+
+    pub fn get_attack_buffer(&mut self) -> Vec<EntityAttack> {
+        let attack_buffer = self.attack_buffer.clone();
+        self.attack_buffer = Vec::new();
+        attack_buffer
     }
 
     /// Return the ServerUpdate with all entities
