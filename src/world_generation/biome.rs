@@ -10,6 +10,7 @@ use crate::chunk::CHUNK_SIZE;
 
 use super::biomes_def::NUM_BIOMES;
 use super::perlin::{PerlinNoiseConfig, MAX_LEVEL_NOISE};
+use super::rng_from_seed::RNGFromSeed;
 
 const PROBABILITY_BIOME_CENTER_IN_CHUNK: f32 = 0.05;
 const MAX_NUMBER_LAYER: usize = 8;
@@ -35,11 +36,20 @@ pub struct BiomeConfig {
     pub noise_config: [PerlinNoiseConfig; MAX_LEVEL_NOISE],
     pub layers: [Option<BiomeLayer>; MAX_NUMBER_LAYER],
     pub num_layer: usize,
+
+    pub tree_probability: f32,
 }
 
 impl BiomeConfig {
     // The constructor enforces that layers respect the convention, allowing for efficient binary search
-    pub fn new(name: &'static str, terrain_offset: f32, terrain_scale: f32, noise_config: [PerlinNoiseConfig; MAX_LEVEL_NOISE], layers: [Option<BiomeLayer>; MAX_NUMBER_LAYER], num_layer: usize) -> Self {
+    pub fn new(name: &'static str,
+                terrain_offset: f32, 
+                terrain_scale: f32, 
+                noise_config: [PerlinNoiseConfig; MAX_LEVEL_NOISE], 
+                layers: [Option<BiomeLayer>; MAX_NUMBER_LAYER], 
+                num_layer: usize, 
+                tree_probability: f32) -> Self {
+
         if num_layer == 0 || (num_layer == 1 && layers[0].is_none()) {
             panic!("Should have at least one layer")
         }
@@ -64,7 +74,8 @@ impl BiomeConfig {
             terrain_scale,
             noise_config,
             layers,
-            num_layer
+            num_layer,
+            tree_probability
         }
     }
 
@@ -116,16 +127,7 @@ impl BiomeGenerator {
 
     /// For a given chunk, computes if it has a biome center and if it does of what kind and where
     fn get_chunk_biome_center(seed: u64, chunk_coord: [i64; 2]) -> (Option<[i32; 2]>, u64) {
-        // Generate a seed for deterministic PRNG
-        let mut hasher = std::hash::DefaultHasher::new();
-        // Hash the seed
-        seed.hash(&mut hasher);
-        // Hash the chunk coordinates
-        chunk_coord.hash(&mut hasher);
-        // Combine the hashes into a final value
-        let specific_seed_hash = hasher.finish();  
-
-        let mut rng: SmallRng = SmallRng::seed_from_u64(specific_seed_hash);
+        let mut rng: SmallRng = RNGFromSeed::rng_seed_coord(seed, chunk_coord);
 
         if rng.sample::<f32, Open01>(Open01) < PROBABILITY_BIOME_CENTER_IN_CHUNK {
             let x = rng.next_u64() % 8;
@@ -220,15 +222,7 @@ use crate::world_generation::biome::*;
         let seed: u64 = 42;
         let chunk_coord: [i64; 2] = [0, 1];
 
-        let mut hasher = std::hash::DefaultHasher::new();
-        // Hash the seed
-        seed.hash(&mut hasher);
-        // Hash the chunk coordinates
-        chunk_coord.hash(&mut hasher);
-        // Combine the hashes into a final value
-        let specific_seed_hash = hasher.finish();  
-
-        let mut rng: SmallRng = SmallRng::seed_from_u64(specific_seed_hash);
+        let mut rng: SmallRng = RNGFromSeed::rng_seed_coord(seed, chunk_coord);
 
         let x = rng.next_u64() % 8;
 
@@ -293,16 +287,8 @@ use crate::world_generation::biome::*;
             for j in 0..5 {
                 let seed: u64 = 42;
                 let chunk_coord: [i64; 2] = [i, j];
-                // Generate a seed for deterministic PRNG
-                let mut hasher = std::hash::DefaultHasher::new();
-                // Hash the seed
-                seed.hash(&mut hasher);
-                // Hash the chunk coordinates
-                chunk_coord.hash(&mut hasher);
-                // Combine the hashes into a final value
-                let specific_seed_hash = hasher.finish();  
-
-                let mut rng: SmallRng = SmallRng::seed_from_u64(specific_seed_hash);
+                
+                let mut rng: SmallRng = RNGFromSeed::rng_seed_coord(seed, chunk_coord);
 
                 let n = rng.sample::<f32, Open01>(Open01);
                 let x = rng.next_u64() % 8;
@@ -329,8 +315,8 @@ use crate::world_generation::biome::*;
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, ];
-        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, layers, num_layer);
-
+        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, layers, num_layer, 0.);
+    
         let cube_height = 20;
         for i in 0..cube_height {
             let block_at_height = config.get_block_at(i);
@@ -356,7 +342,7 @@ use crate::world_generation::biome::*;
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0},
             PerlinNoiseConfig{scale:0.0, amplitude: 0.0}, ];
-        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, search_in, num_layer);
+        let config = BiomeConfig::new("Test", 0.0, 0.0, noise_config, search_in, num_layer, 0.);
 
         let y = 9;
 
