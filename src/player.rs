@@ -274,7 +274,7 @@ impl Player {
             // The margin is between the player and the block we colide with
             // need the projection of velocity onto the normal
             let mut dtmargin: f32 = 0.0;
-            if (self.velocity.norm() >= 1e-10) {
+            if self.velocity.norm() >= 1e-10 {
                 dtmargin = PLAYER_MARGIN / collision.normal.dot(&self.velocity).abs();
             }
             // we want to put a margin, to avoid collision even with floats rounding

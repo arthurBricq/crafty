@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 
 use crate::actions::Action;
 use crate::actions::Action::{Add, Destroy};
-use crate::block_kind::Block::{COBBELSTONE, DIRT, GRASS, OAKLEAVES, OAKLOG, SWORD};
+use crate::block_kind::Block::{COBBELSTONE, OAKLOG, SWORD};
 use crate::entity::entity_manager::EntityManager;
 use crate::entity::humanoid;
 use crate::fps::FpsManager;
@@ -21,6 +21,7 @@ use crate::graphics::hud_renderer::HUDRenderer;
 use crate::graphics::inventory_event::InventoryEvent;
 use crate::graphics::menu_debug::DebugData;
 use crate::graphics::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
+use crate::health::Health;
 use crate::input::MotionState;
 use crate::network::proxy::Proxy;
 use crate::network::server_update::ServerUpdate;
@@ -29,14 +30,12 @@ use crate::player_items::PlayerItems;
 use crate::primitives::position::Position;
 use crate::texture;
 use crate::world::World;
-use crate::health::Health;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Surface};
 use winit::event::ElementState::Pressed;
 use winit::event::{AxisId, ElementState, KeyEvent, MouseButton};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{CursorGrabMode, Fullscreen, Window};
-
+use winit::window::{Fullscreen, Window};
 
 /// 16ms => 60 FPS roughly
 const TARGET_FRAME_DURATION: Duration = Duration::from_millis(16);
@@ -100,21 +99,31 @@ impl WorldRenderer {
 
         let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
             .with_title("Crafty")
+            // In MacOS, you basically can't resize the window...
+            // There is a stretching bug, and I am not sure if it is a `glutin` bug or if it is implementation bug
+            // from my side, due to a different OpenGL implementation on MacOS.
+            // What I can do for is to create a "big enough" window
+            .with_inner_size(2000, 1000)
             .build(&event_loop);
-
-        window.set_cursor_visible(false);
 
         // Add a few items
         self.items.collect(SWORD);
-        for _ in 0..16 { self.items.collect(COBBELSTONE); }
-        for _ in 0..8 { self.items.collect(OAKLOG); }
+        for _ in 0..16 {
+            self.items.collect(COBBELSTONE);
+        }
+        for _ in 0..8 {
+            self.items.collect(OAKLOG);
+        }
 
-        // Try to lock the mouse to the window, this doen't work for all OS
-        let lock_mouse = window
-            .set_cursor_grab(CursorGrabMode::Confined)
-            .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
-        if lock_mouse.is_err() {
-            println!("Can't lock")
+        #[cfg(not(target_os = "macos"))]
+        {
+            window.set_cursor_visible(false);
+            let lock_mouse = window
+                .set_cursor_grab(CursorGrabMode::Confined)
+                .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
+            if lock_mouse.is_err() {
+                println!("Can't lock")
+            }
         }
 
         // Construct the buffer of vertices (for single objects, we use OpenGL's instancing to multiply them)
@@ -142,13 +151,11 @@ impl WorldRenderer {
         );
 
         // Textures for entities
-        let humanoid_texture = humanoid::load_humanoid_textures(
-            "./resources/entity/", &display);
+        let humanoid_texture = humanoid::load_humanoid_textures("./resources/entity/", &display);
         let humanoid_texture_sample = humanoid_texture
             .sampled()
             .magnify_filter(MagnifySamplerFilter::Nearest)
             .minify_filter(MinifySamplerFilter::Nearest);
-
 
         // Build the shader programs
         let cube_program =
@@ -163,7 +170,7 @@ impl WorldRenderer {
             ENTITY_FRAGMENT_SHADER,
             None,
         )
-            .unwrap();
+        .unwrap();
         // Start rendering by creating a new frame
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
@@ -208,7 +215,8 @@ impl WorldRenderer {
                 winit::event::Event::WindowEvent { event, .. } => match event {
                     // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.
                     winit::event::WindowEvent::CloseRequested => window_target.exit(),
-                    winit::event::WindowEvent::Resized(_) => {
+                    winit::event::WindowEvent::Resized(tmp) => {
+                        println!("Resized to {:?}", tmp);
                         self.hud_renderer.set_dimension(display.get_framebuffer_dimensions());
                     }
                     winit::event::WindowEvent::RedrawRequested => {
@@ -347,7 +355,7 @@ impl WorldRenderer {
 
     fn handle_key_event(&mut self, event: KeyEvent, window: &Window) {
         self.handle_general_key_event(&event, window);
-        
+
         if self.hud_renderer.is_inventory_open() {
             self.handle_inventory_key_event(event, window)
         } else {
@@ -360,13 +368,11 @@ impl WorldRenderer {
     fn handle_general_key_event(&mut self, event: &KeyEvent, window: &Window) {
         if event.state == Pressed {
             match event.physical_key {
-                PhysicalKey::Code(key) => {
-                    match key {
-                        KeyCode::F11 => self.toggle_fullscreen(&window),
-                        KeyCode::Escape => std::process::exit(1),
-                        _ => {}
-                    }
-                }
+                PhysicalKey::Code(key) => match key {
+                    KeyCode::F11 => self.toggle_fullscreen(&window),
+                    KeyCode::Escape => std::process::exit(1),
+                    _ => {}
+                },
                 PhysicalKey::Unidentified(_) => {}
             }
         }
@@ -375,18 +381,16 @@ impl WorldRenderer {
     fn handle_inventory_key_event(&mut self, event: KeyEvent, window: &Window) {
         if event.state == Pressed {
             match event.physical_key {
-                PhysicalKey::Code(key) => {
-                    match key {
-                        KeyCode::KeyE => {
-                            if let Some(items) = self.hud_renderer.close_inventory() {
-                                self.items = items;
-                                window.set_cursor_visible(false);
-                                self.update_items_bar();
-                            }
+                PhysicalKey::Code(key) => match key {
+                    KeyCode::KeyE => {
+                        if let Some(items) = self.hud_renderer.close_inventory() {
+                            self.items = items;
+                            window.set_cursor_visible(false);
+                            self.update_items_bar();
                         }
-                        _ => {}
                     }
-                }
+                    _ => {}
+                },
                 PhysicalKey::Unidentified(_) => {}
             }
         }
@@ -399,18 +403,16 @@ impl WorldRenderer {
         }
         let pressed = event.state.is_pressed();
         match event.physical_key {
-            PhysicalKey::Code(key) => {
-                match key {
-                    KeyCode::KeyW => self.player.toggle_state(MotionState::Up, pressed),
-                    KeyCode::KeyS => self.player.toggle_state(MotionState::Down, pressed),
-                    KeyCode::KeyD => self.player.toggle_state(MotionState::Right, pressed),
-                    KeyCode::KeyA => self.player.toggle_state(MotionState::Left, pressed),
-                    KeyCode::KeyK => self.player.up(),
-                    KeyCode::KeyJ => self.player.down(),
-                    KeyCode::Space => self.player.toggle_state(MotionState::Jump, pressed),
-                    _ => {}
-                }
-            }
+            PhysicalKey::Code(key) => match key {
+                KeyCode::KeyW => self.player.toggle_state(MotionState::Up, pressed),
+                KeyCode::KeyS => self.player.toggle_state(MotionState::Down, pressed),
+                KeyCode::KeyD => self.player.toggle_state(MotionState::Right, pressed),
+                KeyCode::KeyA => self.player.toggle_state(MotionState::Left, pressed),
+                KeyCode::KeyK => self.player.up(),
+                KeyCode::KeyJ => self.player.down(),
+                KeyCode::Space => self.player.toggle_state(MotionState::Jump, pressed),
+                _ => {}
+            },
             _ => {}
         }
 
@@ -470,10 +472,10 @@ impl WorldRenderer {
                         }
                         KeyCode::KeyX => {
                             println!("Ask to spawn a monster");
-                            let mut monster_pos = Position::new(self.player.position().pos().clone(), 0., 0.);
+                            let mut monster_pos =
+                                Position::new(self.player.position().pos().clone(), 0., 0.);
                             monster_pos.small_raise();
                             self.proxy.lock().unwrap().request_to_spawn(monster_pos);
-                            
                         }
                         KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
@@ -529,9 +531,13 @@ impl WorldRenderer {
         match button {
             MouseButton::Left => {
                 if self.player.is_selecting_cube() {
-                    self.player.toggle_state(MotionState::LeftClick, state.is_pressed());
+                    self.player
+                        .toggle_state(MotionState::LeftClick, state.is_pressed());
                 } else if state.is_pressed() {
-                    if let Some(mut attack) = self.entity_manager.attack(self.player.position().pos(), self.player.direction()) {
+                    if let Some(mut attack) = self
+                        .entity_manager
+                        .attack(self.player.position().pos(), self.player.direction())
+                    {
                         // Forward the attack to the server
                         attack.set_strength(self.items.attack_strength());
                         self.proxy.lock().unwrap().on_new_attack(attack);
@@ -546,14 +552,17 @@ impl WorldRenderer {
                         if let Some(block) = self.items.get_current_block() {
                             // TODO Sometimes, I can't understand why, we end up not finding a place to add the new cube.
                             //      I know this is not easy to debug...
-                            if let Ok(at) = touched_cube.position_to_add_new_cube(self.player.position().pos(), self.player.direction()) {
-                                self.apply_action(Action::Add { at, block, })
+                            if let Ok(at) = touched_cube.position_to_add_new_cube(
+                                self.player.position().pos(),
+                                self.player.direction(),
+                            ) {
+                                self.apply_action(Action::Add { at, block })
                             }
                         }
                     }
                 }
             }
-            _ => ()
+            _ => (),
         }
     }
 
@@ -589,15 +598,15 @@ impl WorldRenderer {
                     self.player.set_position(position)
                 }
                 ServerUpdate::SendAction(action) => self.world.apply_action(&action),
-                ServerUpdate::RegisterEntity(id, entity_kind, pos) => {
-                    self.entity_manager.register_new_entity(id, entity_kind, pos)
-                }
+                ServerUpdate::RegisterEntity(id, entity_kind, pos) => self
+                    .entity_manager
+                    .register_new_entity(id, entity_kind, pos),
                 ServerUpdate::UpdatePosition(id, pos) => self.entity_manager.set_position(id, pos),
                 ServerUpdate::Attack(attack) => {
                     self.health.damage(attack.strength());
                     self.hud_renderer.set_health(&self.health);
                 }
-                ServerUpdate::RemoveEntity(id) => self.entity_manager.remove_entity(id as u8)
+                ServerUpdate::RemoveEntity(id) => self.entity_manager.remove_entity(id as u8),
             }
         }
     }

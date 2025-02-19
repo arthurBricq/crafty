@@ -139,8 +139,8 @@ impl HUDRenderer {
     }
 
     pub fn set_dimension(&mut self, dim: (u32, u32)) {
-        println!("dimension={dim:?}");
         self.aspect_ratio = dim.0 as f32 / dim.1 as f32;
+        println!("dimension={dim:?}, aspect_ratio={:?}", self.aspect_ratio);
 
         // Cascade down the aspect ratio to the HUD parts that require it
         self.items_bar.set_aspect_ratio(self.aspect_ratio);
