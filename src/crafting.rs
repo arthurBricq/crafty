@@ -7,8 +7,7 @@ pub type CraftingGrid = [[Option<Block>; 3]; 3];
 /// Structure responsible for the crafting recipes. For now, only its static
 /// methods will be used, but in the end it will load configuration from a file,
 /// so will be stateful
-pub struct CraftingManager {
-}
+pub struct CraftingManager {}
 
 impl CraftingManager {
     pub fn recipe(grid: &CraftingGrid) -> Option<Block> {
@@ -21,9 +20,9 @@ impl CraftingManager {
                 [None, Some(Block::COBBELSTONE), None],
                 [None, Some(Block::COBBELSTONE), None],
             ],
-            Block::SWORD
+            Block::SWORD,
         );
-        
+
         recipes.get(grid).copied()
     }
 }

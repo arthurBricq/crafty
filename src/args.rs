@@ -1,5 +1,5 @@
-use std::env;
 use clap::{Parser, ValueEnum};
+use std::env;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, ValueEnum)]
@@ -49,16 +49,22 @@ pub struct Args {
 
     #[arg(short, long, help = "Name of the player", default_value_t = String::new())]
     pub name: String,
-    
-    #[arg(value_enum, short, long, help = "How to initialize the world", default_value = "random")]
-    pub init: WorldInitializer
+
+    #[arg(
+        value_enum,
+        short,
+        long,
+        help = "How to initialize the world",
+        default_value = "random"
+    )]
+    pub init: WorldInitializer,
 }
 
 impl Args {
     pub fn from_args() -> Self {
         Args::parse()
     }
-    
+
     pub fn url(&self) -> String {
         self.server.clone() + ":" + self.port.as_str()
     }

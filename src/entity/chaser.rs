@@ -1,8 +1,8 @@
 use super::monster::{MonsterAction, TransitionState};
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
-use crate::world::World;
 use crate::server::server_state::PlayerState;
+use crate::world::World;
 
 const CHASING_DISTANCE: f32 = 10.;
 const CHASER_ATTACK_COOLDOWN: f32 = 2.; // Time in second before new attack
@@ -34,15 +34,25 @@ impl TransitionState for Chaser {
             MonsterStateEnum::TurnRight => MonsterAction::RightRot,
             MonsterStateEnum::Attack => MonsterAction::Attack(self.chasing.unwrap()),
             MonsterStateEnum::Jump => MonsterAction::Jump,
-            _ => MonsterAction::Idle
+            _ => MonsterAction::Idle,
         }
     }
-    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: &Vec<PlayerState>) {
+    fn update(
+        &mut self,
+        dt: f32,
+        position: &Position,
+        world: &World,
+        player_list: &Vec<PlayerState>,
+    ) {
         // Update the timer for attack
         self.attack_cooldown -= dt;
         // If we have a lock, then keep pursuing the current locked player
         if let Some(player_id) = self.chasing {
-            if let Some(player_pos) = player_list.iter().find(|p| p.id == player_id).map(|p| p.pos.pos()) {
+            if let Some(player_pos) = player_list
+                .iter()
+                .find(|p| p.id == player_id)
+                .map(|p| p.pos.pos())
+            {
                 // Condition to leave the lock: too far from player
                 if player_pos.distance_to(&position.pos()) > CHASING_DISTANCE {
                     self.chasing = None;
@@ -54,12 +64,15 @@ impl TransitionState for Chaser {
                 self.chasing = None;
                 self.state = MonsterStateEnum::Idle;
             }
-        } 
+        }
 
         // Find a new lock
         if self.chasing.is_none() && player_list.len() > 0 {
             // Try to find any player that is in range
-            if let Some(next_target) = player_list.iter().find(|player| player.pos.distance_to(&position.pos()) < CHASING_DISTANCE) {
+            if let Some(next_target) = player_list
+                .iter()
+                .find(|player| player.pos.distance_to(&position.pos()) < CHASING_DISTANCE)
+            {
                 self.chasing = Some(next_target.id);
             }
         }
@@ -73,7 +86,6 @@ impl TransitionState for Chaser {
         }
     }
 }
-
 
 impl Chaser {
     // Go to a target position by first rotating then going forward
@@ -97,8 +109,8 @@ impl Chaser {
         } else {
             let cangle = direction_target_normalize.dot(&forward);
             if cangle < 0. {
-               self.state = MonsterStateEnum::TurnRight;
-               return;
+                self.state = MonsterStateEnum::TurnRight;
+                return;
             }
 
             // Quit if close enought and try to attack
@@ -106,8 +118,7 @@ impl Chaser {
                 if self.attack_cooldown < 0. {
                     self.state = MonsterStateEnum::Attack;
                     self.attack_cooldown = CHASER_ATTACK_COOLDOWN;
-                }
-                else {
+                } else {
                     self.state = MonsterStateEnum::Idle;
                 }
                 return;
@@ -115,7 +126,7 @@ impl Chaser {
 
             // If here, we have a target, we are facing it, time to move toward it !
             // Check if there is a block on the way if so jump !
-            let mut pos = (position.pos() + forward);
+            let mut pos = position.pos() + forward;
             // The block is on the ground, not facing the eyes
             pos[1] -= 1.;
             if world.cube_at(pos).is_none() {

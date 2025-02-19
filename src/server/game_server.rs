@@ -1,7 +1,10 @@
 use crate::actions::Action;
+use crate::attack::EntityAttack;
 use crate::entity::entity::EntityKind;
 use crate::network::server_update::ServerUpdate;
-use crate::network::server_update::ServerUpdate::{Attack, LoggedIn, RegisterEntity, SendAction, UpdatePosition, RemoveEntity};
+use crate::network::server_update::ServerUpdate::{
+    Attack, LoggedIn, RegisterEntity, RemoveEntity, SendAction, UpdatePosition,
+};
 use crate::primitives::position::Position;
 use crate::server::monster_manager::MonsterManager;
 use crate::server::server_state::ServerState;
@@ -9,7 +12,6 @@ use crate::server::world_dispatcher::WorldDispatcher;
 use crate::world::World;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use crate::attack::EntityAttack;
 use std::time::{Duration, Instant};
 
 /// Main function of the thread in charge of entities
@@ -67,23 +69,31 @@ impl GameServer {
     pub fn login(&mut self, name: String) -> usize {
         // Create the new ID
         let player = self.state.login(name.clone());
-        println!("[SERVER] New player registered: {name} (ID={}, pos={:?})", player.id, player.pos);
+        println!(
+            "[SERVER] New player registered: {name} (ID={}, pos={:?})",
+            player.id, player.pos
+        );
         println!("Connected players: {}", self.state.n_players_connected());
 
-        // Create a new buffer of updates for this client, 
+        // Create a new buffer of updates for this client,
         let mut initial_updates = vec![LoggedIn(player.id as u8, player.pos.clone())];
 
         // Initialize it directly with a LoggedIn message and the position of the other players
         for (i, connected) in self.state.connected_players().enumerate() {
             if connected.id != player.id {
-                initial_updates.push(RegisterEntity(i as u8, EntityKind::Player, player.pos.clone()))
+                initial_updates.push(RegisterEntity(
+                    i as u8,
+                    EntityKind::Player,
+                    player.pos.clone(),
+                ))
             }
         }
 
         let monster_entry = self.monster_manager.get_monsters();
         initial_updates.append(&mut monster_entry.clone());
 
-        self.server_updates_buffer.insert(player.id, initial_updates);
+        self.server_updates_buffer
+            .insert(player.id, initial_updates);
 
         // Register the player in the dispatcher
         self.world_dispatcher.register_player(player.id);
@@ -91,9 +101,14 @@ impl GameServer {
         // Register the new player to other players of the game.
         for other_player in self.state.connected_players() {
             if player.id != other_player.id {
-                self.server_updates_buffer.get_mut(&other_player.id).unwrap()
-                    .push(RegisterEntity(player.id as u8, EntityKind::Player, player.pos.clone()));
-                
+                self.server_updates_buffer
+                    .get_mut(&other_player.id)
+                    .unwrap()
+                    .push(RegisterEntity(
+                        player.id as u8,
+                        EntityKind::Player,
+                        player.pos.clone(),
+                    ));
             }
         }
 
@@ -119,11 +134,17 @@ impl GameServer {
     /// Called when receiving the position of a new player
     pub fn on_new_position_update(&mut self, player_id: usize, position: Position) {
         // Update the world dispatcher. to compute if the player needs to be sent new chunks
-        if let Some((chunks_to_send, _chunks_to_delete)) = self.world_dispatcher.update_position(player_id, (position.x(), position.z())) {
+        if let Some((chunks_to_send, _chunks_to_delete)) = self
+            .world_dispatcher
+            .update_position(player_id, (position.x(), position.z()))
+        {
             for corner in chunks_to_send {
                 // Find the correct chunk
                 if let Some(to_send) = self.world.lock().unwrap().get_chunk(corner) {
-                    self.server_updates_buffer.get_mut(&player_id).unwrap().push(ServerUpdate::LoadChunk(to_send))
+                    self.server_updates_buffer
+                        .get_mut(&player_id)
+                        .unwrap()
+                        .push(ServerUpdate::LoadChunk(to_send))
                 } else {
                     // TODO generate chunk !!!
                 }
@@ -133,7 +154,10 @@ impl GameServer {
         // Update other players
         for player in self.state.connected_players() {
             if player.id != player_id {
-                self.server_updates_buffer.get_mut(&player.id).unwrap().push(UpdatePosition(player_id as u8, position.clone()))
+                self.server_updates_buffer
+                    .get_mut(&player.id)
+                    .unwrap()
+                    .push(UpdatePosition(player_id as u8, position.clone()))
             }
         }
 
@@ -148,7 +172,10 @@ impl GameServer {
         // Forward the action to all the other connected players
         for player in self.state.connected_players() {
             if player.id != player_id {
-                self.server_updates_buffer.get_mut(&player.id).unwrap().push(SendAction(action.clone()))
+                self.server_updates_buffer
+                    .get_mut(&player.id)
+                    .unwrap()
+                    .push(SendAction(action.clone()))
             }
         }
     }
@@ -175,17 +202,23 @@ impl GameServer {
 
         // Forward to the other players that the monster was killed.
         for player in self.state.connected_players() {
-            self.server_updates_buffer.get_mut(&player.id).unwrap().push(RemoveEntity(victim as u32));
+            self.server_updates_buffer
+                .get_mut(&player.id)
+                .unwrap()
+                .push(RemoveEntity(victim as u32));
         }
     }
-    
+
     pub fn spawn_monster(&mut self, position: Position) {
-        self.monster_manager.spawn_new_monster(position, EntityKind::Monster1);
+        self.monster_manager
+            .spawn_new_monster(position, EntityKind::Monster1);
     }
 
     /// Returns the list of updates that the server sends to the client.
     pub fn consume_updates(&mut self, player_id: usize) -> Vec<ServerUpdate> {
-        self.server_updates_buffer.insert(player_id, Vec::new()).unwrap()
+        self.server_updates_buffer
+            .insert(player_id, Vec::new())
+            .unwrap()
     }
 
     fn add_monster_updates(&mut self) {
@@ -194,13 +227,12 @@ impl GameServer {
         self.server_updates_buffer
             .iter_mut()
             .for_each(|(_, buffer)| buffer.append(&mut monster_updates.clone()));
-        
+
         for attack in self.monster_manager.take_attack_buffer() {
             self.on_new_attack(attack)
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -242,7 +274,6 @@ mod tests {
 
     #[test]
     fn test_attack_broacasting() {
-
         // Create a server with an empty world
         let mut server = GameServer::new(World::empty());
 

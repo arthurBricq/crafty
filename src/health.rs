@@ -1,5 +1,5 @@
 pub struct Health {
-    health: u8
+    health: u8,
 }
 
 impl Health {
@@ -16,8 +16,10 @@ impl Health {
     }
 
     pub fn damage(&mut self, strength: u8) {
-        self.health = if self.health >= strength
-        { self.health - strength }
-        else { 0 };
+        self.health = if self.health >= strength {
+            self.health - strength
+        } else {
+            0
+        };
     }
 }

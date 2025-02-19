@@ -26,7 +26,6 @@ impl Mul<Vector3> for Matrix3 {
     }
 }
 
-
 impl Mul<f32> for Matrix3 {
     type Output = Matrix3;
 
@@ -175,7 +174,6 @@ mod tests {
         assert!(f32::abs(left.y() - right.y()) < EPSILON);
         assert!(f32::abs(left.z() - right.z()) < EPSILON);
     }
-
 
     #[test]
     fn inverse_simple_matrix() {

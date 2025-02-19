@@ -1,7 +1,7 @@
 use crate::aabb::AABB;
-use crate::graphics::entity::EntityCube;
 use crate::entity::humanoid;
 use crate::entity::humanoid::humanoid_aabb;
+use crate::graphics::entity::EntityCube;
 use crate::primitives::position::Position;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -9,7 +9,7 @@ use crate::primitives::position::Position;
 pub enum EntityKind {
     Player,
     Monster1,
-    Monster2
+    Monster2,
 }
 
 impl EntityKind {
@@ -27,17 +27,15 @@ impl EntityKind {
             1 => Self::Monster1,
             2 => Self::Monster2,
             _ => Self::Monster1,
-            
         }
     }
 
     pub fn is_player(&self) -> bool {
         match self {
-        Self::Player => true,
-        _ => false
+            Self::Player => true,
+            _ => false,
         }
     }
-    
 }
 
 /// Contain the data of an entity
@@ -49,13 +47,13 @@ pub struct Entity {
 
 impl Entity {
     pub fn new(id: usize, entity_type: EntityKind, position: Position) -> Self {
-        Self { 
+        Self {
             id,
             entity_type,
             position,
         }
     }
-    
+
     pub fn set_position(&mut self, position: Position) {
         self.position = position;
     }
@@ -63,11 +61,11 @@ impl Entity {
     pub fn position(&self) -> &Position {
         &self.position
     }
-    
+
     pub fn id(&self) -> usize {
         self.id
     }
-        
+
     pub fn entity_type(&self) -> &EntityKind {
         &self.entity_type
     }
@@ -83,8 +81,9 @@ impl Entity {
 
     pub fn aabb(&self) -> AABB {
         match self.entity_type {
-            EntityKind::Player | EntityKind::Monster1 | EntityKind::Monster2 => humanoid_aabb(&self.position)
-        
+            EntityKind::Player | EntityKind::Monster1 | EntityKind::Monster2 => {
+                humanoid_aabb(&self.position)
+            }
         }
     }
 }

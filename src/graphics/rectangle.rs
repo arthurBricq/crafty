@@ -1,6 +1,6 @@
-use glium::implement_vertex;
 use crate::graphics::color::Color;
 use crate::graphics::font::GLChar;
+use glium::implement_vertex;
 
 pub const RECT_VERTEX_SHADER: &str = r"
     #version 330 core
@@ -76,18 +76,36 @@ pub const RECT_FRAGMENT_SHADER: &str = r"
 pub struct RectVertex {
     /// Position of the pixel on the NDC
     position: [f32; 3],
-    tex_coords: [f32; 2]
+    tex_coords: [f32; 2],
 }
 
 implement_vertex!(RectVertex, position, tex_coords);
 
 pub const RECT_VERTICES: [RectVertex; 6] = [
-    RectVertex { position: [ 1.0,  1.0, 0.], tex_coords: [1., 1.] },
-    RectVertex { position: [ 1.0, -1.0, 0.], tex_coords: [1., 0.] },
-    RectVertex { position: [-1.0,  1.0, 0.], tex_coords: [0., 1.] },
-    RectVertex { position: [-1.0,  1.0, 0.], tex_coords: [0., 1.] },
-    RectVertex { position: [ 1.0, -1.0, 0.], tex_coords: [1., 0.] },
-    RectVertex { position: [-1.0, -1.0, 0.], tex_coords: [0., 0.] },
+    RectVertex {
+        position: [1.0, 1.0, 0.],
+        tex_coords: [1., 1.],
+    },
+    RectVertex {
+        position: [1.0, -1.0, 0.],
+        tex_coords: [1., 0.],
+    },
+    RectVertex {
+        position: [-1.0, 1.0, 0.],
+        tex_coords: [0., 1.],
+    },
+    RectVertex {
+        position: [-1.0, 1.0, 0.],
+        tex_coords: [0., 1.],
+    },
+    RectVertex {
+        position: [1.0, -1.0, 0.],
+        tex_coords: [1., 0.],
+    },
+    RectVertex {
+        position: [-1.0, -1.0, 0.],
+        tex_coords: [0., 0.],
+    },
 ];
 
 /// Holds the model of 1 tile
@@ -102,10 +120,17 @@ pub struct RectInstance {
     font_coords: [f32; 2],
     /// The id of the block whose' side texture will be drawn
     /// If the tile should not have a cube texture, then just put -1
-    block_id: i8
+    block_id: i8,
 }
 
-implement_vertex!(RectInstance, transformation, color, is_font, font_coords, block_id);
+implement_vertex!(
+    RectInstance,
+    transformation,
+    color,
+    is_font,
+    font_coords,
+    block_id
+);
 
 impl RectInstance {
     /// Create a new rectangle
@@ -124,23 +149,23 @@ impl RectInstance {
     pub fn new(u: f32, v: f32, w: f32, h: f32, c: Color) -> Self {
         Self {
             transformation: [
-                [  w, 0.0, 0.0, 0.0],
-                [0.0,   h, 0.0, 0.0],
+                [w, 0.0, 0.0, 0.0],
+                [0.0, h, 0.0, 0.0],
                 [0.0, 0.0, 1.0, 0.0],
-                [  u,   v, 0.0, 1.0]
+                [u, v, 0.0, 1.0],
             ],
             color: c.rgba(),
             is_font: false as u8,
             font_coords: [0., 0.],
-            block_id: -1
+            block_id: -1,
         }
     }
-    
+
     /// Creates a rectangle instance from the bottom left corner of the rectangle
     pub fn new_from_corner(u: f32, v: f32, w: f32, h: f32, c: Color) -> Self {
-        RectInstance::new(u+w/2., v+h/2., w/2., h/2., c)
+        RectInstance::new(u + w / 2., v + h / 2., w / 2., h / 2., c)
     }
-    
+
     /// Creates a square instance from the given corner.
     /// The current aspect ratio of the screen must be provided to properly create the cube
     pub fn square_from_corner(u: f32, v: f32, s: f32, aspect_ratio: f32, c: Color) -> Self {
@@ -151,20 +176,19 @@ impl RectInstance {
     pub fn new_with_char(u: f32, v: f32, w: f32, c: GLChar) -> Self {
         Self {
             transformation: [
-                [  w, 0.0, 0.0, 0.0],
-                [0.0,   w, 0.0, 0.0],
+                [w, 0.0, 0.0, 0.0],
+                [0.0, w, 0.0, 0.0],
                 [0.0, 0.0, 1.0, 0.0],
-                [  u,   v, 0.0, 1.0]
+                [u, v, 0.0, 1.0],
             ],
-            color: [0.,0.,0.,0.],
+            color: [0., 0., 0., 0.],
             is_font: true as u8,
             font_coords: c.get_index(),
-            block_id: -1
+            block_id: -1,
         }
     }
 
     pub fn set_block_id(&mut self, block_id: i8) {
         self.block_id = block_id;
     }
-    
 }

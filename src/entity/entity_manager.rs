@@ -34,7 +34,9 @@ impl EntityManager {
     }
 
     pub fn set_position(&mut self, id: u8, position: Position) {
-        self.entities.get_mut(&id).map(|entity| entity.set_position(position));
+        self.entities
+            .get_mut(&id)
+            .map(|entity| entity.set_position(position));
     }
 
     /// Returns the list of OpenGL attributes to be rendered
@@ -47,10 +49,13 @@ impl EntityManager {
     }
 
     pub fn attack(&self, position: Vector3, direction: Vector3) -> Option<EntityAttack> {
-        if let Some((id, _)) = self.entities
+        if let Some((id, _)) = self
+            .entities
             .iter()
             .map(|(id, entity)| (id, entity.aabb().faces()))
-            .find(|(id, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
+            .find(|(id, faces)| {
+                Cube::intersection_with_faces(&faces, position, direction).is_some()
+            })
         {
             println!("Player {id} was hit !");
             return Some(EntityAttack::new(*id));
@@ -72,10 +77,18 @@ mod tests {
         let mut mgr = EntityManager::new();
         assert_eq!(0, mgr.get_opengl_entities().len());
 
-        mgr.register_new_entity(2, EntityKind::Monster2, Position::from_pos(Vector3::unit_x()));
+        mgr.register_new_entity(
+            2,
+            EntityKind::Monster2,
+            Position::from_pos(Vector3::unit_x()),
+        );
         assert_eq!(6, mgr.get_opengl_entities().len());
 
-        mgr.register_new_entity(3, EntityKind::Monster1, Position::from_pos(Vector3::unit_x()));
+        mgr.register_new_entity(
+            3,
+            EntityKind::Monster1,
+            Position::from_pos(Vector3::unit_x()),
+        );
         assert_eq!(12, mgr.get_opengl_entities().len());
     }
 
@@ -86,7 +99,10 @@ mod tests {
         // Add a player at the origin
         mgr.register_new_entity(0, EntityKind::Player, Position::from_pos(Vector3::empty()));
 
-        assert_eq!(Some(EntityAttack::new(0)), mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite()));
+        assert_eq!(
+            Some(EntityAttack::new(0)),
+            mgr.attack(Vector3::unit_x(), Vector3::unit_x().opposite())
+        );
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_x()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_y()));
         assert_eq!(None, mgr.attack(Vector3::unit_x(), Vector3::unit_z()));
@@ -98,7 +114,11 @@ mod tests {
         let mut mgr = EntityManager::new();
         assert_eq!(0, mgr.get_opengl_entities().len());
 
-        mgr.register_new_entity(2, EntityKind::Monster2, Position::from_pos(Vector3::unit_x()));
+        mgr.register_new_entity(
+            2,
+            EntityKind::Monster2,
+            Position::from_pos(Vector3::unit_x()),
+        );
         assert_eq!(6, mgr.get_opengl_entities().len());
 
         mgr.remove_entity(2);

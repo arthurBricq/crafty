@@ -10,7 +10,7 @@ pub struct CubesToDraw {
     /// List of cube that are going to be drawn
     // Idea for futur: split the vec into smaller structure "ChunkToDraw" representing a "physical" chunk
     // it will be easier to load/unload a "physical" chunk
-    // apparently glium can build its buffer vector from multiple references 
+    // apparently glium can build its buffer vector from multiple references
     // so no need to copy everythink into one vector but it has to be tested (I haven't tested it)
     cubes_to_draw: Vec<CubeInstance>,
     selected_cube_index: Option<usize>,
@@ -20,7 +20,7 @@ impl CubesToDraw {
     pub fn new() -> Self {
         Self {
             cubes_to_draw: Vec::new(),
-            selected_cube_index: None
+            selected_cube_index: None,
         }
     }
 
@@ -36,9 +36,14 @@ impl CubesToDraw {
 
     /// Returns the OpenGL buffer with cubes to be drawn
     /// If you want to have one cube drawn as 'selected', pass it in the argument `selected`
-    pub fn get_cubes_buffer(&mut self, display: &Display<WindowSurface>, selected_cube: Option<Cube>) -> VertexBuffer<CubeInstance>{
+    pub fn get_cubes_buffer(
+        &mut self,
+        display: &Display<WindowSurface>,
+        selected_cube: Option<Cube>,
+    ) -> VertexBuffer<CubeInstance> {
         if let Some(selected) = selected_cube {
-            self.cubes_to_draw.push(CubeInstance::new_selected(&selected));
+            self.cubes_to_draw
+                .push(CubeInstance::new_selected(&selected));
         }
         let buffer = VertexBuffer::immutable(display, &self.cubes_to_draw);
         if selected_cube.is_some() {
@@ -46,8 +51,8 @@ impl CubesToDraw {
         }
         buffer.unwrap()
     }
-    
-    /// Try to remove a cube at at position, 
+
+    /// Try to remove a cube at at position,
     /// Will not panic if a cubeAttr is not present in the Vec
     pub fn remove_cube(&mut self, position: &Vector3) {
         for i in 0..self.cubes_to_draw.len() {
@@ -83,7 +88,6 @@ impl CubesToDraw {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {

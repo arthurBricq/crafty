@@ -82,18 +82,52 @@ impl Cube {
     /// Note that each face points to a neighbor cube using the `to_adjacent_cube`
     pub fn faces(&self) -> [Plane3; 6] {
         [
-            Plane3::new(self.position, Vector3::unit_x(), Vector3::unit_y(), Vector3::unit_z().opposite()),
-            Plane3::new(self.position, Vector3::unit_y(), Vector3::unit_z(), Vector3::unit_x().opposite()),
-            Plane3::new(self.position, Vector3::unit_z(), Vector3::unit_x(), Vector3::unit_y().opposite()),
-            Plane3::new(self.position + Vector3::unit_z(), Vector3::unit_x(), Vector3::unit_y(), Vector3::empty()),
-            Plane3::new(self.position + Vector3::unit_x(), Vector3::unit_z(), Vector3::unit_y(), Vector3::empty()),
-            Plane3::new(self.position + Vector3::unit_y(), Vector3::unit_x(), Vector3::unit_z(), Vector3::empty()),
+            Plane3::new(
+                self.position,
+                Vector3::unit_x(),
+                Vector3::unit_y(),
+                Vector3::unit_z().opposite(),
+            ),
+            Plane3::new(
+                self.position,
+                Vector3::unit_y(),
+                Vector3::unit_z(),
+                Vector3::unit_x().opposite(),
+            ),
+            Plane3::new(
+                self.position,
+                Vector3::unit_z(),
+                Vector3::unit_x(),
+                Vector3::unit_y().opposite(),
+            ),
+            Plane3::new(
+                self.position + Vector3::unit_z(),
+                Vector3::unit_x(),
+                Vector3::unit_y(),
+                Vector3::empty(),
+            ),
+            Plane3::new(
+                self.position + Vector3::unit_x(),
+                Vector3::unit_z(),
+                Vector3::unit_y(),
+                Vector3::empty(),
+            ),
+            Plane3::new(
+                self.position + Vector3::unit_y(),
+                Vector3::unit_x(),
+                Vector3::unit_z(),
+                Vector3::empty(),
+            ),
         ]
     }
 
     /// Computes the intersection between a ray and 6 faces
     /// Returns (distance, index in the array of faces)
-    pub fn intersection_with_faces(faces: &[Plane3; 6], pos: Vector3, dir: Vector3,) -> Option<(f32, usize)> {
+    pub fn intersection_with_faces(
+        faces: &[Plane3; 6],
+        pos: Vector3,
+        dir: Vector3,
+    ) -> Option<(f32, usize)> {
         let mut best_result: Option<(f32, usize)> = None;
         for i in 0..faces.len() {
             if let Some(t) = faces[i].face_intersection(pos, dir) {
@@ -104,7 +138,7 @@ impl Cube {
         }
         best_result
     }
-    
+
     /// Returns the distance between this cube and the the player, computed from ray-tracing
     pub fn intersection_with(&self, pos: Vector3, dir: Vector3) -> Option<f32> {
         Self::intersection_with_faces(&self.faces(), pos, dir).map(|(dist, _)| dist)
@@ -116,7 +150,8 @@ impl Cube {
     /// `camera_dir`      : direction of the player
     pub fn position_to_add_new_cube(&self, pos: Vector3, dir: Vector3) -> Result<Vector3, u8> {
         let index = Self::intersection_with_faces(&self.faces(), pos, dir)
-            .map(|(_, index)| index).ok_or(0)?;
+            .map(|(_, index)| index)
+            .ok_or(0)?;
         Ok(self.faces()[index].adjacent_cube())
     }
 
@@ -128,7 +163,8 @@ impl Cube {
             pos[1],
             pos[0] + 1.,
             pos[0],
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     fn aabb(&self) -> AABB {

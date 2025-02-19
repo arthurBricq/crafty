@@ -1,8 +1,8 @@
-use std::fmt::{write, Display, Formatter};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 enum TcpError {
-    LengthError
+    LengthError,
 }
 
 impl Display for TcpError {
@@ -12,7 +12,6 @@ impl Display for TcpError {
 }
 
 impl std::error::Error for TcpError {}
-
 
 /// A trait that an enum or a struct implement to be shared over the network.
 /// This trait can be used by `to_tcp_repr` to encode a message on our custom protocol.
@@ -31,7 +30,7 @@ pub trait TcpDeserialize {
 
 /// Given an object that can be serialized to our TCP protocol,
 /// returns the bytes message to be sent over the network
-pub fn to_tcp_repr<T: TcpSerialize>(object: &T) -> Vec<u8>{
+pub fn to_tcp_repr<T: TcpSerialize>(object: &T) -> Vec<u8> {
     let mut data = object.to_bytes_representation();
 
     // First bytes contains the type
@@ -54,7 +53,7 @@ pub struct ParseContext {
     len: usize,
 }
 
-impl ParseContext{
+impl ParseContext {
     pub fn new() -> Self {
         Self {
             bytes: vec![],
@@ -89,13 +88,14 @@ impl ParseContext{
     }
 }
 
-
-pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext) -> Result<Vec<T>, Box<dyn std::error::Error>> {
+pub fn from_tcp_repr<T: TcpDeserialize>(
+    bytes: &[u8],
+    context: &mut ParseContext,
+) -> Result<Vec<T>, Box<dyn std::error::Error>> {
     let mut to_return = vec![];
     let mut start = 0;
 
     loop {
-
         if bytes.len() < start + 5 {
             break;
         }
@@ -105,7 +105,10 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
             // Read the header
             // - type of the enum
             // - length of the message being sent
-            let length_bytes: [u8; 4] = bytes.get(start + 1..start + 5).ok_or(TcpError::LengthError)?.try_into()?;
+            let length_bytes: [u8; 4] = bytes
+                .get(start + 1..start + 5)
+                .ok_or(TcpError::LengthError)?
+                .try_into()?;
             let len = u32::from_le_bytes(length_bytes) as usize;
             let code = bytes[start];
             context.set_code(code);
@@ -143,6 +146,6 @@ pub fn from_tcp_repr<T: TcpDeserialize>(bytes: &[u8], context: &mut ParseContext
             break;
         }
     }
-    
+
     Ok(to_return)
 }

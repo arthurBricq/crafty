@@ -1,7 +1,7 @@
 use crafty::args::Args;
 use crafty::network::proxy::Proxy;
-use crafty::player::Player;
 use crafty::network::tcp_proxy::TcpProxy;
+use crafty::player::Player;
 use crafty::world::World;
 use crafty::world_renderer::WorldRenderer;
 

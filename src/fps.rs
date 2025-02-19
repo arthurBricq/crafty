@@ -1,5 +1,5 @@
-use std::time::Duration;
 use bounded_vec_deque::BoundedVecDeque;
+use std::time::Duration;
 
 const TIME_TO_PRINT: f32 = 1.5;
 const BUFFER_LEN: usize = 10;
@@ -8,7 +8,7 @@ const BUFFER_LEN: usize = 10;
 pub struct FpsManager {
     counter: f32,
     buffer: BoundedVecDeque<f32>,
-    fps: f32
+    fps: f32,
 }
 
 impl FpsManager {
@@ -26,13 +26,13 @@ impl FpsManager {
         self.counter += dt;
         if self.counter > TIME_TO_PRINT {
             self.counter = 0.0;
-            self.fps= self.buffer.len() as f32 / self.buffer.iter().sum::<f32>();
+            self.fps = self.buffer.len() as f32 / self.buffer.iter().sum::<f32>();
             self.print_statistics()
         }
     }
 
     fn print_statistics(&self) {
-        println!("fps = {}",self.fps);
+        println!("fps = {}", self.fps);
     }
 
     pub fn fps(&self) -> f32 {

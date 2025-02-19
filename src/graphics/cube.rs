@@ -92,51 +92,193 @@ pub struct CubeVertex {
 implement_vertex!(CubeVertex, position, tex_coords, face);
 
 pub const VERTICES: [CubeVertex; 36] = [
-
     // Right side
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 0 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
+    CubeVertex {
+        position: [-0.5, -0.5, -0.5],
+        tex_coords: [0.0, 0.0],
+        face: 0,
+    },
+    CubeVertex {
+        position: [0.5, -0.5, -0.5],
+        tex_coords: [1.0, 0.0],
+        face: 0,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, -0.5],
+        tex_coords: [1.0, 1.0],
+        face: 0,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, -0.5],
+        tex_coords: [1.0, 1.0],
+        face: 0,
+    },
+    CubeVertex {
+        position: [-0.5, 0.5, -0.5],
+        tex_coords: [0.0, 1.0],
+        face: 0,
+    },
+    CubeVertex {
+        position: [-0.5, -0.5, -0.5],
+        tex_coords: [0.0, 0.0],
+        face: 0,
+    },
     // Front
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 1 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 1 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
+    CubeVertex {
+        position: [0.5, 0.5, 0.5],
+        tex_coords: [1.0, 1.0],
+        face: 1,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, -0.5],
+        tex_coords: [0.0, 1.0],
+        face: 1,
+    },
+    CubeVertex {
+        position: [0.5, -0.5, -0.5],
+        tex_coords: [0.0, 0.0],
+        face: 1,
+    },
+    CubeVertex {
+        position: [0.5, -0.5, -0.5],
+        tex_coords: [0.0, 0.0],
+        face: 1,
+    },
+    CubeVertex {
+        position: [0.5, -0.5, 0.5],
+        tex_coords: [1.0, 0.0],
+        face: 1,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, 0.5],
+        tex_coords: [1.0, 1.0],
+        face: 1,
+    },
     // Left side
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 2 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 },
+    CubeVertex {
+        position: [-0.5, -0.5, 0.5],
+        tex_coords: [1.0, 0.0],
+        face: 2,
+    },
+    CubeVertex {
+        position: [0.5, -0.5, 0.5],
+        tex_coords: [0.0, 0.0],
+        face: 2,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, 0.5],
+        tex_coords: [0.0, 1.0],
+        face: 2,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, 0.5],
+        tex_coords: [0.0, 1.0],
+        face: 2,
+    },
+    CubeVertex {
+        position: [-0.5, 0.5, 0.5],
+        tex_coords: [1.0, 1.0],
+        face: 2,
+    },
+    CubeVertex {
+        position: [-0.5, -0.5, 0.5],
+        tex_coords: [1.0, 0.0],
+        face: 2,
+    },
     // Back
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
+    CubeVertex {
+        position: [-0.5, 0.5, 0.5],
+        tex_coords: [0.0, 1.0],
+        face: 3,
+    },
+    CubeVertex {
+        position: [-0.5, 0.5, -0.5],
+        tex_coords: [1.0, 1.0],
+        face: 3,
+    },
+    CubeVertex {
+        position: [-0.5, -0.5, -0.5],
+        tex_coords: [1.0, 0.0],
+        face: 3,
+    },
+    CubeVertex {
+        position: [-0.5, -0.5, -0.5],
+        tex_coords: [1.0, 0.0],
+        face: 3,
+    },
+    CubeVertex {
+        position: [-0.5, -0.5, 0.5],
+        tex_coords: [0.0, 0.0],
+        face: 3,
+    },
+    CubeVertex {
+        position: [-0.5, 0.5, 0.5],
+        tex_coords: [0.0, 1.0],
+        face: 3,
+    },
     // Top
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 0.0], face: 4 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 4 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
+    CubeVertex {
+        position: [-0.5, 0.5, -0.5],
+        tex_coords: [0.0, 1.0],
+        face: 4,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, -0.5],
+        tex_coords: [0.0, 0.0],
+        face: 4,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, 0.5],
+        tex_coords: [1.0, 0.0],
+        face: 4,
+    },
+    CubeVertex {
+        position: [0.5, 0.5, 0.5],
+        tex_coords: [1.0, 0.0],
+        face: 4,
+    },
+    CubeVertex {
+        position: [-0.5, 0.5, 0.5],
+        tex_coords: [1.0, 1.0],
+        face: 4,
+    },
+    CubeVertex {
+        position: [-0.5, 0.5, -0.5],
+        tex_coords: [0.0, 1.0],
+        face: 4,
+    },
     //  Bottom
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 5 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 5 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
+    CubeVertex {
+        position: [-0.5, -0.5, -0.5],
+        tex_coords: [0.0, 1.0],
+        face: 5,
+    },
+    CubeVertex {
+        position: [0.5, -0.5, -0.5],
+        tex_coords: [0.0, 0.0],
+        face: 5,
+    },
+    CubeVertex {
+        position: [0.5, -0.5, 0.5],
+        tex_coords: [1.0, 0.0],
+        face: 5,
+    },
+    CubeVertex {
+        position: [0.5, -0.5, 0.5],
+        tex_coords: [1.0, 0.0],
+        face: 5,
+    },
+    CubeVertex {
+        position: [-0.5, -0.5, 0.5],
+        tex_coords: [1.0, 1.0],
+        face: 5,
+    },
+    CubeVertex {
+        position: [-0.5, -0.5, -0.5],
+        tex_coords: [0.0, 1.0],
+        face: 5,
+    },
 ];
-
 
 /// An OpenGL type that contains the information for OpenGL's instancing
 #[derive(Copy, Clone)]
@@ -159,10 +301,10 @@ impl CubeInstance {
             position: cube.position().clone(),
         }
     }
-    
+
     /// Creates a new selected cube
     /// This cube will be slightly inflated, which is a hack to greatly optimize performances
-    /// Using this trick allows us to not have to update the existing `CubeInstance` selection property, 
+    /// Using this trick allows us to not have to update the existing `CubeInstance` selection property,
     /// but instead we just insert one extra cube that is inflated.
     pub fn new_selected(cube: &Cube) -> Self {
         Self {
@@ -198,16 +340,26 @@ impl CubeInstance {
             [1.00, 0.0, 0.0, 0.0],
             [0.0, 1.00, 0.0, 0.0],
             [0.0, 0.0, 1.00, 0.0],
-            [position[0] + 0.5, position[1] + 0.5, position[2] + 0.5, 1.0f32]
+            [
+                position[0] + 0.5,
+                position[1] + 0.5,
+                position[2] + 0.5,
+                1.0f32,
+            ],
         ]
     }
-    
+
     pub fn model_matrix_inflated(position: &Vector3) -> [[f32; 4]; 4] {
         [
             [1.01, 0.0, 0.0, 0.0],
             [0.0, 1.01, 0.0, 0.0],
             [0.0, 0.0, 1.01, 0.0],
-            [position[0] + 0.5, position[1] + 0.5, position[2] + 0.5, 1.0f32]
+            [
+                position[0] + 0.5,
+                position[1] + 0.5,
+                position[2] + 0.5,
+                1.0f32,
+            ],
         ]
     }
 }
@@ -246,7 +398,7 @@ impl CubeContainer {
 
 #[cfg(test)]
 mod tests {
-    use crate::graphics::cube::{CubeInstance, CubeContainer};
+    use crate::graphics::cube::{CubeContainer, CubeInstance};
 
     #[test]
     fn test_cube_container() {

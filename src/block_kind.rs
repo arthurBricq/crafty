@@ -54,22 +54,22 @@ impl Block {
     pub fn attack_strength(&self) -> u8 {
         match self {
             Block::SWORD => 2,
-            _ => 1
+            _ => 1,
         }
     }
 
     pub fn is_transparent(&self) -> bool {
         match self {
             Block::OAKLEAVES | Block::WATER => true,
-            _ => false
+            _ => false,
         }
     }
-        
+
     pub fn block_dropped(&self) -> Self {
         match self {
             Block::GRASS => Block::DIRT,
             Block::STONE => Block::COBBELSTONE,
-            block => *block
+            block => *block,
         }
     }
 }

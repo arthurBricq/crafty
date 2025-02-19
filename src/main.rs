@@ -10,13 +10,15 @@ use std::sync::{Arc, Mutex};
 fn main() {
     // Create the initial world
     let init = WorldInitializer::from_args();
-    
+
     println!("Loading world using : {:?}", init);
     println!("[Server] Creating a world ...");
     let world = match init {
         WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(5),
         WorldInitializer::FLAT => WorldGenerator::create_new_flat_world(10),
-        WorldInitializer::DISK => World::from_file("map.json").unwrap_or(WorldGenerator::create_new_random_world(10)),
+        WorldInitializer::DISK => {
+            World::from_file("map.json").unwrap_or(WorldGenerator::create_new_random_world(10))
+        }
     };
     println!("                          ... Finished !");
 

@@ -1,9 +1,11 @@
 use crate::actions::Action;
-use crate::network::message_to_server::MessageToServer::{Attack, Login, OnNewAction, OnNewPosition, SpawnRequest};
+use crate::attack::EntityAttack;
+use crate::network::message_to_server::MessageToServer::{
+    Attack, Login, OnNewAction, OnNewPosition, SpawnRequest,
+};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 use crate::primitives::position::Position;
 use std::str::from_utf8;
-use crate::attack::EntityAttack;
 
 /// List of message that can be exchanged between to the server from the client
 #[derive(Debug, PartialEq)]
@@ -32,7 +34,7 @@ impl TcpSerialize for MessageToServer {
             Login(name) => name.clone().into_bytes(),
             OnNewPosition(pos) | SpawnRequest(pos) => pos.to_bytes(),
             OnNewAction(action) => action.to_bytes(),
-            Attack(attack) => attack.to_bytes()
+            Attack(attack) => attack.to_bytes(),
         }
     }
 }
@@ -45,7 +47,7 @@ impl TcpDeserialize for MessageToServer {
             2 => OnNewAction(Action::from_str(from_utf8(bytes_to_parse).unwrap())),
             3 => Attack(EntityAttack::from_bytes(bytes_to_parse)),
             4 => SpawnRequest(Position::from_bytes(bytes_to_parse)),
-            _ => panic!("Cannot build message to server from code {code}")
+            _ => panic!("Cannot build message to server from code {code}"),
         }
     }
 }
@@ -90,9 +92,13 @@ mod tests {
     fn test_multiple_message_integrity() {
         let p1 = Vector3::new(1., 2., 3.);
         let p2 = Vector3::new(5., 6., 7.);
-        test_multiple_messages(&[OnNewPosition(Position::from_pos(p1.clone())), OnNewPosition(Position::from_pos(p2))]);
-        test_multiple_messages(&[Login("hey".to_string()), OnNewPosition(Position::from_pos(p1))]);
+        test_multiple_messages(&[
+            OnNewPosition(Position::from_pos(p1.clone())),
+            OnNewPosition(Position::from_pos(p2)),
+        ]);
+        test_multiple_messages(&[
+            Login("hey".to_string()),
+            OnNewPosition(Position::from_pos(p1)),
+        ]);
     }
 }
-
-

@@ -1,6 +1,9 @@
 use crate::block_kind::Block;
 
-use super::{biome::{BiomeConfig, BiomeLayer}, perlin::{PerlinNoiseConfig, MAX_LEVEL_NOISE}};
+use super::{
+    biome::{BiomeConfig, BiomeLayer},
+    perlin::{PerlinNoiseConfig, MAX_LEVEL_NOISE},
+};
 
 /// Number of biomes
 pub const NUM_BIOMES: u64 = 4;
@@ -35,13 +38,23 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             },
         ],
         layers: [
-            Some(BiomeLayer {start_y_from_top:  0, block: Block::GRASS}),
-            Some(BiomeLayer {start_y_from_top: 1, block: Block::DIRT}),
-            None, None, None, None, None, None
+            Some(BiomeLayer {
+                start_y_from_top: 0,
+                block: Block::GRASS,
+            }),
+            Some(BiomeLayer {
+                start_y_from_top: 1,
+                block: Block::DIRT,
+            }),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
         ],
-        num_layer: 2
+        num_layer: 2,
     },
-
     // Plain biome
     BiomeConfig {
         name: "Forest",
@@ -70,13 +83,23 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             },
         ],
         layers: [
-            Some(BiomeLayer {start_y_from_top:  0, block: Block::GRASS}),
-            Some(BiomeLayer {start_y_from_top: 1, block: Block::DIRT}),
-            None, None, None, None, None, None
+            Some(BiomeLayer {
+                start_y_from_top: 0,
+                block: Block::GRASS,
+            }),
+            Some(BiomeLayer {
+                start_y_from_top: 1,
+                block: Block::DIRT,
+            }),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
         ],
-        num_layer: 2
+        num_layer: 2,
     },
-
     // Plain biome
     BiomeConfig {
         name: "Mountain",
@@ -105,14 +128,26 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             },
         ],
         layers: [
-            Some(BiomeLayer {start_y_from_top:  0, block: Block::GRASS}),
-            Some(BiomeLayer {start_y_from_top:  1, block: Block::DIRT}),
-            Some(BiomeLayer {start_y_from_top:  2, block: Block::STONE}),
-            None, None, None, None, None, 
+            Some(BiomeLayer {
+                start_y_from_top: 0,
+                block: Block::GRASS,
+            }),
+            Some(BiomeLayer {
+                start_y_from_top: 1,
+                block: Block::DIRT,
+            }),
+            Some(BiomeLayer {
+                start_y_from_top: 2,
+                block: Block::STONE,
+            }),
+            None,
+            None,
+            None,
+            None,
+            None,
         ],
-        num_layer: 3
+        num_layer: 3,
     },
-
     // Plain biome
     BiomeConfig {
         name: "Ocean",
@@ -141,10 +176,19 @@ pub const BIOMES: [BiomeConfig; NUM_BIOMES as usize] = [
             },
         ],
         layers: [
-            Some(BiomeLayer {start_y_from_top:  0, block: Block::SAND}),
-            None, None, None, None, None, None, None
+            Some(BiomeLayer {
+                start_y_from_top: 0,
+                block: Block::SAND,
+            }),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
         ],
-        num_layer: 1
+        num_layer: 1,
     },
 ];
 

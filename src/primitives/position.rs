@@ -1,7 +1,7 @@
-use std::ops::{Add, AddAssign};
-use std::str::from_utf8;
 use crate::chunk::CHUNK_FLOOR;
 use crate::primitives::vector::Vector3;
+use std::ops::{Add, AddAssign};
+use std::str::from_utf8;
 
 /// Position of an entity in a 3D world
 #[derive(Debug, PartialEq, Clone)]
@@ -16,35 +16,43 @@ impl Position {
         Self {
             pos: Vector3::empty(),
             yaw: 0.,
-            pitch: 0.
+            pitch: 0.,
         }
     }
-    
+
     pub fn spawn_position() -> Self {
         Self {
             pos: Vector3::new(0., CHUNK_FLOOR as f32 + 3., 0.),
             yaw: 0.,
-            pitch: 0.
+            pitch: 0.,
         }
     }
-    
+
     pub fn new(pos: Vector3, yaw: f32, pitch: f32) -> Self {
         Self { pos, yaw, pitch }
     }
 
     pub fn new_vec(x: f32, y: f32, z: f32) -> Self {
-        Self { pos: Vector3::new(x, y, z), yaw: 0., pitch: 0. }
+        Self {
+            pos: Vector3::new(x, y, z),
+            yaw: 0.,
+            pitch: 0.,
+        }
     }
 
     pub fn from_pos(pos: Vector3) -> Self {
-        Self { pos, yaw: 0., pitch: 0. }
+        Self {
+            pos,
+            yaw: 0.,
+            pitch: 0.,
+        }
     }
-    
+
     /// Send the player in the air
     pub fn raise(&mut self) {
         self.pos[1] += 5. * CHUNK_FLOOR as f32;
     }
-    
+
     pub fn small_raise(&mut self) {
         self.pos[1] += CHUNK_FLOOR as f32;
     }
@@ -58,7 +66,15 @@ impl Position {
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
-        format!("{},{},{},{},{}", self.pos.x(), self.pos.y(), self.pos.z(), self.yaw, self.pitch).into_bytes()
+        format!(
+            "{},{},{},{},{}",
+            self.pos.x(),
+            self.pos.y(),
+            self.pos.z(),
+            self.yaw,
+            self.pitch
+        )
+        .into_bytes()
     }
 
     pub fn from_bytes(bytes_to_parse: &[u8]) -> Self {
@@ -69,7 +85,11 @@ impl Position {
         let z = iter.next().unwrap().parse::<f32>().unwrap();
         let yaw = iter.next().unwrap().parse::<f32>().unwrap();
         let pitch = iter.next().unwrap().parse::<f32>().unwrap();
-        Self { pos: Vector3::new(x, y, z), yaw, pitch }
+        Self {
+            pos: Vector3::new(x, y, z),
+            yaw,
+            pitch,
+        }
     }
 
     pub fn yaw(&self) -> f32 {
@@ -95,8 +115,8 @@ impl Position {
     pub fn z(&self) -> f32 {
         self.pos.z()
     }
-    
-    pub fn distance_to(&self, to: &Vector3) -> f32{
+
+    pub fn distance_to(&self, to: &Vector3) -> f32 {
         self.pos.distance_to(to)
     }
 
@@ -130,7 +150,7 @@ impl Add<Vector3> for &Position {
         Position {
             pos: self.pos + rhs,
             yaw: self.yaw,
-            pitch: self.pitch
+            pitch: self.pitch,
         }
     }
 }

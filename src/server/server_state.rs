@@ -1,5 +1,5 @@
-use std::collections::{HashMap, HashSet};
 use crate::primitives::position::Position;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone)]
 pub struct PlayerState {
@@ -24,7 +24,13 @@ impl ServerState {
     pub fn login(&mut self, name: String) -> PlayerState {
         self.connected.insert(name.clone());
         if !self.players.contains_key(&name) {
-            self.players.insert(name.clone(), PlayerState { id: self.players.len(), pos: Position::spawn_position() });
+            self.players.insert(
+                name.clone(),
+                PlayerState {
+                    id: self.players.len(),
+                    pos: Position::spawn_position(),
+                },
+            );
         }
         self.players.get_mut(&name).map(|player| player.pos.raise());
         self.players.get(&name).unwrap().clone()
@@ -35,8 +41,9 @@ impl ServerState {
         self.connected.remove(name);
     }
 
-    pub fn connected_players(&self) -> impl Iterator<Item=&PlayerState> {
-        self.players.iter()
+    pub fn connected_players(&self) -> impl Iterator<Item = &PlayerState> {
+        self.players
+            .iter()
             .filter(|(k, v)| self.connected.contains(*k))
             .map(|(k, v)| v)
     }
@@ -46,9 +53,12 @@ impl ServerState {
     }
 
     pub fn set_player_pos(&mut self, id: usize, pos: Position) {
-        if let Some(player_state) = self.players.iter_mut()
+        if let Some(player_state) = self
+            .players
+            .iter_mut()
             .find(|(k, v)| v.id == id)
-            .map(|(k, v)| v) {
+            .map(|(k, v)| v)
+        {
             player_state.pos = pos;
         }
     }

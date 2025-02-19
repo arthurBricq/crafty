@@ -5,9 +5,9 @@ use crate::primitives::vector::Vector3;
 /// Informations about a collision
 pub struct CollisionData {
     /// Time till the collision, in s
-    pub time: f32, 
+    pub time: f32,
     /// Normal of the colliding surface, at the point of collision
-    pub normal: Vector3, 
+    pub normal: Vector3,
 }
 
 /// Trait to define static (i.e. that do not move) objects that the entities can
@@ -23,11 +23,11 @@ pub trait Collidable {
     ///
     /// Note that the implementor of this trait can assume that `aabb` is not
     /// colliding already, and can panic if it does.
-    fn collision_time(&self,
-                      position: &Position,
-                      aabb: &AABB,
-                      target: &AABB,
-                      velocity: &Vector3
+    fn collision_time(
+        &self,
+        position: &Position,
+        aabb: &AABB,
+        target: &AABB,
+        velocity: &Vector3,
     ) -> Option<CollisionData>;
-
 }

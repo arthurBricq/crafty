@@ -1,4 +1,4 @@
-use crate::graphics::color::Color::{LightGray, Red};
+use crate::graphics::color::Color::Red;
 
 use crate::graphics::font::GLChar;
 use crate::graphics::rectangle::RectInstance;
@@ -17,9 +17,9 @@ use super::menu_debug::DebugMenuData;
 use super::inventory_menu::InventoryMenu;
 use crate::graphics::update_status::UpdateStatus;
 
+use crate::graphics::health_bar::HealthBar;
 use crate::graphics::inventory_event::InventoryEvent;
 use crate::graphics::items_bar::ItemBar;
-use crate::graphics::health_bar::HealthBar;
 use crate::player_items::{ItemStack, PlayerItems};
 
 /// Has the responsability to provide all the HUD to be drawn by OpenGL.
@@ -28,7 +28,7 @@ pub struct HUDRenderer {
     aspect_ratio: f32,
     /// List of the tiles to be presented on the screen
     rects: Vec<RectInstance>,
-    
+
     /// The rects that are always present on the screen
     base: Vec<RectInstance>,
 
@@ -46,12 +46,11 @@ pub struct HUDRenderer {
 
 impl HUDRenderer {
     pub fn new() -> Self {
+        let help_menu_data = HelpMenuData::new(menu_help::HELP_MENU_DATA.to_vec());
 
-        let help_menu_data= HelpMenuData::new(menu_help::HELP_MENU_DATA.to_vec());
-        
-        let debug_menu_data= DebugMenuData::new(menu_debug::DEBUG_MENU_DATA.to_vec());
+        let debug_menu_data = DebugMenuData::new(menu_debug::DEBUG_MENU_DATA.to_vec());
 
-        let mut hud= Self { 
+        let mut hud = Self {
             aspect_ratio: 1.0,
             rects: Vec::new(),
             base: Vec::new(),
@@ -77,28 +76,54 @@ impl HUDRenderer {
         self.base.push(RectInstance::new(0., 0., w / 1.5, s, Red));
         self.base.push(RectInstance::new(0., 0., s / 2.5, w, Red));
     }
-    
+
     pub fn add_crafty_label(&mut self) {
         let h = 0.4;
         let s = 0.05;
         let x0 = -0.3;
-        self.base.push(RectInstance::new_with_char(x0, h, s, GLChar::C));
-        self.base.push(RectInstance::new_with_char(x0 + 1. * s * 3., h, s, GLChar::R));
-        self.base.push(RectInstance::new_with_char(x0 + 2. * s * 3., h, s, GLChar::A));
-        self.base.push(RectInstance::new_with_char(x0 + 3. * s * 3., h, s, GLChar::F));
-        self.base.push(RectInstance::new_with_char(x0 + 4. * s * 3., h, s, GLChar::T));
-        self.base.push(RectInstance::new_with_char(x0 + 5. * s * 3., h, s, GLChar::Y));
+        self.base
+            .push(RectInstance::new_with_char(x0, h, s, GLChar::C));
+        self.base.push(RectInstance::new_with_char(
+            x0 + 1. * s * 3.,
+            h,
+            s,
+            GLChar::R,
+        ));
+        self.base.push(RectInstance::new_with_char(
+            x0 + 2. * s * 3.,
+            h,
+            s,
+            GLChar::A,
+        ));
+        self.base.push(RectInstance::new_with_char(
+            x0 + 3. * s * 3.,
+            h,
+            s,
+            GLChar::F,
+        ));
+        self.base.push(RectInstance::new_with_char(
+            x0 + 4. * s * 3.,
+            h,
+            s,
+            GLChar::T,
+        ));
+        self.base.push(RectInstance::new_with_char(
+            x0 + 5. * s * 3.,
+            h,
+            s,
+            GLChar::Y,
+        ));
     }
 
     /// Add/Remove the help menu
     pub fn toggle_help_menu(&mut self) {
-        self.show_help= !self.show_help;
+        self.show_help = !self.show_help;
         self.update();
     }
 
     /// Add/Remove the debug menu
     pub fn toggle_debug_menu(&mut self) {
-        self.show_debug= !self.show_debug;
+        self.show_debug = !self.show_debug;
         self.update();
     }
 
@@ -107,13 +132,13 @@ impl HUDRenderer {
         // We first clone and append the Vec in each menu
         // and then do it again here, maybe we can only do it here ?
         // rects() would return a Vec of ref to append
-        self.rects=self.base.clone();
+        self.rects = self.base.clone();
 
         if !self.is_inventory_open() {
             self.rects.append(&mut self.items_bar.rects());
             self.rects.append(&mut self.health_bar.rects());
         }
-        
+
         if self.show_help {
             self.rects.append(&mut self.help_menu.rects().clone());
         }
@@ -121,7 +146,8 @@ impl HUDRenderer {
             self.rects.append(&mut self.debug_menu.rects().clone());
         }
         if self.is_inventory_open() {
-            self.rects.append(&mut self.inventory_menu.as_mut().unwrap().rects().clone());
+            self.rects
+                .append(&mut self.inventory_menu.as_mut().unwrap().rects().clone());
         }
     }
 
@@ -133,7 +159,7 @@ impl HUDRenderer {
     pub fn rects(&self) -> &Vec<RectInstance> {
         &self.rects
     }
-    
+
     pub fn show_debug(&self) -> bool {
         self.show_debug
     }
@@ -145,8 +171,10 @@ impl HUDRenderer {
         // Cascade down the aspect ratio to the HUD parts that require it
         self.items_bar.set_aspect_ratio(self.aspect_ratio);
         self.health_bar.set_aspect_ratio(self.aspect_ratio);
-        self.inventory_menu.as_mut().map(|mut inv| { inv.set_aspect_ratio(self.aspect_ratio); });
-        
+        self.inventory_menu.as_mut().map(|inv| {
+            inv.set_aspect_ratio(self.aspect_ratio);
+        });
+
         // Update the collection of rectangles
         self.update();
     }
@@ -176,19 +204,21 @@ impl HUDRenderer {
         if self.inventory_menu.as_ref().unwrap().can_be_closed_safely() {
             let items = self.inventory_menu.take().unwrap().take_items();
             self.update();
-            
+
             Some(items)
         } else {
             None
-        }        
+        }
     }
 
     /// If the inventory is open, forward it the event
     pub fn maybe_forward_inventory_event(&mut self, event: InventoryEvent) {
-        let status = self.inventory_menu.as_mut().map(|inv| {
-            inv.handle_event(event)
-        }).unwrap_or(UpdateStatus::NoUpdate);
-        
+        let status = self
+            .inventory_menu
+            .as_mut()
+            .map(|inv| inv.handle_event(event))
+            .unwrap_or(UpdateStatus::NoUpdate);
+
         if let UpdateStatus::Update = status {
             self.update();
         }

@@ -33,7 +33,6 @@ impl MultiscalePerlinNoise {
     /// Create a new MultiscalePerlinNoise, requires the level of scales and amplitudes associated.
     /// These values will change the world aspect.
     pub fn new(seed: u64, perlin_conf: [PerlinNoiseConfig; MAX_LEVEL_NOISE]) -> Self {
-        
         Self {
             perlin_noises: perlin_conf
                 .into_iter()
@@ -136,7 +135,7 @@ fn random_gradient(coord: &[i64; 2], seed: u64) -> [f32; 2] {
     // Hash the chunk coordinates
     coord.hash(&mut hasher);
     // Combine the hashes into a final value
-    let specific_seed_hash = hasher.finish();  
+    let specific_seed_hash = hasher.finish();
 
     let mut rng: SmallRng = SmallRng::seed_from_u64(specific_seed_hash);
 
@@ -187,7 +186,7 @@ mod tests {
     #[test]
     fn test_fractional_space() {
         {
-            let mut noise = PerlinNoise::new(
+            let noise = PerlinNoise::new(
                 42,
                 PerlinNoiseConfig {
                     scale: 1.,
@@ -197,7 +196,7 @@ mod tests {
             assert_eq!(noise.coord_to_fractional_space([1.5, 2.5]), [1.5, 2.5])
         }
         {
-            let mut noise = PerlinNoise::new(
+            let noise = PerlinNoise::new(
                 42,
                 PerlinNoiseConfig {
                     scale: 8.,
@@ -214,7 +213,7 @@ mod tests {
     #[test]
     fn test_closest_corner() {
         {
-            let mut noise = PerlinNoise::new(
+            let noise = PerlinNoise::new(
                 42,
                 PerlinNoiseConfig {
                     scale: 1.,
@@ -224,7 +223,7 @@ mod tests {
             assert_eq!(noise.closest_corner([1.5, 2.1]), [1, 2])
         }
         {
-            let mut noise = PerlinNoise::new(
+            let noise = PerlinNoise::new(
                 42,
                 PerlinNoiseConfig {
                     scale: 4.,

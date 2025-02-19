@@ -2,11 +2,48 @@ const N_ROWS: f32 = 8.;
 const N_COLS: f32 = 16.;
 
 /// A character that can be rendered with our OpenGL pipeline
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub enum GLChar {
-    A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
-    DOT,DOUBLEPOINT,COMMA,MINUS,
-    ZERO,ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT,NINE
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
+    DOT,
+    DOUBLEPOINT,
+    COMMA,
+    MINUS,
+    ZERO,
+    ONE,
+    TWO,
+    THREE,
+    FOUR,
+    FIVE,
+    SIX,
+    SEVEN,
+    EIGHT,
+    NINE,
 }
 
 impl GLChar {
@@ -52,12 +89,12 @@ impl GLChar {
             '7' => GLChar::SEVEN,
             '8' => GLChar::EIGHT,
             '9' => GLChar::NINE,
-            _ => panic!("Character is not supported: {c}")
+            _ => panic!("Character is not supported: {c}"),
         }
     }
 
     /// Returns the index of the bottom-left corner in the font atlas
-    pub fn get_index(&self) -> [f32;2] {
+    pub fn get_index(&self) -> [f32; 2] {
         match self {
             GLChar::A => [1. / N_COLS, 3. / N_ROWS],
             GLChar::B => [2. / N_COLS, 3. / N_ROWS],
@@ -103,7 +140,7 @@ impl GLChar {
     }
 
     /// Returns the dimensions of each font in the font atlas
-    pub fn get_offset() -> [f32;2] {
+    pub fn get_offset() -> [f32; 2] {
         [1. / N_COLS * 0.7, 1. / N_ROWS]
     }
 }

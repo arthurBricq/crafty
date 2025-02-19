@@ -24,18 +24,16 @@ pub const GRAVITY_ACCELERATION_VECTOR: Vector3 = Vector3::new(0., -2. * 9.81, 0.
 
 pub const PLAYER_MARGIN: f32 = 1e-5;
 
-
 pub const PLAYER_HEIGHT: f32 = 1.8;
 pub const DIAMETER: f32 = 0.5;
 pub const FOREHEAD: f32 = 0.1;
-
 
 /// Represents the physical state of a player, on the client side.
 /// This means:
 /// - position
 /// - orientation
 /// - speed
-/// 
+///
 /// It handles
 /// - Collision detection
 /// - Cube selection
@@ -102,10 +100,10 @@ impl Player {
         self.compute_selected_cube(world);
     }
 
-    pub fn toggle_state(&mut self, element: MotionState, pressed: bool ) {
+    pub fn toggle_state(&mut self, element: MotionState, pressed: bool) {
         self.input_status.set_input(element, pressed);
     }
-    
+
     /// Sets the position of the player to the given one, without collision checks
     pub fn set_position(&mut self, position: Position) {
         self.position = position
@@ -123,7 +121,7 @@ impl Player {
         self.input_status.reset_click_time()
     }
 
-    pub fn add_click_time(&mut self, click_time: f32 ) {
+    pub fn add_click_time(&mut self, click_time: f32) {
         self.input_status.add_click_time(click_time)
     }
 
@@ -192,7 +190,7 @@ impl Player {
 
         return cube_aabb.collides(player_aabb);
     }
-    
+
     pub fn debug(&mut self) {
         println!("* Camera - position   : {:?}", self.position);
         println!("*        - orientation: {:?}", self.direction());
@@ -230,22 +228,24 @@ impl Player {
         // 1. loop through all the visible cubes near the player
         // 2. compute the intersection between the player's ray and the cube
         // 3. keep the intersection with the shortest distance
-            
+
         let mut current_best: Option<(f32, Cube)> = None;
-        for cube in world.cubes_near_player(position)
+        for cube in world
+            .cubes_near_player(position)
             .filter_map(|c| *c)
             .filter(|c| c.is_visible())
-            .filter(|c| c.position().distance_to(&position) < 6.) {
+            .filter(|c| c.position().distance_to(&position) < 6.)
+        {
             if let Some(result) = cube.intersection_with(position, direction) {
                 if current_best.is_none() || result < current_best.unwrap().0 {
                     current_best = Some((result, cube.clone()));
                 }
             }
         }
-        
+
         self.touched_cube = current_best.map(|(_, cube)| cube)
     }
-    
+
     /// Integrate the velocity to move the camera, with collision. Returns the
     /// dt (in seconds), which can be smaller than `dt` if there is a collision.
     fn move_with_collision(&mut self, dt: f32, world: &World) -> f32 {
@@ -256,7 +256,7 @@ impl Player {
                 &self.position,
                 &humanoid_aabb(&self.position),
                 &target,
-                &self.velocity
+                &self.velocity,
             )
             .unwrap_or(CollisionData {
                 time: f32::MAX,
@@ -279,7 +279,7 @@ impl Player {
             }
             // we want to put a margin, to avoid collision even with floats rounding
             self.position += self.velocity * (collision.time - dtmargin);
-            
+
             // remove component of velocity along the normal
             let vnormal = collision.normal * collision.normal.dot(&self.velocity);
             self.velocity = self.velocity - vnormal;
@@ -296,7 +296,6 @@ impl Player {
             self.position.yaw().sin() * self.position.pitch().cos(),
         )
     }
-
 
     /// Returns true if the player is asking to break a cube
     pub fn is_time_to_break_over(&mut self, dt: f32) -> bool {

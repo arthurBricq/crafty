@@ -23,7 +23,6 @@ pub fn lcm(a: u32, b: u32) -> u32 {
 mod tests {
     use crate::primitives::math::{gcd, lcm};
 
- 
     #[test]
     fn test_lcm() {
         assert_eq!(lcm(3, 2), 6);
@@ -43,5 +42,4 @@ mod tests {
         assert_eq!(gcd(1, 9), 1);
         assert_eq!(gcd(10, 15), 5);
     }
-
 }

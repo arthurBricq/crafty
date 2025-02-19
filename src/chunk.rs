@@ -1,12 +1,12 @@
+use crate::aabb::AABB;
 use crate::block_kind::Block;
 use crate::block_kind::Block::{DIRT, GRASS};
 use crate::collidable::{Collidable, CollisionData};
 use crate::cube::Cube;
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use strum::IntoEnumIterator;
-use crate::aabb::AABB;
-use crate::primitives::position::Position;
 
 type ChunkData = [[[Option<Cube>; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
 pub type CubeIndex = (usize, usize, usize);
@@ -45,8 +45,9 @@ impl Chunk {
     }
 
     /// Returns an iterator over all the positions of the chunk
-    pub fn cubes_iter(&self) -> impl Iterator<Item=&Option<Cube>> {
-        self.cubes.iter()
+    pub fn cubes_iter(&self) -> impl Iterator<Item = &Option<Cube>> {
+        self.cubes
+            .iter()
             .flat_map(|matrix_2d| matrix_2d.iter())
             .flat_map(|row| row.iter())
     }
@@ -62,9 +63,33 @@ impl Chunk {
         let mut cubes = [[[None; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_HEIGHT];
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
-                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 2., corner[1] + j as f32], DIRT, 0));
-                cubes[(CHUNK_FLOOR as i32 - 1 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32 - 1., corner[1] + j as f32], DIRT, 0));
-                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new([corner[0] + i as f32, (CHUNK_FLOOR as i32 + z_offset) as f32, corner[1] + j as f32], GRASS, 0));
+                cubes[(CHUNK_FLOOR as i32 - 2 + z_offset) as usize][i][j] = Some(Cube::new(
+                    [
+                        corner[0] + i as f32,
+                        (CHUNK_FLOOR as i32 + z_offset) as f32 - 2.,
+                        corner[1] + j as f32,
+                    ],
+                    DIRT,
+                    0,
+                ));
+                cubes[(CHUNK_FLOOR as i32 - 1 + z_offset) as usize][i][j] = Some(Cube::new(
+                    [
+                        corner[0] + i as f32,
+                        (CHUNK_FLOOR as i32 + z_offset) as f32 - 1.,
+                        corner[1] + j as f32,
+                    ],
+                    DIRT,
+                    0,
+                ));
+                cubes[(CHUNK_FLOOR as i32 + z_offset) as usize][i][j] = Some(Cube::new(
+                    [
+                        corner[0] + i as f32,
+                        (CHUNK_FLOOR as i32 + z_offset) as f32,
+                        corner[1] + j as f32,
+                    ],
+                    GRASS,
+                    0,
+                ));
             }
         }
         Self { cubes, corner }
@@ -74,8 +99,15 @@ impl Chunk {
     pub fn fill_layer(&mut self, h: usize, kind: Block) {
         for i in 0..CHUNK_SIZE {
             for j in 0..CHUNK_SIZE {
-                self.cubes[h][i][j] = Some(
-                    Cube::new([self.corner[0] + i as f32, h as f32, self.corner[1] + j as f32], kind, 0));
+                self.cubes[h][i][j] = Some(Cube::new(
+                    [
+                        self.corner[0] + i as f32,
+                        h as f32,
+                        self.corner[1] + j as f32,
+                    ],
+                    kind,
+                    0,
+                ));
             }
         }
     }
@@ -103,10 +135,12 @@ impl Chunk {
     pub fn is_in(&self, pos: &Vector3) -> bool {
         // Note that in the received position, the 'y' (from the plane) position is actually the third value
         // of the vector...
-        pos[0] >= self.corner[0] && pos[0] < (self.corner[0] + CHUNK_SIZE as f32) &&
-            pos[2] >= self.corner[1] && pos[2] < (self.corner[1] + CHUNK_SIZE as f32)
+        pos[0] >= self.corner[0]
+            && pos[0] < (self.corner[0] + CHUNK_SIZE as f32)
+            && pos[2] >= self.corner[1]
+            && pos[2] < (self.corner[1] + CHUNK_SIZE as f32)
     }
-    
+
     fn empty_or_transparent(cube: Option<Cube>) -> bool {
         cube.is_none() || cube.unwrap().is_transparent()
     }
@@ -139,12 +173,24 @@ impl Chunk {
                         // We set the cube as not visible if all the 6 neighbors are not full
                         // If either one is none, the cube must be visible.
                         let mut count = 0;
-                        if !Self::empty_or_transparent(self.cubes[k - 1][i][j]) { count += 1 }
-                        if !Self::empty_or_transparent(self.cubes[k + 1][i][j]) { count += 1 }
-                        if !Self::empty_or_transparent(self.cubes[k][i - 1][j]) { count += 1 }
-                        if !Self::empty_or_transparent(self.cubes[k][i + 1][j]) { count += 1 }
-                        if !Self::empty_or_transparent(self.cubes[k][i][j - 1]) { count += 1 }
-                        if !Self::empty_or_transparent(self.cubes[k][i][j + 1]) { count += 1 }
+                        if !Self::empty_or_transparent(self.cubes[k - 1][i][j]) {
+                            count += 1
+                        }
+                        if !Self::empty_or_transparent(self.cubes[k + 1][i][j]) {
+                            count += 1
+                        }
+                        if !Self::empty_or_transparent(self.cubes[k][i - 1][j]) {
+                            count += 1
+                        }
+                        if !Self::empty_or_transparent(self.cubes[k][i + 1][j]) {
+                            count += 1
+                        }
+                        if !Self::empty_or_transparent(self.cubes[k][i][j - 1]) {
+                            count += 1
+                        }
+                        if !Self::empty_or_transparent(self.cubes[k][i][j + 1]) {
+                            count += 1
+                        }
                         self.cubes[k][i][j].as_mut().unwrap().set_n_neighbors(count);
                     }
                 }
@@ -281,13 +327,13 @@ impl Collidable for Chunk {
         false
     }
 
-    fn collision_time(&self,
-                      position: &Position,
-                      aabb: &AABB,
-                      target: &AABB,
-                      velocity: &Vector3
-    )
-                          -> Option<CollisionData> {
+    fn collision_time(
+        &self,
+        position: &Position,
+        aabb: &AABB,
+        target: &AABB,
+        velocity: &Vector3,
+    ) -> Option<CollisionData> {
         // TODO do it the dumb way for now, i.e. loop on all the cubes
         let mut acc_time = f32::MAX;
         let mut acc_normal = Vector3::empty();
@@ -298,8 +344,9 @@ impl Collidable for Chunk {
                     if let Some(cube) = self.cubes[k][i][j] {
                         let cube_pos = cube.position().distance_to(&position.pos());
                         if cube_pos < 5.0 {
-                            if let Some(CollisionData { time, normal })
-                                = cube.collision_time(position, aabb, target, velocity) {
+                            if let Some(CollisionData { time, normal }) =
+                                cube.collision_time(position, aabb, target, velocity)
+                            {
                                 if time < acc_time {
                                     acc_time = time;
                                     acc_normal = normal;
@@ -314,7 +361,10 @@ impl Collidable for Chunk {
         if acc_time > 1e10 {
             None
         } else {
-            Some(CollisionData{ time: acc_time, normal: acc_normal })
+            Some(CollisionData {
+                time: acc_time,
+                normal: acc_normal,
+            })
         }
     }
 }
@@ -351,7 +401,9 @@ mod tests {
         for k in 0..CHUNK_HEIGHT {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
-                    assert!(chunk.is_position_free_or_transparent(&Vector3::new(i as f32, k as f32, j as f32)));
+                    assert!(chunk.is_position_free_or_transparent(&Vector3::new(
+                        i as f32, k as f32, j as f32
+                    )));
                 }
             }
         }
@@ -364,9 +416,13 @@ mod tests {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if k != 10 {
-                        assert!(chunk.is_position_free_or_transparent(&Vector3::new(i as f32, k as f32, j as f32)));
+                        assert!(chunk.is_position_free_or_transparent(&Vector3::new(
+                            i as f32, k as f32, j as f32
+                        )));
                     } else {
-                        assert!(!chunk.is_position_free_or_transparent(&Vector3::new(i as f32, k as f32, j as f32)));
+                        assert!(!chunk.is_position_free_or_transparent(&Vector3::new(
+                            i as f32, k as f32, j as f32
+                        )));
                     }
                 }
             }
@@ -392,7 +448,6 @@ mod tests {
         assert!(chunk.is_position_free_or_transparent(&Vector3::new(4.0, 1.5, 4.0)));
     }
 
-
     #[test]
     fn test_visible_cube_in_one_chunnk() {
         let mut chunk = Chunk::new([0., 0.]);
@@ -408,7 +463,10 @@ mod tests {
         assert!(chunk.visible_cube_count() < 3 * CHUNK_SIZE * CHUNK_SIZE);
 
         // In this case, we know the actual number of cubes not visible.
-        assert_eq!(chunk.visible_cube_count(), 3 * CHUNK_SIZE * CHUNK_SIZE - (CHUNK_SIZE - 2) * (CHUNK_SIZE - 2));
+        assert_eq!(
+            chunk.visible_cube_count(),
+            3 * CHUNK_SIZE * CHUNK_SIZE - (CHUNK_SIZE - 2) * (CHUNK_SIZE - 2)
+        );
     }
 
     #[test]
@@ -418,12 +476,11 @@ mod tests {
         let reconstructed = Chunk::from_json(serialized.as_str()).unwrap();
         assert_eq!(chunk, reconstructed);
     }
-    
+
     #[test]
     fn test_cube_at_in_altitude() {
         let chunk = Chunk::new_for_demo([0., 0.], 5);
         let tmp = chunk.cube_at(&Vector3::new(3., 2. * CHUNK_HEIGHT as f32, 3.));
         assert!(tmp.is_none());
     }
-    
 }

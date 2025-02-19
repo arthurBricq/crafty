@@ -1,11 +1,11 @@
 use crate::attack::EntityAttack;
 use crate::collidable::{Collidable, CollisionData};
-use crate::server::server_state::PlayerState;
+use crate::entity::entity::EntityKind;
+use crate::player::{GRAVITY_ACCELERATION_VECTOR, JUMP_VELOCITY, PLAYER_MARGIN};
 use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
+use crate::server::server_state::PlayerState;
 use crate::world::World;
-use crate::entity::entity::EntityKind;
-use crate::player::{JUMP_VELOCITY, GRAVITY_ACCELERATION_VECTOR, PLAYER_MARGIN};
 
 use super::humanoid::humanoid_aabb;
 const MONSTER1_SPEED: f32 = 2.;
@@ -26,8 +26,14 @@ pub enum MonsterAction {
 pub trait TransitionState {
     /// Return the monster's action
     fn action(&self) -> MonsterAction;
-    /// Change the internal state of the machine 
-    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: &Vec<PlayerState>);
+    /// Change the internal state of the machine
+    fn update(
+        &mut self,
+        dt: f32,
+        position: &Position,
+        world: &World,
+        player_list: &Vec<PlayerState>,
+    );
     fn new() -> Self;
 }
 
@@ -40,7 +46,7 @@ pub struct Monster<T> {
     in_air: bool,
     velocity: Vector3,
     /// If the monster is attacking, if so give the id of the victim
-    attack: Option<EntityAttack>
+    attack: Option<EntityAttack>,
 }
 
 impl<T> Monster<T>
@@ -62,7 +68,8 @@ where
     /// Update the state of the monster and do an action (move, attack)
     pub fn update(&mut self, world: &World, dt: f32, player_list: &Vec<PlayerState>) {
         // Update the internal state of transition
-        self.transition.update(dt, &self.position, world, player_list);
+        self.transition
+            .update(dt, &self.position, world, player_list);
 
         // Apply the action return by transition
         self.apply_action(self.transition.action(), dt, world);
@@ -83,19 +90,18 @@ where
             MonsterAction::Idle => {
                 self.velocity[0] = 0.;
                 self.velocity[2] = 0.;
-             }
-             MonsterAction::Attack(attacked) => {
+            }
+            MonsterAction::Attack(attacked) => {
                 self.attack = Some(EntityAttack::new(attacked as u8));
                 self.velocity[0] = 0.;
                 self.velocity[2] = 0.;
             }
-            _ => ()
+            _ => (),
         }
 
         if self.in_air {
             self.velocity += GRAVITY_ACCELERATION_VECTOR * dt;
         }
-
 
         loop {
             dt = dt - self.move_with_collision(dt, world);
@@ -135,7 +141,12 @@ where
         let target = humanoid_aabb(&(&self.position + self.velocity * dt));
 
         let collision = world
-            .collision_time(&self.position, &humanoid_aabb(&self.position), &target, &self.velocity)
+            .collision_time(
+                &self.position,
+                &humanoid_aabb(&self.position),
+                &target,
+                &self.velocity,
+            )
             .unwrap_or(CollisionData {
                 time: f32::MAX,
                 normal: Vector3::empty(),
@@ -152,7 +163,7 @@ where
             // The margin is between the player and the block we colide with
             // need the projection of velocity onto the normal
             let mut dtmargin: f32 = 0.0;
-            if (self.velocity.norm() >= 1e-10) {
+            if self.velocity.norm() >= 1e-10 {
                 dtmargin = PLAYER_MARGIN / collision.normal.dot(&self.velocity).abs();
             }
             // we want to put a margin, to avoid collision even with floats rounding

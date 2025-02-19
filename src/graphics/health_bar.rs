@@ -1,7 +1,5 @@
-use crate::graphics::color::Color::{LightGray, LightYellow, Red};
+use crate::graphics::color::Color::Red;
 use crate::graphics::rectangle::RectInstance;
-use crate::graphics::string_rect::StringRect;
-use crate::player_items::ItemStack;
 
 pub struct HealthBar {
     health: u8,
@@ -14,14 +12,14 @@ impl HealthBar {
         let mut menu = Self {
             health,
             rects: Vec::new(),
-            aspect_ratio
+            aspect_ratio,
         };
 
         menu.update();
 
         menu
     }
-    
+
     pub fn set_aspect_ratio(&mut self, ratio: f32) {
         self.aspect_ratio = ratio;
         self.update();
@@ -47,10 +45,13 @@ impl HealthBar {
 
         // Add the health points
         for n in 0..self.health {
-            let mut hp = RectInstance::square_from_corner(
+            let hp = RectInstance::square_from_corner(
                 X0 + n as f32 * (HP_SIDE + INNER_MARGIN),
                 Y0,
-                HP_SIDE, self.aspect_ratio, Red);
+                HP_SIDE,
+                self.aspect_ratio,
+                Red,
+            );
             self.rects.push(hp);
         }
     }

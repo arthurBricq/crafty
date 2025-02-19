@@ -23,15 +23,17 @@ impl MonsterManager {
             world,
             monsters: Vec::new(),
             buffer_update: Vec::new(),
-            attack_buffer: Vec::new()
+            attack_buffer: Vec::new(),
         }
     }
 
     pub fn spawn_new_monster(&mut self, pos: Position, kind: EntityKind) -> usize {
         let id = self.generate_id();
-        self.monsters.push(Monster::new(id, kind.clone(), pos.clone()));
+        self.monsters
+            .push(Monster::new(id, kind.clone(), pos.clone()));
         // Inform the player that a new entity has spawn
-        self.buffer_update.push(ServerUpdate::RegisterEntity(id as u8, kind, pos));
+        self.buffer_update
+            .push(ServerUpdate::RegisterEntity(id as u8, kind, pos));
         id
     }
 
@@ -48,15 +50,17 @@ impl MonsterManager {
 
     /// Ask the monster to move
     pub fn step(&mut self, dt: f32, players: &Vec<PlayerState>) {
-        self.monsters.iter_mut()
-            .for_each(|monster| {
-                monster.update(&self.world.lock().unwrap(), dt, players);
-                // Inform the players that the monster has moved
-                self.buffer_update.push(ServerUpdate::UpdatePosition(monster.id() as u8, monster.position().clone()));
-                if let Some(att) = monster.attack() {
-                    self.attack_buffer.push(att.clone());
-                }
-            });
+        self.monsters.iter_mut().for_each(|monster| {
+            monster.update(&self.world.lock().unwrap(), dt, players);
+            // Inform the players that the monster has moved
+            self.buffer_update.push(ServerUpdate::UpdatePosition(
+                monster.id() as u8,
+                monster.position().clone(),
+            ));
+            if let Some(att) = monster.attack() {
+                self.attack_buffer.push(att.clone());
+            }
+        });
     }
 
     /// Return the updated position of the monsters
@@ -73,7 +77,11 @@ impl MonsterManager {
     pub fn get_monsters(&self) -> Vec<ServerUpdate> {
         let mut vec_update = Vec::new();
         for monster in &self.monsters {
-            vec_update.push(ServerUpdate::RegisterEntity(monster.id() as u8, monster.entity_type().clone(), monster.position().clone()));
+            vec_update.push(ServerUpdate::RegisterEntity(
+                monster.id() as u8,
+                monster.entity_type().clone(),
+                monster.position().clone(),
+            ));
         }
         vec_update
     }
@@ -87,12 +95,12 @@ impl MonsterManager {
 mod test {
     use std::sync::{Arc, Mutex};
 
+    use super::MonsterManager;
+    use crate::entity::entity::EntityKind;
+    use crate::network::server_update::ServerUpdate;
+    use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
     use crate::world::World;
-    use crate::network::server_update::ServerUpdate;
-    use super::MonsterManager;
-    use crate::primitives::position::Position;
-    use crate::entity::entity::EntityKind;
 
     #[test]
     fn test_add_monster() {
@@ -123,7 +131,8 @@ mod test {
         let mut monster_manager = MonsterManager::new(world);
         let pos = Position::new(Vector3::empty(), 0., 0.);
 
-        let id = monster_manager.spawn_new_monster(pos.clone(), crate::entity::entity::EntityKind::Monster1);
+        let id = monster_manager
+            .spawn_new_monster(pos.clone(), crate::entity::entity::EntityKind::Monster1);
 
         monster_manager.take_server_updates();
 
@@ -151,7 +160,7 @@ mod test {
                 assert_eq!(position0, *position1);
                 assert_eq!(entity_type0, *entity_pos1);
             }
-            _ => assert!(false)
+            _ => assert!(false),
         }
     }
 }

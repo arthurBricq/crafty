@@ -11,8 +11,6 @@ use crate::primitives::vector::Vector3;
 use crate::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, VertexBuffer};
-use serde::{Deserialize, Serialize};
-use std::ops::Index;
 use strum::IntoEnumIterator;
 
 pub struct World {
@@ -162,7 +160,7 @@ impl World {
 
         None
     }
-    
+
     /// Returns true if there is a cube at this position
     pub fn is_position_free_or_transparent(&self, pos: &Vector3) -> bool {
         for chunk in &self.chunks {
@@ -231,7 +229,6 @@ impl World {
             for pos in Cube::neighbors_positions(at) {
                 // Toggle this position
                 if let Some(cube_to_toggle) = self.cube_at_mut(pos) {
-
                     // This cube now has a new neighbor
                     cube_to_toggle.add_neighhor();
                     if !cube_to_toggle.is_visible() {
@@ -452,11 +449,31 @@ mod tests {
         world.chunks[0].print_all_cubes();
 
         // Assert some positions
-        assert!(!world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 1.5, 4.0)));
-        assert!(!world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 - 0.5, 4.0)));
-        assert!(!world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 0.5, 4.0)));
-        assert!(world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
-        assert!(world.is_position_free_or_transparent(&Vector3::new(-4.0, CHUNK_FLOOR as f32 + 1.5, 4.0)));
+        assert!(!world.is_position_free_or_transparent(&Vector3::new(
+            -4.0,
+            CHUNK_FLOOR as f32 - 1.5,
+            4.0
+        )));
+        assert!(!world.is_position_free_or_transparent(&Vector3::new(
+            -4.0,
+            CHUNK_FLOOR as f32 - 0.5,
+            4.0
+        )));
+        assert!(!world.is_position_free_or_transparent(&Vector3::new(
+            -4.0,
+            CHUNK_FLOOR as f32 + 0.5,
+            4.0
+        )));
+        assert!(world.is_position_free_or_transparent(&Vector3::new(
+            -4.0,
+            CHUNK_FLOOR as f32 + 1.5,
+            4.0
+        )));
+        assert!(world.is_position_free_or_transparent(&Vector3::new(
+            -4.0,
+            CHUNK_FLOOR as f32 + 1.5,
+            4.0
+        )));
     }
 
     #[test]
@@ -626,7 +643,10 @@ mod tests {
         chunk.fill_layer(0, GRASS);
         world.chunks.push(chunk);
 
-        let count = world.cubes_near_player(Vector3::empty()).filter(|c| c.is_some()).count();
+        let count = world
+            .cubes_near_player(Vector3::empty())
+            .filter(|c| c.is_some())
+            .count();
         assert_eq!(count, CHUNK_SIZE * CHUNK_SIZE)
     }
 
@@ -634,25 +654,16 @@ mod tests {
     fn benchmark_collision() {
         let world = World::from_file("benchmark_map.json").unwrap();
 
-
         let t0 = Instant::now();
         for i in 0..100 {
-            let pos = Position::new(Vector3::new(0., 100., 2.), 0., 0.); 
+            let pos = Position::new(Vector3::new(0., 100., 2.), 0., 0.);
             let from = humanoid_aabb(&pos);
             let velocity = Vector3::unit_x();
             let dt = 0.01;
             let target = humanoid_aabb(&(&pos + velocity * dt));
 
-            let collision = world.collision_time(
-                &pos, 
-                &from,
-                &target,
-                &velocity
-            );
-            
+            let collision = world.collision_time(&pos, &from, &target, &velocity);
         }
         println!("Elasped = {:?}", t0.elapsed());
-
     }
 }
-

@@ -12,7 +12,6 @@ pub const DEBUG_MENU_DATA: [DebugItem; 4] = [
     DebugItem::new("cube rendered:"),
 ];
 
-
 pub struct DebugData {
     fps: f32,
     pos: Position,
@@ -21,7 +20,11 @@ pub struct DebugData {
 
 impl DebugData {
     pub fn new(fps: f32, pos: Position, cube_rendered: usize) -> Self {
-        Self { fps, pos: pos.clone(), cube_rendered }
+        Self {
+            fps,
+            pos: pos.clone(),
+            cube_rendered,
+        }
     }
 
     pub fn fps(&self) -> f32 {
@@ -45,9 +48,7 @@ pub struct DebugItem {
 
 impl DebugItem {
     pub const fn new(element: &'static str) -> Self {
-        Self {
-            element
-        }
+        Self { element }
     }
 
     pub fn element(&self) -> &str {
@@ -61,9 +62,7 @@ pub struct DebugMenuData {
 
 impl DebugMenuData {
     pub fn new(items: Vec<DebugItem>) -> Self {
-        Self {
-            items
-        }
+        Self { items }
     }
 
     pub fn items(&self) -> &Vec<DebugItem> {
@@ -85,7 +84,12 @@ impl DebugMenu {
         let mut y = 0.8;
         let u = -0.95;
         let size = 0.015;
-        StringRect::write_string_centered(y + 8. * size, 1.8 * size, &String::from("debug menu"), &mut static_part);
+        StringRect::write_string_centered(
+            y + 8. * size,
+            1.8 * size,
+            &String::from("debug menu"),
+            &mut static_part,
+        );
 
         for item in debug_menu_data.items() {
             StringRect::write_string(u, y, size, &item.element().to_string(), &mut static_part);
@@ -104,21 +108,52 @@ impl DebugMenu {
     }
 
     /// Create the new text rectangle from the DebugData
-    pub fn set_items(&mut self, debug_data: DebugData)
-    {
+    pub fn set_items(&mut self, debug_data: DebugData) {
         self.rects = self.static_part.clone();
 
         let fps_string = &format!("{:5.1}", debug_data.fps());
-        StringRect::write_string(self.coord_to_update[0][0], self.coord_to_update[0][1], 0.015, fps_string, &mut self.rects);
+        StringRect::write_string(
+            self.coord_to_update[0][0],
+            self.coord_to_update[0][1],
+            0.015,
+            fps_string,
+            &mut self.rects,
+        );
 
-        let pos_string = &format!("{:7.3}:{:7.3}:{:7.3}", debug_data.pos().x(), debug_data.pos().y(), debug_data.pos().z());
-        StringRect::write_string(self.coord_to_update[1][0], self.coord_to_update[1][1], 0.015, pos_string, &mut self.rects);
+        let pos_string = &format!(
+            "{:7.3}:{:7.3}:{:7.3}",
+            debug_data.pos().x(),
+            debug_data.pos().y(),
+            debug_data.pos().z()
+        );
+        StringRect::write_string(
+            self.coord_to_update[1][0],
+            self.coord_to_update[1][1],
+            0.015,
+            pos_string,
+            &mut self.rects,
+        );
 
-        let rot_string = &format!("{:7.3}:{:7.3}", debug_data.pos().yaw() % (2. * PI), debug_data.pos.pitch());
-        StringRect::write_string(self.coord_to_update[2][0], self.coord_to_update[2][1], 0.015, rot_string, &mut self.rects);
+        let rot_string = &format!(
+            "{:7.3}:{:7.3}",
+            debug_data.pos().yaw() % (2. * PI),
+            debug_data.pos.pitch()
+        );
+        StringRect::write_string(
+            self.coord_to_update[2][0],
+            self.coord_to_update[2][1],
+            0.015,
+            rot_string,
+            &mut self.rects,
+        );
 
         let cube_string = &format!("{:7}", debug_data.cube_rendered());
-        StringRect::write_string(self.coord_to_update[3][0] + 0.3, self.coord_to_update[3][1], 0.015, cube_string, &mut self.rects);
+        StringRect::write_string(
+            self.coord_to_update[3][0] + 0.3,
+            self.coord_to_update[3][1],
+            0.015,
+            cube_string,
+            &mut self.rects,
+        );
     }
 }
-

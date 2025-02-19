@@ -17,21 +17,37 @@ impl Vector3 {
     pub const fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
     }
-    
+
     pub fn unit_x() -> Self {
-        Self { x: 1.0, y: 0.0, z: 0.0 }
+        Self {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
-    
+
     pub fn unit_y() -> Self {
-        Self { x: 0.0, y: 1.0, z: 0.0 }
+        Self {
+            x: 0.0,
+            y: 1.0,
+            z: 0.0,
+        }
     }
-    
+
     pub fn unit_z() -> Self {
-        Self { x: 0.0, y: 0.0, z: 1.0 }
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 1.0,
+        }
     }
-    
+
     pub fn newf(xyz: [f32; 3]) -> Self {
-        Self { x: xyz[0], y: xyz[1], z: xyz[2] }
+        Self {
+            x: xyz[0],
+            y: xyz[1],
+            z: xyz[2],
+        }
     }
 
     /// Create a face from integers
@@ -47,7 +63,7 @@ impl Vector3 {
         Self {
             x: x as f32,
             y: y as f32,
-            z: 0.
+            z: 0.,
         }
     }
 
@@ -89,7 +105,7 @@ impl Vector3 {
     pub fn equals(&self, pos: &Vector3) -> bool {
         self.x == pos[0] && self.y == pos[1] && self.z == pos[2]
     }
-    
+
     pub fn to_cube_coordinates(&self) -> Vector3 {
         Vector3::new(self.x.floor(), self.y.floor(), self.z.floor())
     }
@@ -139,7 +155,7 @@ impl Vector3 {
         Self {
             x: self.y * vec.z - self.z * vec.y,
             y: self.z * vec.x - self.x * vec.z,
-            z: self.x * vec.y - self.y * vec.x
+            z: self.x * vec.y - self.y * vec.x,
         }
     }
 
@@ -182,7 +198,7 @@ impl Vector3 {
     /// Rotation around the vertical z with angle radian
     pub fn rotation_z(&self, angle: f32) -> Self {
         Self {
-            x:  angle.cos() * self.x + angle.sin() * self.y,
+            x: angle.cos() * self.x + angle.sin() * self.y,
             y: -angle.sin() * self.x + angle.cos() * self.y,
             z: self.z,
         }
@@ -204,7 +220,7 @@ impl Vector3 {
         self.y = self.y.clamp(min, max);
         self.z = self.z.clamp(min, max);
     }
-    
+
     pub fn distance_to(&self, to: &Vector3) -> f32 {
         (self - to).norm()
     }

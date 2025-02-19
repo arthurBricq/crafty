@@ -1,13 +1,13 @@
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
-use strum::IntoEnumIterator;
 use crate::block_kind::Block;
 use crate::chunk::Chunk;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use strum::IntoEnumIterator;
 
 #[derive(Serialize, Deserialize)]
 pub struct SerializedWorld {
-    pub chunk_corners: Vec<[f32;2]>,
-    pub cubes_by_kind: HashMap<Block, Vec<[i32;4]>>
+    pub chunk_corners: Vec<[f32; 2]>,
+    pub cubes_by_kind: HashMap<Block, Vec<[i32; 4]>>,
 }
 
 /// Returns a container to be used to serialize chunks or world.
@@ -28,7 +28,7 @@ pub fn serialize_one_chunk(all_cubes: &mut HashMap<Block, Vec<[i32; 4]>>, chunk:
                 cube.position().x() as i32,
                 cube.position().y() as i32,
                 cube.position().z() as i32,
-                cube.n_neighbors() as i32
+                cube.n_neighbors() as i32,
             ]);
         }
     }

@@ -45,7 +45,7 @@ impl PlayerInputStatus {
                 self.left_click = pressed;
                 self.click_time = 0.;
             }
-            _ => ()
+            _ => (),
         }
     }
 
@@ -91,12 +91,10 @@ impl PlayerInputStatus {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use crate::input::PlayerInputStatus;
     use crate::input::MotionState;
-
+    use crate::input::PlayerInputStatus;
 
     #[test]
     fn test_set_input() {

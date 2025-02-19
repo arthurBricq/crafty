@@ -1,12 +1,14 @@
 use crate::actions::Action;
 use crate::chunk::Chunk;
 use crate::entity::entity::EntityKind;
-use crate::network::server_update::ServerUpdate::{Attack, LoadChunk, LoggedIn, RegisterEntity, SendAction, UpdatePosition, RemoveEntity};
+use crate::network::server_update::ServerUpdate::{
+    Attack, LoadChunk, LoggedIn, RegisterEntity, RemoveEntity, SendAction, UpdatePosition,
+};
 use crate::network::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
-use std::str::from_utf8;
 use crate::attack::EntityAttack;
 use crate::primitives::position::Position;
+use std::str::from_utf8;
 
 pub const RESPONSE_OK: u8 = 100;
 pub const RESPONSE_ERROR: u8 = 101;
@@ -27,7 +29,7 @@ pub enum ServerUpdate {
     /// Attack to suffer... :(
     Attack(EntityAttack),
     /// Remove an entity
-    RemoveEntity(u32)
+    RemoveEntity(u32),
 }
 
 impl ServerUpdate {
@@ -56,7 +58,7 @@ impl TcpSerialize for ServerUpdate {
         match self {
             LoadChunk(chunk) => chunk.to_json().into_bytes(),
             SendAction(action) => action.to_bytes(),
-            LoggedIn(id, pos) | UpdatePosition(id, pos)=> {
+            LoggedIn(id, pos) | UpdatePosition(id, pos) => {
                 let mut bytes = vec![*id];
                 bytes.extend_from_slice(&pos.to_bytes());
                 bytes
@@ -81,28 +83,35 @@ impl TcpDeserialize for ServerUpdate {
                 let chunk = Chunk::from_json(as_json);
                 match chunk {
                     Ok(chunk) => LoadChunk(chunk),
-                    Err(err) => panic!("Error while parsing a chunk: {err}")
+                    Err(err) => panic!("Error while parsing a chunk: {err}"),
                 }
             }
-            1 => {
-                LoggedIn(bytes_to_parse[0], Position::from_bytes(&bytes_to_parse[1..]))
-            }
+            1 => LoggedIn(
+                bytes_to_parse[0],
+                Position::from_bytes(&bytes_to_parse[1..]),
+            ),
             2 => {
                 let as_json = from_utf8(bytes_to_parse).unwrap();
                 let action = Action::from_str(as_json);
                 SendAction(action)
             }
-            3 => {
-                RegisterEntity(bytes_to_parse[0], EntityKind::from_u8(bytes_to_parse[1]), Position::from_bytes(&bytes_to_parse[2..]))
-            }
-            4 => {
-                UpdatePosition(bytes_to_parse[0], Position::from_bytes(&bytes_to_parse[1..]))
-            }
-            5 => {
-                Attack(EntityAttack::from_bytes(bytes_to_parse))
-            }
-            6 => RemoveEntity(u32::from_be_bytes([bytes_to_parse[0], bytes_to_parse[1], bytes_to_parse[2], bytes_to_parse[3]])),
-            _ => panic!("Cannot build server update from code {code}")
+            3 => RegisterEntity(
+                bytes_to_parse[0],
+                EntityKind::from_u8(bytes_to_parse[1]),
+                Position::from_bytes(&bytes_to_parse[2..]),
+            ),
+            4 => UpdatePosition(
+                bytes_to_parse[0],
+                Position::from_bytes(&bytes_to_parse[1..]),
+            ),
+            5 => Attack(EntityAttack::from_bytes(bytes_to_parse)),
+            6 => RemoveEntity(u32::from_be_bytes([
+                bytes_to_parse[0],
+                bytes_to_parse[1],
+                bytes_to_parse[2],
+                bytes_to_parse[3],
+            ])),
+            _ => panic!("Cannot build server update from code {code}"),
         }
     }
 }
@@ -111,7 +120,9 @@ impl TcpDeserialize for ServerUpdate {
 mod tests {
     use crate::chunk::Chunk;
     use crate::network::server_update::ServerUpdate;
-    use crate::network::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity, RemoveEntity};
+    use crate::network::server_update::ServerUpdate::{
+        LoadChunk, LoggedIn, RegisterEntity, RemoveEntity,
+    };
     use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
     use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
@@ -127,7 +138,7 @@ mod tests {
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
             (LoadChunk(a), LoadChunk(b)) => assert_eq!(a, b),
-            (_, _) => assert!(false)
+            (_, _) => assert!(false),
         }
     }
 
@@ -141,7 +152,7 @@ mod tests {
         // Assert that the two chunks are the same !
         match (&update, &parsed[0]) {
             (LoggedIn(a, _), LoggedIn(b, _)) => assert_eq!(a, b),
-            (_, _) => assert!(false)
+            (_, _) => assert!(false),
         }
     }
 
@@ -153,7 +164,11 @@ mod tests {
         let update_1 = LoadChunk(chunk1);
         let update_2 = LoadChunk(chunk2);
         let update_3 = LoggedIn(113, Position::empty());
-        let update_4 = RegisterEntity(113, crate::entity::entity::EntityKind::Monster1, Position::from_pos(Vector3::new(-3., 2., 34.532)));
+        let update_4 = RegisterEntity(
+            113,
+            crate::entity::entity::EntityKind::Monster1,
+            Position::from_pos(Vector3::new(-3., 2., 34.532)),
+        );
         let update_5 = RemoveEntity(258);
 
         let mut bytes1 = to_tcp_repr(&update_1);
@@ -173,17 +188,17 @@ mod tests {
 
         match (&update_1, &parsed[0]) {
             (LoadChunk(a), LoadChunk(b)) => assert_eq!(a, b),
-            (_, _) => assert!(false)
+            (_, _) => assert!(false),
         }
 
         match (&update_2, &parsed[1]) {
             (LoadChunk(a), LoadChunk(b)) => assert_eq!(a, b),
-            (_, _) => assert!(false)
+            (_, _) => assert!(false),
         }
 
         match (&update_3, &parsed[2]) {
             (LoggedIn(a, _), LoggedIn(b, _)) => assert_eq!(a, b),
-            (_, _) => assert!(false)
+            (_, _) => assert!(false),
         }
 
         match (&update_4, &parsed[3]) {
@@ -191,14 +206,14 @@ mod tests {
                 assert_eq!(id1, id2);
                 assert_eq!(pos1, pos2);
                 assert_eq!(entity_kind1, entity_kind2);
-            },
-            (_, _) => assert!(false)
+            }
+            (_, _) => assert!(false),
         }
-        match(&update_5,&parsed[4]) {
+        match (&update_5, &parsed[4]) {
             (RemoveEntity(id0), RemoveEntity(id1)) => assert_eq!(id0, id1),
-            (_, _) => assert!(false)
+            (_, _) => assert!(false),
         }
-        }
+    }
 
     #[test]
     fn test_one_message_sent_over_mutliple_packet() {
@@ -214,10 +229,10 @@ mod tests {
 
         let parsed: Vec<ServerUpdate> = from_tcp_repr(packet1, &mut context).unwrap();
         assert_eq!(0, parsed.len());
-        
+
         let parsed: Vec<ServerUpdate> = from_tcp_repr(packet2, &mut context).unwrap();
         assert_eq!(0, parsed.len());
-        
+
         let parsed: Vec<ServerUpdate> = from_tcp_repr(packet3, &mut context).unwrap();
         assert_eq!(1, parsed.len())
     }

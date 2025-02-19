@@ -1,13 +1,8 @@
 use super::biome::BiomeGenerator;
-use super::biomes_def::{BIOMES, SINGLE_NOISE_CONFIG, BASE_BIOME_CONFIG};
+use super::biomes_def::{BASE_BIOME_CONFIG, BIOMES, SINGLE_NOISE_CONFIG};
 use super::perlin::MultiscalePerlinNoise;
-use super::perlin::PerlinNoiseConfig;
-use crate::block_kind::Block;
 use crate::block_kind::Block::DIRT;
 use crate::block_kind::Block::GRASS;
-use crate::block_kind::Block::COBBELSTONE;
-use crate::block_kind::Block::OAKLOG;
-use crate::block_kind::Block::OAKLEAVES;
 use crate::chunk::Chunk;
 use crate::chunk::CHUNK_FLOOR;
 use crate::chunk::CHUNK_SIZE;
@@ -37,8 +32,9 @@ impl WorldGenerator {
                 // get the height from the perlin noise for each block
                 for x in 0..8 {
                     for z in 0..8 {
-                        let biome_t: u64 = BiomeGenerator::find_closest_biome(seed, x + x0 as i32, z + z0 as i32);
-                        
+                        let biome_t: u64 =
+                            BiomeGenerator::find_closest_biome(seed, x + x0 as i32, z + z0 as i32);
+
                         let biome_config = &BIOMES[biome_t as usize];
 
                         if SINGLE_NOISE_CONFIG {

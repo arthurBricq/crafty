@@ -33,7 +33,8 @@ impl ItemBar {
 
         // Add the background tiles
         let mut rects = Vec::new();
-        let background = RectInstance::new_from_corner(-W / 2., BOTTOM - 1., W, H + 2. * PADDING, LightGray);
+        let background =
+            RectInstance::new_from_corner(-W / 2., BOTTOM - 1., W, H + 2. * PADDING, LightGray);
         rects.push(background);
 
         // Add the items
@@ -47,20 +48,27 @@ impl ItemBar {
                 let cube = RectInstance::square_from_corner(
                     x0 - DX / self.aspect_ratio,
                     BOTTOM - 1. + 2. * PADDING - DX,
-                    ITEM_SIDE + 2. * DX, self.aspect_ratio, LightYellow);
+                    ITEM_SIDE + 2. * DX,
+                    self.aspect_ratio,
+                    LightYellow,
+                );
                 rects.push(cube);
             }
 
             let mut cube = RectInstance::square_from_corner(
                 x0,
                 BOTTOM - 1. + 2. * PADDING,
-                ITEM_SIDE, self.aspect_ratio, Red);
+                ITEM_SIDE,
+                self.aspect_ratio,
+                Red,
+            );
             cube.set_block_id(kind as u8 as i8);
             rects.push(cube);
 
             // And we want to print the number of remaining items
             let text = format!("{quantity}");
-            let quantity = StringRect::new(&text, x0 + ITEM_SIDE / 5., BOTTOM - 1. + 0. * PADDING, 0.03);
+            let quantity =
+                StringRect::new(&text, x0 + ITEM_SIDE / 5., BOTTOM - 1. + 0. * PADDING, 0.03);
             rects.append(&mut quantity.rects().clone());
 
             x0 += ITEM_SIDE;

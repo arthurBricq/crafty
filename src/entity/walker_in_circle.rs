@@ -1,8 +1,8 @@
+use super::monster::{MonsterAction, TransitionState};
+use crate::primitives::position::Position;
 use crate::primitives::vector::Vector3;
 use crate::server::server_state::PlayerState;
 use crate::world::World;
-use crate::primitives::position::Position;
-use super::monster::{MonsterAction, TransitionState};
 
 /// Internal state of the monster,
 /// name are for convinience, they are not force to a particular action
@@ -31,11 +31,17 @@ impl TransitionState for WalkInCercle {
         match self.state {
             MonsterStateEnum::Forward => MonsterAction::Forward,
             MonsterStateEnum::TurnLeft => MonsterAction::LeftRot,
-            _ => MonsterAction::Idle
+            _ => MonsterAction::Idle,
         }
     }
 
-    fn update(&mut self, dt: f32, position: &Position, world: &World, player_list: &Vec<PlayerState>) {
+    fn update(
+        &mut self,
+        dt: f32,
+        position: &Position,
+        world: &World,
+        player_list: &Vec<PlayerState>,
+    ) {
         if self.timer - dt < 0. {
             match self.state {
                 MonsterStateEnum::Idle => {
@@ -50,7 +56,7 @@ impl TransitionState for WalkInCercle {
                     self.state = MonsterStateEnum::Idle;
                     self.timer = 2.;
                 }
-                _ => ()
+                _ => (),
             }
         } else {
             self.timer -= dt;

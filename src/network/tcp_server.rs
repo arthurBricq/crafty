@@ -1,22 +1,22 @@
-use std::{io, thread};
+use crate::network::message_to_server::MessageToServer;
+use crate::server::game_server::GameServer;
 use std::io::{Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use crate::server::game_server::GameServer;
-use crate::network::message_to_server::MessageToServer;
+use std::{io, thread};
 
 use crate::network::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
 
-pub struct TcpServer {
-
-}
+pub struct TcpServer {}
 
 impl TcpServer {
     pub fn start(address: &str, game: Arc<Mutex<GameServer>>) {
         // Start the Server
         let listener = TcpListener::bind(address).unwrap();
-        listener.set_nonblocking(true).expect("Cannot set non-blocking");
+        listener
+            .set_nonblocking(true)
+            .expect("Cannot set non-blocking");
         println!("Server is running: {}", listener.local_addr().unwrap());
 
         // Accept connections and process them, spawning a new thread for each one
@@ -25,7 +25,9 @@ impl TcpServer {
                 Ok(stream) => {
                     println!("New connection: {}", stream.peer_addr().unwrap());
                     // Set the stream also as non-blocking on the server-side.
-                    stream.set_nonblocking(true).expect("Cannot set non-blocking");
+                    stream
+                        .set_nonblocking(true)
+                        .expect("Cannot set non-blocking");
 
                     // Create a new thread that will handle the connection with this client
                     // Note that each client must be able to send messages back to the world
@@ -72,11 +74,17 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                                     client_id = Some(id as usize);
                                 }
                                 MessageToServer::OnNewPosition(new_pos) => {
-                                    game.lock().unwrap().on_new_position_update(client_id.unwrap(), new_pos);
+                                    game.lock()
+                                        .unwrap()
+                                        .on_new_position_update(client_id.unwrap(), new_pos);
                                 }
                                 MessageToServer::OnNewAction(action) => {
-                                    println!("Client {client_id:?} has submitted an action: {action:?}");
-                                    game.lock().unwrap().on_new_action(client_id.unwrap(), action);
+                                    println!(
+                                        "Client {client_id:?} has submitted an action: {action:?}"
+                                    );
+                                    game.lock()
+                                        .unwrap()
+                                        .on_new_action(client_id.unwrap(), action);
                                 }
                                 MessageToServer::Attack(attack) => {
                                     game.lock().unwrap().on_new_attack(attack);
@@ -94,8 +102,8 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                         }
                         println!("Trying to safely shutdown...");
                         match stream.shutdown(Shutdown::Write) {
-                            Ok(_) =>          println!("   ... Shutdown successfull"),
-                            Err(err) => println!("   ... Error while closing socket: {err}")
+                            Ok(_) => println!("   ... Shutdown successfull"),
+                            Err(err) => println!("   ... Error while closing socket: {err}"),
                         }
                         return;
                     }
@@ -105,7 +113,10 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                 // Read: https://doc.rust-lang.org/std/net/struct.TcpListener.html#method.set_nonblocking
             }
             Err(_) => {
-                println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
+                println!(
+                    "An error occurred, terminating connection with {}",
+                    stream.peer_addr().unwrap()
+                );
                 stream.shutdown(Shutdown::Both).unwrap();
                 return;
             }
@@ -132,6 +143,5 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                 }
             }
         }
-
     }
 }
