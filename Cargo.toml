@@ -23,8 +23,8 @@ lto = true
 
 [dependencies]
 # OpenGL related
-glium = "0.36.0"
-winit = "0.30.9"
+glium = "0.34"
+winit = "0.29"
 image = "0.24"
 
 # Iterate over the variants of an enum
