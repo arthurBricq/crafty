@@ -34,7 +34,6 @@ use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{uniform, Surface};
 use winit::event::ElementState::Pressed;
 use winit::event::{AxisId, ElementState, KeyEvent, MouseButton};
-use winit::event_loop::EventLoop;
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Fullscreen, Window};
 
@@ -94,7 +93,7 @@ impl WorldRenderer {
     pub fn run(&mut self) {
         // We start by creating the EventLoop, this can only be done once per process.
         // This also needs to happen on the main thread to make the program portable.
-        let event_loop = EventLoop::builder()
+        let event_loop = winit::event_loop::EventLoopBuilder::new()
             .build()
             .expect("event loop building");
 
