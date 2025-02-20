@@ -96,7 +96,6 @@ where
                 self.velocity[0] = 0.;
                 self.velocity[2] = 0.;
             }
-            _ => (),
         }
 
         if self.in_air {
@@ -113,10 +112,6 @@ where
         // update in_air
         let displacement = Vector3::new(0., -2.0 * PLAYER_MARGIN, 0.);
         self.in_air = !world.collides(&humanoid_aabb(&(&self.position + displacement)));
-    }
-
-    fn set_position(&mut self, position: Position) {
-        self.position = position;
     }
 
     pub fn position(&self) -> &Position {

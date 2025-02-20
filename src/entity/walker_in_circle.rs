@@ -1,6 +1,5 @@
 use super::monster::{MonsterAction, TransitionState};
 use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
 use crate::server::server_state::PlayerState;
 use crate::world::World;
 
@@ -16,7 +15,6 @@ pub enum MonsterStateEnum {
 pub struct WalkInCercle {
     state: MonsterStateEnum,
     timer: f32,
-    target: Vector3,
 }
 
 impl TransitionState for WalkInCercle {
@@ -24,7 +22,6 @@ impl TransitionState for WalkInCercle {
         Self {
             state: MonsterStateEnum::Idle,
             timer: 0.,
-            target: Vector3::new(10., 15., 10.),
         }
     }
     fn action(&self) -> MonsterAction {
@@ -38,9 +35,9 @@ impl TransitionState for WalkInCercle {
     fn update(
         &mut self,
         dt: f32,
-        position: &Position,
-        world: &World,
-        player_list: &Vec<PlayerState>,
+        _position: &Position,
+        _world: &World,
+        _player_list: &Vec<PlayerState>,
     ) {
         if self.timer - dt < 0. {
             match self.state {
@@ -56,7 +53,6 @@ impl TransitionState for WalkInCercle {
                     self.state = MonsterStateEnum::Idle;
                     self.timer = 2.;
                 }
-                _ => (),
             }
         } else {
             self.timer -= dt;

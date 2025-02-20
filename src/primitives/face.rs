@@ -50,7 +50,7 @@ mod tests {
 
     #[test]
     fn test_face_intersection() {
-        let P = Plane3::new(
+        let plane = Plane3::new(
             Vector3::empty(),
             Vector3::unit_x(),
             Vector3::unit_y(),
@@ -60,49 +60,49 @@ mod tests {
         // When looking toward the face, there is an intersection
         assert_eq!(
             Some(10.),
-            P.face_intersection(Vector3::new(0.5, 0.5, 10.), Vector3::unit_z().opposite())
+            plane.face_intersection(Vector3::new(0.5, 0.5, 10.), Vector3::unit_z().opposite())
         );
 
         // When looking somewhere else, no intersection
         assert_eq!(
             None,
-            P.face_intersection(Vector3::new(0.5, 0.5, 10.), Vector3::unit_z())
+            plane.face_intersection(Vector3::new(0.5, 0.5, 10.), Vector3::unit_z())
         );
         assert_eq!(
             None,
-            P.face_intersection(Vector3::new(0.5, 0.5, 10.), Vector3::unit_y())
+            plane.face_intersection(Vector3::new(0.5, 0.5, 10.), Vector3::unit_y())
         );
         assert_eq!(
             None,
-            P.face_intersection(Vector3::new(0.5, 0.5, 10.), Vector3::unit_x())
+            plane.face_intersection(Vector3::new(0.5, 0.5, 10.), Vector3::unit_x())
         );
 
         // Make sure that only points inside the [0;1] face are valid
         assert_eq!(
             Some(10.),
-            P.face_intersection(Vector3::new(0.2, 0.1, 10.), Vector3::unit_z().opposite())
+            plane.face_intersection(Vector3::new(0.2, 0.1, 10.), Vector3::unit_z().opposite())
         );
         assert_eq!(
             Some(10.),
-            P.face_intersection(Vector3::new(0.2, 0.9, 10.), Vector3::unit_z().opposite())
+            plane.face_intersection(Vector3::new(0.2, 0.9, 10.), Vector3::unit_z().opposite())
         );
         assert_eq!(
             Some(10.),
-            P.face_intersection(
+            plane.face_intersection(
                 Vector3::new(0.001, 0.999, 10.),
                 Vector3::unit_z().opposite()
             )
         );
         assert_eq!(
             None,
-            P.face_intersection(
+            plane.face_intersection(
                 Vector3::new(0.001, 1.999, 10.),
                 Vector3::unit_z().opposite()
             )
         );
         assert_eq!(
             None,
-            P.face_intersection(Vector3::new(1.001, 0.5, 10.), Vector3::unit_z().opposite())
+            plane.face_intersection(Vector3::new(1.001, 0.5, 10.), Vector3::unit_z().opposite())
         );
     }
 }

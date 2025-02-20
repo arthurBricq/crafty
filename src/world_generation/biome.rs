@@ -377,7 +377,6 @@ mod tests {
         let cube_height = 20;
         for i in 0..cube_height {
             let block_at_height = config.get_block_at(i);
-            let y = cube_height - i - 1;
             if let Some(block) = block_at_height {
                 dbg!(block);
             }

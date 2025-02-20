@@ -179,7 +179,7 @@ impl Collidable for Cube {
 
     fn collision_time(
         &self,
-        position: &Position,
+        _position: &Position,
         aabb: &AABB,
         target: &AABB,
         velocity: &Vector3,

@@ -432,13 +432,9 @@ mod tests {
     use crate::block_kind::Block;
     use crate::block_kind::Block::GRASS;
     use crate::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
-    use crate::collidable::Collidable;
-    use crate::entity::humanoid::humanoid_aabb;
-    use crate::primitives::position::Position;
     use crate::primitives::vector::Vector3;
     use crate::world::World;
     use crate::world_generation::world_generator::WorldGenerator;
-    use std::time::Instant;
 
     #[test]
     fn test_chunk_collision_1() {
@@ -650,20 +646,4 @@ mod tests {
         assert_eq!(count, CHUNK_SIZE * CHUNK_SIZE)
     }
 
-    #[test]
-    fn benchmark_collision() {
-        let world = World::from_file("benchmark_map.json").unwrap();
-
-        let t0 = Instant::now();
-        for i in 0..100 {
-            let pos = Position::new(Vector3::new(0., 100., 2.), 0., 0.);
-            let from = humanoid_aabb(&pos);
-            let velocity = Vector3::unit_x();
-            let dt = 0.01;
-            let target = humanoid_aabb(&(&pos + velocity * dt));
-
-            let collision = world.collision_time(&pos, &from, &target, &velocity);
-        }
-        println!("Elasped = {:?}", t0.elapsed());
-    }
 }

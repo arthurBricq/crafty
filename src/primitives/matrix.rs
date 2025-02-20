@@ -45,30 +45,6 @@ impl Mul<f32> for Matrix3 {
 }
 
 impl Matrix3 {
-    pub fn new(
-        a11: f32,
-        a12: f32,
-        a13: f32,
-        a21: f32,
-        a22: f32,
-        a23: f32,
-        a31: f32,
-        a32: f32,
-        a33: f32,
-    ) -> Self {
-        Self {
-            a11,
-            a12,
-            a13,
-            a21,
-            a22,
-            a23,
-            a31,
-            a32,
-            a33,
-        }
-    }
-
     /// Create a matrix from its 3 rows
     pub fn from_columns(c1: &Vector3, c2: &Vector3, c3: &Vector3) -> Self {
         Self {
@@ -84,6 +60,7 @@ impl Matrix3 {
         }
     }
 
+    #[cfg(test)]
     pub fn identity() -> Self {
         Self {
             a11: 1.0,
@@ -151,6 +128,7 @@ impl Matrix3 {
         }
     }
 
+    #[cfg(test)]
     fn col(&self, i: usize) -> Vector3 {
         match i {
             0 => Vector3::new(self.a11, self.a21, self.a31),

@@ -44,8 +44,8 @@ impl ServerState {
     pub fn connected_players(&self) -> impl Iterator<Item = &PlayerState> {
         self.players
             .iter()
-            .filter(|(k, v)| self.connected.contains(*k))
-            .map(|(k, v)| v)
+            .filter(|(k, _)| self.connected.contains(*k))
+            .map(|(_, v)| v)
     }
 
     pub fn n_players_connected(&self) -> usize {
@@ -56,8 +56,8 @@ impl ServerState {
         if let Some(player_state) = self
             .players
             .iter_mut()
-            .find(|(k, v)| v.id == id)
-            .map(|(k, v)| v)
+            .find(|(_, v)| v.id == id)
+            .map(|(_, v)| v)
         {
             player_state.pos = pos;
         }

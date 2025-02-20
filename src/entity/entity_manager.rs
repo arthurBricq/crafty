@@ -53,7 +53,7 @@ impl EntityManager {
             .entities
             .iter()
             .map(|(id, entity)| (id, entity.aabb().faces()))
-            .find(|(id, faces)| {
+            .find(|(_, faces)| {
                 Cube::intersection_with_faces(&faces, position, direction).is_some()
             })
         {

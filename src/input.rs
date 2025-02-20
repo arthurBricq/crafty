@@ -45,7 +45,6 @@ impl PlayerInputStatus {
                 self.left_click = pressed;
                 self.click_time = 0.;
             }
-            _ => (),
         }
     }
 
