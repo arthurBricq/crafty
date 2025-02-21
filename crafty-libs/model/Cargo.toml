@@ -1,0 +1,18 @@
+[package]
+name = "model"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "model"
+path = "src/lib.rs"
+
+[dependencies]
+# TODO: We should really find a way to NOT have glium used here !
+#       This can be probably achieved using a trait, for now I keep this here and then I will improve it.
+glium = {workspace = true }
+rand = {workspace = true }
+serde = {workspace = true }
+serde_json = {workspace = true }
+strum = {workspace = true }
+clap = {workspace = true }

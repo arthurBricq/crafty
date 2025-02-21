@@ -1,0 +1,12 @@
+[package]
+name = "crafty-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+model = { workspace = true }
+network = { workspace = true }
+
+[[bin]]
+name = "crafty-server"
+path = "src/main.rs"

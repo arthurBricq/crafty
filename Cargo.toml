@@ -1,19 +1,12 @@
-[package]
-name = "crafty"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
 
-[[bin]]
-name = "crafty"
-path = "src/main.rs"
-
-[[bin]]
-name = "server"
-path = "src/main_server.rs"
-
-[[bin]]
-name = "client"
-path = "src/main_client.rs"
+members = [
+    "crafty-single-player",
+    "crafty-server",
+    "crafty-multiplayer",
+    "crafty-libs/*"
+]
 
 # Enable link-time optimisation, only in release mode.
 [profile.release]
@@ -21,7 +14,11 @@ lto = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
+[workspace.dependencies]
+model = { path = "./crafty-libs/model"}
+network = { path = "./crafty-libs/network"}
+graphics = { path = "./crafty-libs/graphics"}
+
 # OpenGL related
 glium = "0.34"
 winit = "0.29"

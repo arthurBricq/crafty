@@ -1,0 +1,13 @@
+[package]
+name = "crafty-multiplayer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+model = { workspace = true }
+network = { workspace = true }
+graphics = { workspace = true }
+
+[[bin]]
+name = "crafty-multi"
+path = "src/main.rs"

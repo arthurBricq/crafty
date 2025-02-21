@@ -1,0 +1,11 @@
+[package]
+name = "network"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "network"
+path = "src/lib.rs"
+
+[dependencies]
+model = { workspace = true }
