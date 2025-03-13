@@ -1,6 +1,8 @@
 # Crafty
 
-A MineCraft clone coded from craft, fully in Rust (without any game engine or any multiplayer framework)
+A MineCraft clone coded from craft, fully in Rust (without any game engine or any multiplayer framework).
+
+Works best under Linux or Windows. With macos, you can't resize the window...
 
 ![](demo/demo1.jpg)
 
@@ -103,24 +105,28 @@ cargo run --bin client --release -- --server "YOUR.IP" --port "PORT" -- name "UN
 
 - Each client needs to specify his name, and it needs to be different than the other players.
 
-## Crafting recipes (for now)
-
-Stone word:
-
-```
-_c_
-_c_
-_o_
-```
-
-where `c` is a cobblestone block, and `o` is an oak log.
-
 # Dependencies
 
 The goal of this for-fun side-project was to write a minecraft clone with **as little dependencies** as possible.
 
 The biggest dependency that we use is for a Rust binding of the OpenGL ports called `glium`. This library is
 unfortunately not maintained anymore, but hey, our code works with `0.34`.
+
+# Code architecture
+
+The code is divided in 3 libraries and 3 executables
+
+The libraries are
+
+- `model`: defines the model of the game. Itself contains the following modules
+    - `game`: model of the game
+    - `entity`: model of the entities (players and monsters)
+    - `primitves`
+    - `collision`: how collisions are handles
+    - `server`: model of the server
+    - `world`
+- `graphics`: defines an implementation of the graphics, using `glium`.
+- `network`: defines the network abstraction used for playing with multiple players.
 
 # Roadmap
 
@@ -134,7 +140,21 @@ This project works quite well, but... There is still a lot to do.
 
 ### Problems
 
-- The collision often crashes.
-- The multiplayer architecture should be improved.
-- There is a bunch of corner cases with multiplayer.
-- The performances are quite bad.
+- The collision often crashes, and when it happens the consequences are... terrible.
+- The multiplayer architecture and implementations should be improved, to support more players. There is a bunch of
+  corner cases with multiplayer, most of them are not tracked.
+- The UI library is shit, because we have implemented everything ourselves using a dead-library. As a consequence, it
+  does not work well with macos and the performances are quite bad. I am not sure to which extent it will be easy to
+  create new bindings for another graphics library.
+
+## Crafting recipes (for now)
+
+Stone word:
+
+```
+_c_
+_c_
+_o_
+```
+
+where `c` is a cobblestone block, and `o` is an oak log.

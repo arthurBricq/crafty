@@ -10,7 +10,7 @@ use glium::{uniform, Surface};
 use winit::event::ElementState::Pressed;
 use winit::event::{AxisId, ElementState, KeyEvent, MouseButton};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{Fullscreen, Window};
+use winit::window::{CursorGrabMode, Fullscreen, Window};
 use model::entity::entity_manager::EntityManager;
 use model::game::actions::Action;
 use model::game::actions::Action::{Add, Destroy};
@@ -97,11 +97,11 @@ impl WorldRenderer {
 
         let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
             .with_title("Crafty")
-            // In MacOS, you basically can't resize the window...
+            // In macos, you basically can't resize the window...
             // There is a stretching bug, and I am not sure if it is a `glutin` bug or if it is implementation bug
             // from my side, due to a different OpenGL implementation on MacOS.
             // What I can do for is to create a "big enough" window
-            .with_inner_size(2000, 1000)
+            .with_inner_size(3460, 2000)
             .build(&event_loop);
 
         // Add a few items
@@ -113,15 +113,17 @@ impl WorldRenderer {
             self.items.collect(OAKLOG);
         }
 
+        let lock_mouse = window
+            .set_cursor_grab(CursorGrabMode::Confined)
+            .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
+        
+        if lock_mouse.is_err() {
+            println!("Could not lock the mouse")
+        }
+
         #[cfg(not(target_os = "macos"))]
         {
             window.set_cursor_visible(false);
-            let lock_mouse = window
-                .set_cursor_grab(CursorGrabMode::Confined)
-                .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
-            if lock_mouse.is_err() {
-                println!("Can't lock")
-            }
         }
 
         // Construct the buffer of vertices (for single objects, we use OpenGL's instancing to multiply them)
@@ -352,7 +354,7 @@ impl WorldRenderer {
     }
 
     fn handle_key_event(&mut self, event: KeyEvent, window: &Window) {
-        self.handle_general_key_event(&event, window);
+        self.handle_general_key_event(&event);
 
         if self.hud_renderer.is_inventory_open() {
             self.handle_inventory_key_event(event, window)
@@ -363,11 +365,10 @@ impl WorldRenderer {
 
     /// Deal with the events that needs to be taken care of both in the
     /// inventory and in the game
-    fn handle_general_key_event(&mut self, event: &KeyEvent, window: &Window) {
+    fn handle_general_key_event(&mut self, event: &KeyEvent) {
         if event.state == Pressed {
             match event.physical_key {
                 PhysicalKey::Code(key) => match key {
-                    KeyCode::F11 => self.toggle_fullscreen(&window),
                     KeyCode::Escape => std::process::exit(1),
                     _ => {}
                 },
@@ -475,8 +476,9 @@ impl WorldRenderer {
                             monster_pos.small_raise();
                             self.proxy.lock().unwrap().request_to_spawn(monster_pos);
                         }
-                        KeyCode::F10 => self.world.save_to_file("map.json"),
                         KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
+                        KeyCode::F10 => self.toggle_fullscreen(&window),
+                        KeyCode::F11 => self.world.save_to_file("map.json"),
                         KeyCode::F12 => self.hud_renderer.toggle_help_menu(),
                         _ => {}
                     }
