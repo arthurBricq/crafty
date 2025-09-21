@@ -127,6 +127,15 @@ The libraries are
     - `world`
 - `graphics`: defines an implementation of the graphics, using `glium`.
 - `network`: defines the network abstraction used for playing with multiple players.
+- `primitives`
+
+One major architecture flaw is that OpenGL sepcifics logic is in both `graphics` and `model` crate. The solution that
+I have in mind involves creating a new crate `graphics_glium`, that involves `glium` as a dependency, that defines the
+OpenGL specificities. Then, `graphics` would define traits (such as "drawable", or things like that) and
+`graphics_glium` would implement them. And then model would only depend on `graphics`, meaning that in theory you
+could totally replace glium by another library, and the code would still work.
+
+will depend on `graphics_glium` and `model` will depend on `graphics`.
 
 # Roadmap
 
