@@ -3,7 +3,7 @@ use glium::Display;
 use glium::{glutin::surface::WindowSurface, Texture2d};
 use image::{GenericImageView, ImageBuffer, Rgba};
 use model::entity::humanoid::{ImageCut, HUMANOID_TEXTURES_PATH, PLAYER_CUT_TEMPLATE};
-use model::primitives::math;
+use primitives::math;
 use model::world::block_kind::Block;
 use crate::core::texture;
 

@@ -1,5 +1,5 @@
 use std::f32::consts::PI;
-use model::primitives::position::Position;
+use primitives::position::Position;
 use crate::core::rectangle::RectInstance;
 use crate::core::string_rect::StringRect;
 

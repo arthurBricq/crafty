@@ -1,5 +1,5 @@
-use crate::primitives::matrix::Matrix3;
-use crate::primitives::vector::Vector3;
+use crate::matrix::Matrix3;
+use crate::vector::Vector3;
 
 /// A 3D plane, spawning from a point and 2 vectors
 pub struct Plane3 {
@@ -45,8 +45,8 @@ impl Plane3 {
 
 #[cfg(test)]
 mod tests {
-    use crate::primitives::face::Plane3;
-    use crate::primitives::vector::Vector3;
+    use crate::face::Plane3;
+    use crate::vector::Vector3;
 
     #[test]
     fn test_face_intersection() {

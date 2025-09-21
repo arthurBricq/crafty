@@ -1,11 +1,3 @@
-pub mod primitives {
-    pub mod face;
-    pub mod math;
-    pub mod matrix;
-    pub mod position;
-    pub mod vector;
-}
-
 pub mod entity {
     pub mod chaser;
     pub mod entity;

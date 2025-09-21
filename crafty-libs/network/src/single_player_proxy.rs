@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use model::game::actions::Action;
 use model::game::attack::EntityAttack;
-use model::primitives::position::Position;
+use primitives::position::Position;
 use model::server::game_server::GameServer;
 use model::server::server_update::ServerUpdate;
 use crate::proxy::Proxy;

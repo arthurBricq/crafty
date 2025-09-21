@@ -1,4 +1,5 @@
-use crate::primitives::position::Position;
+use crate::world::chunk::CHUNK_FLOOR;
+use primitives::position::Position;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Clone)]
@@ -28,11 +29,13 @@ impl ServerState {
                 name.clone(),
                 PlayerState {
                     id: self.players.len(),
-                    pos: Position::spawn_position(),
+                    pos: Position::spawn_position(CHUNK_FLOOR as f32 + 3.),
                 },
             );
         }
-        self.players.get_mut(&name).map(|player| player.pos.raise());
+        self.players
+            .get_mut(&name)
+            .map(|player| player.pos.raise(10. * CHUNK_FLOOR as f32));
         self.players.get(&name).unwrap().clone()
     }
 

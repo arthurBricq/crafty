@@ -1,7 +1,7 @@
 use crate::entity::entity::EntityKind;
 use crate::game::actions::Action;
 use crate::game::attack::EntityAttack;
-use crate::primitives::position::Position;
+use primitives::position::Position;
 use crate::server::server_update::ServerUpdate::LoadChunk;
 use crate::world::chunk::Chunk;
 

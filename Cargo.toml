@@ -18,6 +18,7 @@ lto = true
 model = { path = "./crafty-libs/model"}
 network = { path = "./crafty-libs/network"}
 graphics = { path = "./crafty-libs/graphics"}
+primitives = { path = "./crafty-libs/primitives"}
 
 # OpenGL related
 glium = "0.34"

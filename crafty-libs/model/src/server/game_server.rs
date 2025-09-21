@@ -1,5 +1,5 @@
 use crate::entity::entity::EntityKind;
-use crate::primitives::position::Position;
+use primitives::position::Position;
 use crate::server::monster_manager::MonsterManager;
 use crate::server::server_state::ServerState;
 use crate::server::world_dispatcher::WorldDispatcher;

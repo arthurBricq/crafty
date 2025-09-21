@@ -1,6 +1,6 @@
 use crate::entity::entity::{Entity, EntityCube, EntityKind};
-use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
+use primitives::position::Position;
+use primitives::vector::Vector3;
 use std::collections::HashMap;
 use crate::game::attack::EntityAttack;
 use crate::world::cube::Cube;
@@ -68,8 +68,8 @@ mod tests {
     use crate::entity::entity::EntityKind;
     use crate::entity::entity_manager::EntityManager;
     use crate::game::attack::EntityAttack;
-    use crate::primitives::position::Position;
-    use crate::primitives::vector::Vector3;
+    use primitives::position::Position;
+    use primitives::vector::Vector3;
 
     #[test]
     fn test_basic_functionality() {

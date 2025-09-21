@@ -1,7 +1,7 @@
 use std::str::from_utf8;
 use model::game::actions::Action;
 use model::game::attack::EntityAttack;
-use model::primitives::position::Position;
+use primitives::position::Position;
 use crate::message_to_server::MessageToServer::{Attack, Login, OnNewAction, OnNewPosition, SpawnRequest};
 use crate::tcp_message_encoding::{TcpDeserialize, TcpSerialize};
 
@@ -52,8 +52,8 @@ impl TcpDeserialize for MessageToServer {
 
 #[cfg(test)]
 mod tests {
-    use model::primitives::position::Position;
-    use model::primitives::vector::Vector3;
+    use primitives::position::Position;
+    use primitives::vector::Vector3;
     use crate::message_to_server::MessageToServer;
     use crate::message_to_server::MessageToServer::{Login, OnNewPosition};
     use crate::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};

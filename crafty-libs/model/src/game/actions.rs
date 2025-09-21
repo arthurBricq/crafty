@@ -1,4 +1,4 @@
-use crate::primitives::vector::Vector3;
+use primitives::vector::Vector3;
 use serde::{Deserialize, Serialize};
 use crate::world::block_kind::Block;
 
@@ -30,7 +30,7 @@ impl Action {
 
 #[cfg(test)]
 mod tests {
-    use crate::primitives::vector::Vector3;
+    use primitives::vector::Vector3;
     use crate::world::block_kind::Block;
     use crate::world::cube::Cube;
 

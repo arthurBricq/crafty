@@ -1,7 +1,6 @@
-use crate::primitives::vector::Vector3;
+use crate::vector::Vector3;
 use std::ops::{Add, AddAssign};
 use std::str::from_utf8;
-use crate::world::chunk::CHUNK_FLOOR;
 
 /// Position of an entity in a 3D world
 #[derive(Debug, PartialEq, Clone)]
@@ -20,9 +19,9 @@ impl Position {
         }
     }
 
-    pub fn spawn_position() -> Self {
+    pub fn spawn_position(y: f32) -> Self {
         Self {
-            pos: Vector3::new(0., CHUNK_FLOOR as f32 + 3., 0.),
+            pos: Vector3::new(0., y, 0.),
             yaw: 0.,
             pitch: 0.,
         }
@@ -49,12 +48,8 @@ impl Position {
     }
 
     /// Send the player in the air
-    pub fn raise(&mut self) {
-        self.pos[1] += 5. * CHUNK_FLOOR as f32;
-    }
-
-    pub fn small_raise(&mut self) {
-        self.pos[1] += CHUNK_FLOOR as f32;
+    pub fn raise(&mut self, inc: f32) {
+        self.pos[1] += inc;
     }
 
     pub fn ground_direction_forward(&self) -> Vector3 {

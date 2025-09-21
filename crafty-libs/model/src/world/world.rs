@@ -1,6 +1,6 @@
 use strum::IntoEnumIterator;
-use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
+use primitives::position::Position;
+use primitives::vector::Vector3;
 use crate::world::chunk::{Chunk, CHUNK_SIZE};
 use crate::world::cube::Cube;
 use crate::world::cube_instance::CubeInstance;
@@ -430,7 +430,7 @@ impl Collidable for World {
 #[cfg(test)]
 mod tests {
     use crate::game::actions::Action;
-    use crate::primitives::vector::Vector3;
+    use primitives::vector::Vector3;
     use crate::world::block_kind::Block;
     use crate::world::block_kind::Block::GRASS;
     use crate::world::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};

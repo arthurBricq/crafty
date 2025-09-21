@@ -1,8 +1,8 @@
 use crate::collision::aabb::AABB;
 use crate::collision::collidable::{Collidable, CollisionData};
-use crate::primitives::face::Plane3;
-use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
+use primitives::face::Plane3;
+use primitives::position::Position;
+use primitives::vector::Vector3;
 use crate::world::block_kind::Block;
 
 /// Model of a cube in the 3D world.

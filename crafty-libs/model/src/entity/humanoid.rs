@@ -1,8 +1,8 @@
 use crate::collision::aabb::AABB;
 use crate::entity::entity::EntityCube;
 use crate::game::player::{DIAMETER, FOREHEAD, PLAYER_HEIGHT};
-use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
+use primitives::position::Position;
+use primitives::vector::Vector3;
 
 // Define some constants to draw a player
 // Height taken from human proportion in drawing

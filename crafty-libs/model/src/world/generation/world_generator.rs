@@ -1,7 +1,7 @@
 use super::biome::BiomeGenerator;
 use super::biomes_def::{BASE_BIOME_CONFIG, BIOMES, SINGLE_NOISE_CONFIG};
 use super::perlin::MultiscalePerlinNoise;
-use crate::primitives::vector::Vector3;
+use primitives::vector::Vector3;
 use crate::world::block_kind::Block::{DIRT, GRASS};
 use crate::world::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
 use crate::world::world::World;

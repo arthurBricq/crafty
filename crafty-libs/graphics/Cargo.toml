@@ -11,6 +11,7 @@ path = "src/lib.rs"
 glium = { workspace = true }
 winit = { workspace = true }
 
+primitives = { workspace = true }
 model = { workspace = true }
 network = { workspace = true }
 image = { workspace = true }

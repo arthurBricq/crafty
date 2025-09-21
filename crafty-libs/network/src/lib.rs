@@ -2,7 +2,7 @@ use std::str::from_utf8;
 use model::entity::entity::EntityKind;
 use model::game::actions::Action;
 use model::game::attack::EntityAttack;
-use model::primitives::position::Position;
+use primitives::position::Position;
 use model::server::server_update::ServerUpdate;
 use model::server::server_update::ServerUpdate::{Attack, LoadChunk, LoggedIn, RegisterEntity, RemoveEntity, SendAction, UpdatePosition};
 use model::world::chunk::Chunk;
@@ -95,8 +95,8 @@ impl TcpDeserialize for ServerUpdate {
 #[cfg(test)]
 mod tests {
     use model::entity::entity::EntityKind;
-    use model::primitives::position::Position;
-    use model::primitives::vector::Vector3;
+    use primitives::position::Position;
+    use primitives::vector::Vector3;
     use model::server::server_update::ServerUpdate;
     use model::server::server_update::ServerUpdate::{LoadChunk, LoggedIn, RegisterEntity, RemoveEntity};
     use model::world::chunk::Chunk;

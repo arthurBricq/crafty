@@ -5,25 +5,6 @@ extern crate winit;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
-use glium::{uniform, Surface};
-use winit::event::ElementState::Pressed;
-use winit::event::{AxisId, ElementState, KeyEvent, MouseButton};
-use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{CursorGrabMode, Fullscreen, Window};
-use model::entity::entity_manager::EntityManager;
-use model::game::actions::Action;
-use model::game::actions::Action::{Add, Destroy};
-use model::game::camera::perspective_matrix;
-use model::game::health::Health;
-use model::game::input::MotionState;
-use model::game::player::{Player, CLICK_TIME_TO_BREAK};
-use model::game::player_items::PlayerItems;
-use model::primitives::position::Position;
-use model::server::server_update::ServerUpdate;
-use model::world::block_kind::Block::{COBBELSTONE, OAKLOG, SWORD};
-use model::world::world::World;
-use network::proxy::Proxy;
 use crate::core::color::Color;
 use crate::core::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
 use crate::core::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER};
@@ -34,6 +15,26 @@ use crate::core::menu_debug::DebugData;
 use crate::core::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use crate::core::texture;
 use crate::player::fps::FpsManager;
+use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
+use glium::{uniform, Surface};
+use model::entity::entity_manager::EntityManager;
+use model::game::actions::Action;
+use model::game::actions::Action::{Add, Destroy};
+use model::game::camera::perspective_matrix;
+use model::game::health::Health;
+use model::game::input::MotionState;
+use model::game::player::{Player, CLICK_TIME_TO_BREAK};
+use model::game::player_items::PlayerItems;
+use model::server::server_update::ServerUpdate;
+use model::world::block_kind::Block::{COBBELSTONE, OAKLOG, SWORD};
+use model::world::chunk::CHUNK_FLOOR;
+use model::world::world::World;
+use network::proxy::Proxy;
+use primitives::position::Position;
+use winit::event::ElementState::Pressed;
+use winit::event::{AxisId, ElementState, KeyEvent, MouseButton};
+use winit::keyboard::{KeyCode, PhysicalKey};
+use winit::window::{CursorGrabMode, Fullscreen, Window};
 
 /// 16ms => 60 FPS roughly
 const TARGET_FRAME_DURATION: Duration = Duration::from_millis(16);
@@ -116,7 +117,7 @@ impl WorldRenderer {
         let lock_mouse = window
             .set_cursor_grab(CursorGrabMode::Confined)
             .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
-        
+
         if lock_mouse.is_err() {
             println!("Could not lock the mouse")
         }
@@ -473,7 +474,7 @@ impl WorldRenderer {
                             println!("Ask to spawn a monster");
                             let mut monster_pos =
                                 Position::new(self.player.position().pos().clone(), 0., 0.);
-                            monster_pos.small_raise();
+                            monster_pos.raise(CHUNK_FLOOR as f32);
                             self.proxy.lock().unwrap().request_to_spawn(monster_pos);
                         }
                         KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),

@@ -1,4 +1,4 @@
-use crate::primitives::vector::Vector3;
+use crate::vector::Vector3;
 use std::ops::Mul;
 
 #[derive(Clone, Debug)]
@@ -141,8 +141,8 @@ impl Matrix3 {
 
 #[cfg(test)]
 mod tests {
-    use crate::primitives::matrix::Matrix3;
-    use crate::primitives::vector::Vector3;
+    use crate::matrix::Matrix3;
+    use crate::vector::Vector3;
 
     const EPSILON: f32 = 0.0001;
 

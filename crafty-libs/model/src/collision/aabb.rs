@@ -1,5 +1,5 @@
-use crate::primitives::face::Plane3;
-use crate::primitives::vector::Vector3;
+use primitives::face::Plane3;
+use primitives::vector::Vector3;
 use std::fmt::{Display, Error, Formatter};
 
 #[derive(Debug)]

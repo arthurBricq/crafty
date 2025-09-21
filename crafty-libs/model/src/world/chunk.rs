@@ -1,8 +1,8 @@
 use strum::IntoEnumIterator;
 use crate::collision::aabb::AABB;
 use crate::collision::collidable::{Collidable, CollisionData};
-use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
+use primitives::position::Position;
+use primitives::vector::Vector3;
 use crate::world::block_kind::Block;
 use crate::world::block_kind::Block::{DIRT, GRASS};
 use crate::world::cube::Cube;
@@ -371,7 +371,7 @@ impl Collidable for Chunk {
 
 #[cfg(test)]
 mod tests {
-    use crate::primitives::vector::Vector3;
+    use primitives::vector::Vector3;
     use crate::world::block_kind::Block::GRASS;
     use crate::world::chunk::{Chunk, CHUNK_HEIGHT, CHUNK_SIZE};
 

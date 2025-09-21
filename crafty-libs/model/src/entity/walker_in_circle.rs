@@ -1,5 +1,5 @@
 use super::monster::{MonsterAction, TransitionState};
-use crate::primitives::position::Position;
+use primitives::position::Position;
 use crate::server::server_state::PlayerState;
 use crate::world::world::World;
 

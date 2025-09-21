@@ -1,6 +1,6 @@
 use model::game::actions::Action;
 use model::game::attack::EntityAttack;
-use model::primitives::position::Position;
+use primitives::position::Position;
 use model::server::server_update::ServerUpdate;
 
 /// Defines the interface that a client use to communicate with the game server

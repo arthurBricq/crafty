@@ -2,7 +2,7 @@ use glium::implement_vertex;
 use crate::collision::aabb::AABB;
 use crate::entity::humanoid;
 use crate::entity::humanoid::humanoid_aabb;
-use crate::primitives::position::Position;
+use primitives::position::Position;
 
 #[derive(Debug, PartialEq, Clone)]
 /// Enum for the different types of entity

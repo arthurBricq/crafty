@@ -1,6 +1,6 @@
 use crate::collision::aabb::AABB;
-use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
+use primitives::position::Position;
+use primitives::vector::Vector3;
 
 /// Information about a collision
 pub struct CollisionData {

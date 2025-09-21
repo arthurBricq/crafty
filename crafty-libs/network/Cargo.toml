@@ -9,3 +9,4 @@ path = "src/lib.rs"
 
 [dependencies]
 model = { workspace = true }
+primitives = { workspace = true }

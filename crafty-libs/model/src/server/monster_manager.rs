@@ -4,7 +4,7 @@ use crate::entity::chaser::Chaser;
 use crate::entity::entity::EntityKind;
 use crate::entity::monster::Monster;
 use crate::game::attack::EntityAttack;
-use crate::primitives::position::Position;
+use primitives::position::Position;
 use crate::server::server_update::ServerUpdate;
 use crate::world::world::World;
 use super::server_state::PlayerState;
@@ -96,8 +96,8 @@ mod test {
 
     use super::MonsterManager;
     use crate::entity::entity::EntityKind;
-    use crate::primitives::position::Position;
-    use crate::primitives::vector::Vector3;
+    use primitives::position::Position;
+    use primitives::vector::Vector3;
     use crate::server::server_update::ServerUpdate;
     use crate::world::world::World;
 

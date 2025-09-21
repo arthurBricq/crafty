@@ -6,7 +6,7 @@ use std::sync::{mpsc, Arc, Mutex};
 use std::{io, thread};
 use model::game::actions::Action;
 use model::game::attack::EntityAttack;
-use model::primitives::position::Position;
+use primitives::position::Position;
 use model::server::server_update::ServerUpdate;
 use crate::message_to_server::MessageToServer;
 use crate::proxy::Proxy;

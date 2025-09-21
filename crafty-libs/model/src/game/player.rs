@@ -1,6 +1,6 @@
 use crate::entity::humanoid::humanoid_aabb;
-use crate::primitives::position::Position;
-use crate::primitives::vector::Vector3;
+use primitives::position::Position;
+use primitives::vector::Vector3;
 use std::f32::consts::PI;
 use std::time::Duration;
 use crate::collision::collidable::{Collidable, CollisionData};

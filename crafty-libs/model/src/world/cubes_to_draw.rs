@@ -1,4 +1,4 @@
-use crate::primitives::vector::Vector3;
+use primitives::vector::Vector3;
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, VertexBuffer};
 use crate::world::chunk::Chunk;
@@ -92,7 +92,7 @@ impl CubesToDraw {
 #[cfg(test)]
 mod tests {
     use super::CubesToDraw;
-    use crate::primitives::vector::Vector3;
+    use primitives::vector::Vector3;
     use crate::world::block_kind::Block::DIRT;
     use crate::world::cube::Cube;
 
