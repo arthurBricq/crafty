@@ -1,12 +1,12 @@
+use graphics::player::world_renderer::WorldRenderer;
 use model::args::WorldInitializer;
+use model::game::player::Player;
 use model::server::game_server::{handle_entity_thread, GameServer};
 use model::world::generation::world_generator::WorldGenerator;
 use model::world::world::World;
+use network::proxy::Proxy;
 use network::single_player_proxy::SinglePlayerProxy;
 use std::sync::{Arc, Mutex};
-use graphics::player::world_renderer::WorldRenderer;
-use model::game::player::Player;
-use network::proxy::Proxy;
 
 fn main() {
     // Create the initial world
@@ -39,5 +39,5 @@ fn main() {
     // Currently, the client 'owns' the proxy, this is really the part that sucks for now.
     let mut renderer =
         WorldRenderer::new(Arc::new(Mutex::new(proxy)), World::empty(), Player::new());
-    renderer.run();
+    renderer.run::<graphics_glium::runtime::GliumRenderer>();
 }

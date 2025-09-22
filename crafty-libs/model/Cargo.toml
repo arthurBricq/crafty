@@ -8,9 +8,6 @@ name = "model"
 path = "src/lib.rs"
 
 [dependencies]
-# TODO: We should really find a way to NOT have glium used here !
-#       This can be probably achieved using a trait, for now I keep this here and then I will improve it.
-glium = {workspace = true }
 rand = {workspace = true }
 serde = {workspace = true }
 serde_json = {workspace = true }

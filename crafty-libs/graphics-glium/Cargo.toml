@@ -1,7 +1,13 @@
 [package]
-name = "graphics-glium"
+name = "graphics_glium"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 glium = { workspace = true }
+graphics = { workspace = true }
+primitives = { workspace = true }
+image = { workspace = true }
+# TODO we should not import the model here...
+model = { workspace = true }
+winit = { workspace = true }

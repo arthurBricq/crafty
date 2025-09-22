@@ -1,6 +1,5 @@
+use crate::vector::Vector3;
 use glium::implement_vertex;
-use primitives::vector::Vector3;
-use crate::world::cube::Cube;
 
 /// An OpenGL type that contains the information for OpenGL's instancing
 #[derive(Copy, Clone)]
@@ -15,25 +14,25 @@ pub struct CubeInstance {
 implement_vertex!(CubeInstance, world_matrix, block_id, is_selected);
 
 impl CubeInstance {
-    pub fn new(cube: &Cube) -> Self {
+    pub fn new(position: Vector3, block_id: u8) -> Self {
         Self {
-            world_matrix: Self::model_matrix(cube.position()),
-            block_id: cube.block_id(),
+            world_matrix: Self::model_matrix(&position),
+            block_id,
             is_selected: false as u8,
-            position: cube.position().clone(),
+            position,
         }
     }
 
-    /// Creates a new selected cube
+    /// Creates a newly selected cube
     /// This cube will be slightly inflated, which is a hack to greatly optimize performances
     /// Using this trick allows us to not have to update the existing `CubeInstance` selection property,
     /// but instead we just insert one extra cube that is inflated.
-    pub fn new_selected(cube: &Cube) -> Self {
+    pub fn new_selected(position: Vector3, block_id: u8) -> Self {
         Self {
-            world_matrix: Self::model_matrix_inflated(&(cube.position())),
-            block_id: cube.block_id(),
+            world_matrix: Self::model_matrix_inflated(&position),
+            block_id,
             is_selected: true as u8,
-            position: cube.position().clone(),
+            position,
         }
     }
 

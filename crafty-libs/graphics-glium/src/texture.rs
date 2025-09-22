@@ -1,11 +1,10 @@
-use glium::texture::Texture2dArray;
 use glium::Display;
-use glium::{glutin::surface::WindowSurface, Texture2d};
+use glium::texture::Texture2dArray;
+use glium::{Texture2d, glutin::surface::WindowSurface};
 use image::{GenericImageView, ImageBuffer, Rgba};
-use model::entity::humanoid::{ImageCut, HUMANOID_TEXTURES_PATH, PLAYER_CUT_TEMPLATE};
-use primitives::math;
+use model::entity::humanoid::{HUMANOID_TEXTURES_PATH, ImageCut, PLAYER_CUT_TEMPLATE};
 use model::world::block_kind::Block;
-use crate::core::texture;
+use primitives::math;
 
 /// Builds the array of 2D textures using all the blocks
 /// Each block is associated with 3 textures: side, top and bottom
@@ -113,7 +112,7 @@ pub fn load_texture_cut(
 
 /// Load the texture for an humanoid entity
 pub fn load_humanoid_textures(root: &str, display: &Display<WindowSurface>) -> Texture2dArray {
-    texture::load_texture_cut(
+    load_texture_cut(
         root,
         HUMANOID_TEXTURES_PATH.to_vec(),
         display,

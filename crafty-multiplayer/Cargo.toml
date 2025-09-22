@@ -7,6 +7,7 @@ edition = "2021"
 model = { workspace = true }
 network = { workspace = true }
 graphics = { workspace = true }
+graphics_glium = { workspace = true }
 
 [[bin]]
 name = "crafty-multi"

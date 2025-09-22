@@ -156,6 +156,14 @@ This project works quite well, but... There is still a lot to do.
   does not work well with macos and the performances are quite bad. I am not sure to which extent it will be easy to
   create new bindings for another graphics library.
 
+On going steps
+
+- [ ] Better UI abstraction: this is a WIP, to really remove all `glium` dependencies from the model and graphics
+  crates.
+- [ ] Stop to `println`, instead use a logger.
+- [ ] Better collision detection: to solve the collision crashing problem.
+- [ ] Better multiplayer
+
 ## Crafting recipes (for now)
 
 Stone word:

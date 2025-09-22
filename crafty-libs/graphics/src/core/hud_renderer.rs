@@ -1,15 +1,15 @@
-use model::game::health::Health;
-use model::game::player_items::{ItemStack, PlayerItems};
-use crate::core::color::Color::Red;
-use crate::core::font::GLChar;
-use crate::core::health_bar::HealthBar;
-use crate::core::inventory_event::InventoryEvent;
-use crate::core::items_bar::ItemBar;
-use crate::core::rectangle::RectInstance;
-use crate::core::update_status::UpdateStatus;
 use super::menu_help;
 use super::menu_help::HelpMenu;
 use super::menu_help::HelpMenuData;
+use crate::core::health_bar::HealthBar;
+use crate::core::inventory_event::InventoryEvent;
+use crate::core::items_bar::ItemBar;
+use crate::core::update_status::UpdateStatus;
+use model::game::health::Health;
+use model::game::player_items::{ItemStack, PlayerItems};
+use primitives::color::Color::Red;
+use primitives::opengl::font::GLChar;
+use primitives::opengl::rectangle::RectInstance;
 
 use super::menu_debug;
 use super::menu_debug::DebugData;
@@ -152,8 +152,8 @@ impl HUDRenderer {
         self.update();
     }
 
-    pub fn rects(&self) -> &Vec<RectInstance> {
-        &self.rects
+    pub fn rects(&self) -> Vec<RectInstance> {
+        self.rects.clone()
     }
 
     pub fn show_debug(&self) -> bool {

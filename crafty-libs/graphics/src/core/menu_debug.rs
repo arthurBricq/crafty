@@ -1,7 +1,7 @@
-use std::f32::consts::PI;
-use primitives::position::Position;
-use crate::core::rectangle::RectInstance;
 use crate::core::string_rect::StringRect;
+use primitives::opengl::rectangle::RectInstance;
+use primitives::position::Position;
+use std::f32::consts::PI;
 
 /// Data in the debug menu
 pub const DEBUG_MENU_DATA: [DebugItem; 4] = [

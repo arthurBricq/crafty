@@ -1,9 +1,7 @@
-use primitives::vector::Vector3;
-use glium::glutin::surface::WindowSurface;
-use glium::{Display, VertexBuffer};
+use primitives::opengl::cube_instance::CubeInstance;
 use crate::world::chunk::Chunk;
 use crate::world::cube::Cube;
-use crate::world::cube_instance::CubeInstance;
+use primitives::vector::Vector3;
 
 /// Control the cubes to be drawn
 pub struct CubesToDraw {
@@ -31,25 +29,21 @@ impl CubesToDraw {
 
     /// Add a CubeAttr to the Vector from the parameter of a Cube
     pub fn add_cube(&mut self, c: &Cube) {
-        self.cubes_to_draw.push(CubeInstance::new(c));
+        self.cubes_to_draw.push(CubeInstance::new(c.position().clone(), c.block_id()));
     }
 
     /// Returns the OpenGL buffer with cubes to be drawn
     /// If you want to have one cube drawn as 'selected', pass it in the argument `selected`
-    pub fn get_cubes_buffer(
-        &mut self,
-        display: &Display<WindowSurface>,
-        selected_cube: Option<Cube>,
-    ) -> VertexBuffer<CubeInstance> {
+    pub fn get_cubes_buffer(&mut self, selected_cube: Option<Cube>) -> Vec<CubeInstance> {
         if let Some(selected) = selected_cube {
             self.cubes_to_draw
-                .push(CubeInstance::new_selected(&selected));
+                .push(CubeInstance::new_selected(selected.position().clone(), selected.block_id()));
         }
-        let buffer = VertexBuffer::immutable(display, &self.cubes_to_draw);
+        let buffer = self.cubes_to_draw.clone();
         if selected_cube.is_some() {
             self.cubes_to_draw.pop();
         }
-        buffer.unwrap()
+        buffer
     }
 
     /// Try to remove a cube at at position,
@@ -92,9 +86,9 @@ impl CubesToDraw {
 #[cfg(test)]
 mod tests {
     use super::CubesToDraw;
-    use primitives::vector::Vector3;
     use crate::world::block_kind::Block::DIRT;
     use crate::world::cube::Cube;
+    use primitives::vector::Vector3;
 
     #[test]
     fn test_add_remove_one_cube() {

@@ -1,7 +1,7 @@
-use model::game::player_items::ItemStack;
-use crate::core::color::Color::{LightGray, LightYellow, Red};
-use crate::core::rectangle::RectInstance;
 use crate::core::string_rect::StringRect;
+use model::game::player_items::ItemStack;
+use primitives::color::Color::{LightGray, LightYellow, Red};
+use primitives::opengl::rectangle::RectInstance;
 
 pub struct ItemBar {
     items: Vec<ItemStack>,

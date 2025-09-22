@@ -1,5 +1,5 @@
-use crate::core::color::Color::Red;
-use crate::core::rectangle::RectInstance;
+use primitives::color::Color::Red;
+use primitives::opengl::rectangle::RectInstance;
 
 pub struct HealthBar {
     health: u8,

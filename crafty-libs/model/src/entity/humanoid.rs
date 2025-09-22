@@ -1,6 +1,6 @@
 use crate::collision::aabb::AABB;
-use crate::entity::entity::EntityCube;
 use crate::game::player::{DIAMETER, FOREHEAD, PLAYER_HEIGHT};
+use primitives::opengl::entity::EntityCube;
 use primitives::position::Position;
 use primitives::vector::Vector3;
 
@@ -70,7 +70,6 @@ pub const PLAYER_CUT_TEMPLATE: [ImageCut; 24] = [
 ];
 
 pub const HUMANOID_TEXTURES_PATH: [&str; 2] = ["player.png", "monster.png"];
-
 
 /// Return a vector of EntityCube forming a humanoid
 pub fn get_opengl_entities(mut position: Position, monster_type: u8) -> Vec<EntityCube> {

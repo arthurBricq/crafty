@@ -1,5 +1,4 @@
 use glium::implement_vertex;
-use model::world::cube_instance::CubeInstance;
 
 // Vertex shader
 // Most basic example with a camera
@@ -277,57 +276,3 @@ pub const VERTICES: [CubeVertex; 36] = [
         face: 5,
     },
 ];
-
-
-
-
-const CONTAINER_SIZE: usize = 100000;
-
-/// A class responsible for holding many cubes.
-/// The purpose of this class is to not have to re-allocate all the time
-pub struct CubeContainer {
-    // data: [CubeAttr; CONTAINER_SIZE],
-    data: Vec<CubeInstance>,
-    current_size: usize,
-}
-
-impl CubeContainer {
-    pub fn new() -> Self {
-        Self {
-            data: vec![CubeInstance::empty(); CONTAINER_SIZE],
-            current_size: 0,
-        }
-    }
-
-    pub fn as_slice(&self) -> &[CubeInstance] {
-        &self.data[..self.current_size]
-    }
-
-    pub fn reset(&mut self) {
-        self.current_size = 0;
-    }
-
-    pub fn push(&mut self, cube: CubeInstance) {
-        self.data[self.current_size] = cube;
-        self.current_size += 1;
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use model::world::cube_instance::CubeInstance;
-    use crate::core::cube::CubeContainer;
-
-    #[test]
-    fn test_cube_container() {
-        let mut container = CubeContainer::new();
-        assert_eq!(container.as_slice().len(), 0);
-
-        container.push(CubeInstance::empty());
-        container.push(CubeInstance::empty());
-        assert_eq!(container.as_slice().len(), 2);
-
-        container.reset();
-        assert_eq!(container.as_slice().len(), 0);
-    }
-}

@@ -1,9 +1,9 @@
-use model::game::player_items::ItemStack;
-use crate::core::color::Color::{EvenLighterGray, LighterGray};
 use crate::core::inventory_space;
 use crate::core::inventory_space::{InventoryPosition, InventoryRect};
-use crate::core::rectangle::RectInstance;
 use crate::core::string_rect::StringRect;
+use model::game::player_items::ItemStack;
+use primitives::color::Color::{EvenLighterGray, LighterGray};
+use primitives::opengl::rectangle::RectInstance;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InventorySlot {

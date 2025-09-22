@@ -1,5 +1,5 @@
-use crate::core::font::GLChar;
-use crate::core::rectangle::RectInstance;
+use primitives::opengl::font::GLChar;
+use primitives::opengl::rectangle::RectInstance;
 
 /// Represent a string with rectangles
 pub struct StringRect {

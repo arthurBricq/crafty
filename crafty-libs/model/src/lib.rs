@@ -11,30 +11,28 @@ pub mod server {
     pub mod game_server;
     pub mod monster_manager;
     pub mod server_state;
-    pub mod world_dispatcher;
     pub mod server_update;
+    pub mod world_dispatcher;
 }
 
 pub mod world {
+    pub mod block_kind;
     pub mod chunk;
     pub mod cube;
-    pub mod cube_instance;
     pub mod cubes_to_draw;
-    pub mod world;
     pub mod generation;
-    pub mod block_kind;
+    pub mod world;
     pub mod world_serializer;
 }
 
 pub mod game {
     pub mod actions;
-    pub mod camera;
     pub mod attack;
     pub mod crafting;
     pub mod health;
+    pub mod input;
     pub mod player;
     pub mod player_items;
-    pub mod input;
 }
 
 pub mod collision {

@@ -1,14 +1,14 @@
-use winit::event::ElementState;
-use model::game::crafting::{CraftingGrid, CraftingManager};
-use model::game::player_items::PlayerItems;
-use model::world::block_kind::Block;
-use crate::core::color::Color::{LightGray, Red};
 use crate::core::inventory_event::InventoryEvent;
 use crate::core::inventory_slot::InventorySlot;
 use crate::core::inventory_space;
 use crate::core::inventory_space::{InventoryPosition, InventoryRect};
-use crate::core::rectangle::RectInstance;
 use crate::core::update_status::UpdateStatus;
+use crate::renderer::PressedOrReleased;
+use model::game::crafting::{CraftingGrid, CraftingManager};
+use model::game::player_items::PlayerItems;
+use model::world::block_kind::Block;
+use primitives::color::Color::{LightGray, Red};
+use primitives::opengl::rectangle::RectInstance;
 
 const INVENTORY_NROWS: usize = 4; // the 0th is the item bar
 const INVENTORY_NCOLS: usize = 8;
@@ -93,7 +93,7 @@ impl InventoryMenu {
                 }
             }
             InventoryEvent::Button(state) => {
-                if state == ElementState::Pressed {
+                if state == PressedOrReleased::Pressed {
                     self.handle_button_pressed()
                 } else {
                     UpdateStatus::Update

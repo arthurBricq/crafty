@@ -1,8 +1,8 @@
-use winit::event::ElementState;
+use crate::renderer::PressedOrReleased;
 
 pub enum InventoryEvent {
     /// Contains the x, y coordinates in NDC of the new position
     CursorMoved(f32, f32),
     /// Only left click for now
-    Button(ElementState),
+    Button(PressedOrReleased),
 }

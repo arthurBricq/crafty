@@ -1,4 +1,5 @@
 use graphics::player::world_renderer::WorldRenderer;
+use graphics_glium::runtime::GliumRenderer;
 use model::args::Args;
 use model::game::player::Player;
 use model::world::world::World;
@@ -19,5 +20,5 @@ pub fn main() {
     let mut client = WorldRenderer::new(proxy, World::empty(), Player::new());
 
     // This is blocking so we can't really do it...
-    client.run();
+    client.run::<GliumRenderer>();
 }

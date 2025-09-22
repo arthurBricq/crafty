@@ -1,9 +1,10 @@
-use crate::entity::entity::{Entity, EntityCube, EntityKind};
+use crate::entity::entity::{Entity, EntityKind};
+use crate::game::attack::EntityAttack;
+use crate::world::cube::Cube;
+use primitives::opengl::entity::EntityCube;
 use primitives::position::Position;
 use primitives::vector::Vector3;
 use std::collections::HashMap;
-use crate::game::attack::EntityAttack;
-use crate::world::cube::Cube;
 
 /// Contain all the entities
 pub struct EntityManager {
@@ -52,9 +53,7 @@ impl EntityManager {
             .entities
             .iter()
             .map(|(id, entity)| (id, entity.aabb().faces()))
-            .find(|(_, faces)| {
-                Cube::intersection_with_faces(&faces, position, direction).is_some()
-            })
+            .find(|(_, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
         {
             println!("Player {id} was hit !");
             return Some(EntityAttack::new(*id));

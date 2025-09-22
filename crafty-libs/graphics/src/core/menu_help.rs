@@ -1,4 +1,4 @@
-use crate::core::rectangle::RectInstance;
+use primitives::opengl::rectangle::RectInstance;
 use crate::core::string_rect::StringRect;
 
 /// Data in the help menu

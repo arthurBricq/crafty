@@ -15,10 +15,11 @@ lto = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace.dependencies]
-model = { path = "./crafty-libs/model"}
-network = { path = "./crafty-libs/network"}
-graphics = { path = "./crafty-libs/graphics"}
-primitives = { path = "./crafty-libs/primitives"}
+model = { path = "./crafty-libs/model" }
+network = { path = "./crafty-libs/network" }
+graphics = { path = "./crafty-libs/graphics" }
+graphics_glium = { path = "./crafty-libs/graphics-glium" }
+primitives = { path = "./crafty-libs/primitives" }
 
 # OpenGL related
 glium = "0.34"

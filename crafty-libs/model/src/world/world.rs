@@ -1,18 +1,17 @@
-use strum::IntoEnumIterator;
-use primitives::position::Position;
-use primitives::vector::Vector3;
-use crate::world::chunk::{Chunk, CHUNK_SIZE};
-use crate::world::cube::Cube;
-use crate::world::cube_instance::CubeInstance;
-use crate::world::cubes_to_draw::CubesToDraw;
-
-use glium::glutin::surface::WindowSurface;
-use glium::{Display, VertexBuffer};
 use crate::collision::aabb::AABB;
 use crate::collision::collidable::{Collidable, CollisionData};
 use crate::game::actions::Action;
 use crate::world::block_kind::Block;
-use crate::world::world_serializer::{get_serialize_container, serialize_one_chunk, SerializedWorld};
+use crate::world::chunk::{Chunk, CHUNK_SIZE};
+use crate::world::cube::Cube;
+use crate::world::cubes_to_draw::CubesToDraw;
+use crate::world::world_serializer::{
+    get_serialize_container, serialize_one_chunk, SerializedWorld,
+};
+use primitives::position::Position;
+use primitives::vector::Vector3;
+use strum::IntoEnumIterator;
+use primitives::opengl::cube_instance::CubeInstance;
 
 pub struct World {
     /// The list of the chunks currently being displayed
@@ -112,7 +111,7 @@ impl World {
                     for cube in row {
                         if let Some(c) = cube {
                             if c.is_visible() {
-                                positions.push(CubeInstance::new(c));
+                                positions.push(CubeInstance::new(c.position().clone(), c.block_id()));
                             }
                         }
                     }
@@ -134,15 +133,11 @@ impl World {
 
     /// Returns the OpenGL buffer with cubes to be drawn
     /// If you want to have one cube drawn as 'selected', pass it in the argument `selected`
-    pub fn get_cubes_buffer(
-        &mut self,
-        display: &Display<WindowSurface>,
-        selected: Option<Cube>,
-    ) -> VertexBuffer<CubeInstance> {
+    pub fn get_cubes_buffer(&mut self, selected: Option<Cube>) -> Vec<CubeInstance> {
         self.cubes_to_draw
             .as_mut()
             .unwrap()
-            .get_cubes_buffer(display, selected)
+            .get_cubes_buffer(selected)
     }
 
     pub fn number_cubes_rendered(&self) -> usize {
@@ -430,12 +425,12 @@ impl Collidable for World {
 #[cfg(test)]
 mod tests {
     use crate::game::actions::Action;
-    use primitives::vector::Vector3;
     use crate::world::block_kind::Block;
     use crate::world::block_kind::Block::GRASS;
     use crate::world::chunk::{Chunk, CHUNK_FLOOR, CHUNK_SIZE};
     use crate::world::generation::world_generator::WorldGenerator;
     use crate::world::world::World;
+    use primitives::vector::Vector3;
 
     #[test]
     fn test_chunk_collision_1() {
@@ -646,5 +641,4 @@ mod tests {
             .count();
         assert_eq!(count, CHUNK_SIZE * CHUNK_SIZE)
     }
-
 }

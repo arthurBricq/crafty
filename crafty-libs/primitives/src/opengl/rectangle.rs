@@ -1,6 +1,6 @@
+use crate::color::Color;
+use crate::opengl::font::GLChar;
 use glium::implement_vertex;
-use crate::core::color::Color;
-use crate::core::font::GLChar;
 
 pub const RECT_VERTEX_SHADER: &str = r"
     #version 330 core
