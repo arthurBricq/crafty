@@ -9,7 +9,7 @@ pub struct CubeRenderData {
 /// Backend-agnostic representation of an entity part to render
 #[derive(Clone)]
 pub struct EntityRenderData {
-    pub position: crate::position::Position,  // includes rotation
+    pub position: crate::position::Position, // includes rotation
     pub body_part_id: u8,
     pub monster_type: u8,
     pub scale: [f32; 3],
@@ -56,17 +56,23 @@ impl RectRenderData {
     }
 
     /// Creates a rectangle instance from the bottom left corner of the rectangle
-    /// 
+    ///
     /// Takes corner coordinates (u, v) and full dimensions (w, h).
     /// Converts to center coordinates but keeps full dimensions (unlike RectInstance::new_from_corner
     /// which halves dimensions, because RectRenderData stores what RectInstance::new expects).
     pub fn new_from_corner(u: f32, v: f32, w: f32, h: f32, color: crate::color::Color) -> Self {
-        Self::new(u + w / 2., v + h / 2., w, h, color)
+        Self::new(u + w / 2., v + h / 2., w / 2., h / 2., color)
     }
 
     /// Creates a square instance from the given corner.
     /// The current aspect ratio of the screen must be provided to properly create the cube
-    pub fn square_from_corner(u: f32, v: f32, s: f32, aspect_ratio: f32, color: crate::color::Color) -> Self {
+    pub fn square_from_corner(
+        u: f32,
+        v: f32,
+        s: f32,
+        aspect_ratio: f32,
+        color: crate::color::Color,
+    ) -> Self {
         Self::new_from_corner(u, v, s / aspect_ratio, s, color)
     }
 }
