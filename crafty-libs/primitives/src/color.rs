@@ -8,6 +8,7 @@ pub enum Color {
     LightYellow,
     Sky1,
     Sky2,
+    Transparent,
 }
 
 impl Color {
@@ -21,6 +22,7 @@ impl Color {
             Color::LightYellow => [252. / 255., 253. / 255., 181. / 255., 0.8],
             Color::Sky1 => [146. / 255., 210. / 255., 249. / 255., 1.],
             Color::Sky2 => [205. / 255., 226. / 255., 238. / 255., 1.],
+            Color::Transparent => [0., 0., 0., 0.],
         }
     }
 

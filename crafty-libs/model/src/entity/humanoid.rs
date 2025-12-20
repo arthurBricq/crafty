@@ -1,6 +1,6 @@
 use crate::collision::aabb::AABB;
 use crate::game::player::{DIAMETER, FOREHEAD, PLAYER_HEIGHT};
-use primitives::opengl::entity::EntityCube;
+use primitives::render_data::EntityRenderData;
 use primitives::position::Position;
 use primitives::vector::Vector3;
 
@@ -71,8 +71,8 @@ pub const PLAYER_CUT_TEMPLATE: [ImageCut; 24] = [
 
 pub const HUMANOID_TEXTURES_PATH: [&str; 2] = ["player.png", "monster.png"];
 
-/// Return a vector of EntityCube forming a humanoid
-pub fn get_opengl_entities(mut position: Position, monster_type: u8) -> Vec<EntityCube> {
+/// Return a vector of EntityRenderData forming a humanoid
+pub fn get_opengl_entities(mut position: Position, monster_type: u8) -> Vec<EntityRenderData> {
     let mut ent = Vec::new();
 
     // Head
@@ -80,12 +80,12 @@ pub fn get_opengl_entities(mut position: Position, monster_type: u8) -> Vec<Enti
     position += Vector3::newf(PLAYER_HEAD_OFFSET)
         .rotation_z(-position.pitch())
         .rotation_y(position.yaw());
-    ent.push(EntityCube::new(
-        &position,
-        0,
+    ent.push(EntityRenderData {
+        position: position.clone(),
+        body_part_id: 0,
         monster_type,
-        [PLAYER_HEAD_SIZE; 3],
-    ));
+        scale: [PLAYER_HEAD_SIZE; 3],
+    });
     position += Vector3::newf(PLAYER_HEAD_OFFSET)
         .rotation_z(-position.pitch())
         .rotation_y(position.yaw())
@@ -93,45 +93,45 @@ pub fn get_opengl_entities(mut position: Position, monster_type: u8) -> Vec<Enti
 
     // Body
     position += Vector3::newf(PLAYER_BODY_OFFSET);
-    ent.push(EntityCube::new_only_yaw(
-        &position,
-        2,
+    ent.push(EntityRenderData {
+        position: position.clone(),
+        body_part_id: 2,
         monster_type,
-        PLAYER_BODY_SCALE,
-    ));
+        scale: PLAYER_BODY_SCALE,
+    });
 
     // Arm
     position += Vector3::newf(PLAYER_ARM_OFFSET).rotation_y(position.yaw());
-    ent.push(EntityCube::new_only_yaw(
-        &position,
-        3,
+    ent.push(EntityRenderData {
+        position: position.clone(),
+        body_part_id: 3,
         monster_type,
-        PLAYER_ARM_SCALE,
-    ));
+        scale: PLAYER_ARM_SCALE,
+    });
     position += Vector3::newf(PLAYER_ARM_OFFSET).rotation_y(position.yaw()) * -2.;
-    ent.push(EntityCube::new_only_yaw(
-        &position,
-        3,
+    ent.push(EntityRenderData {
+        position: position.clone(),
+        body_part_id: 3,
         monster_type,
-        PLAYER_ARM_SCALE,
-    ));
+        scale: PLAYER_ARM_SCALE,
+    });
     position += Vector3::newf(PLAYER_ARM_OFFSET).rotation_y(position.yaw());
 
     // Legs
     position += Vector3::newf(PLAYER_LEG_OFSET).rotation_y(position.yaw());
-    ent.push(EntityCube::new_only_yaw(
-        &position,
-        1,
+    ent.push(EntityRenderData {
+        position: position.clone(),
+        body_part_id: 1,
         monster_type,
-        PLAYER_LEG_SCALE,
-    ));
+        scale: PLAYER_LEG_SCALE,
+    });
     position += Vector3::new(0., 0., -2. * PLAYER_LEG_WIDTH_SHIFT).rotation_y(position.yaw());
-    ent.push(EntityCube::new_only_yaw(
-        &position,
-        1,
+    ent.push(EntityRenderData {
+        position: position.clone(),
+        body_part_id: 1,
         monster_type,
-        PLAYER_LEG_SCALE,
-    ));
+        scale: PLAYER_LEG_SCALE,
+    });
 
     ent
 }

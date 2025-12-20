@@ -8,13 +8,13 @@ use model::game::crafting::{CraftingGrid, CraftingManager};
 use model::game::player_items::PlayerItems;
 use model::world::block_kind::Block;
 use primitives::color::Color::{LightGray, Red};
-use primitives::opengl::rectangle::RectInstance;
+use crate::renderer::RectRenderData;
 
 const INVENTORY_NROWS: usize = 4; // the 0th is the item bar
 const INVENTORY_NCOLS: usize = 8;
 
 pub struct InventoryMenu {
-    rects: Vec<RectInstance>,
+    rects: Vec<RectRenderData>,
     aspect_ratio: f32,
 
     items: PlayerItems,
@@ -59,7 +59,7 @@ impl InventoryMenu {
         self.update()
     }
 
-    pub fn rects(&self) -> &Vec<RectInstance> {
+    pub fn rects(&self) -> &Vec<RectRenderData> {
         &self.rects
     }
 
@@ -216,8 +216,16 @@ impl InventoryMenu {
         self.ui_rect = inventory_space::ui_boundaries(self.aspect_ratio);
         {
             let (u, v, w, h) = self.ui_rect;
-            self.rects
-                .push(RectInstance::new_from_corner(u, v, w, h, LightGray));
+            self.rects.push(RectRenderData {
+                u: u + w / 2.,
+                v: v + h / 2.,
+                w: w / 2.,
+                h: h / 2.,
+                color: LightGray,
+                is_font: false,
+                font_coords: None,
+                block_id: None,
+            });
         }
 
         // inventory slots
@@ -301,9 +309,16 @@ impl InventoryMenu {
                     &self.ui_rect,
                     &InventoryRect::new(self.cursor_pos.x, self.cursor_pos.y, item_size, item_size),
                 );
-                let mut rect = RectInstance::new_from_corner(x, y, w, h, Red);
-                rect.set_block_id(block as u8 as i8);
-                self.rects.push(rect);
+                self.rects.push(RectRenderData {
+                    u: x + w / 2.,
+                    v: y + h / 2.,
+                    w: w / 2.,
+                    h: h / 2.,
+                    color: Red,
+                    is_font: false,
+                    font_coords: None,
+                    block_id: Some(block as u8 as i8),
+                });
             }
         }
     }

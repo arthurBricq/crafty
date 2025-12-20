@@ -1,9 +1,9 @@
 use crate::core::inventory_space;
 use crate::core::inventory_space::{InventoryPosition, InventoryRect};
 use crate::core::string_rect::StringRect;
+use crate::renderer::RectRenderData;
 use model::game::player_items::ItemStack;
 use primitives::color::Color::{EvenLighterGray, LighterGray};
-use primitives::opengl::rectangle::RectInstance;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InventorySlot {
@@ -28,26 +28,40 @@ impl InventorySlot {
         ui_rect: &(f32, f32, f32, f32),
         item: Option<ItemStack>,
         hover: bool,
-    ) -> Vec<RectInstance> {
+    ) -> Vec<RectRenderData> {
         let (x, y, w, h) = inventory_space::from_ui_to_ndc_rect(
             ui_rect,
             &InventoryRect::new(self.position.x, self.position.y, self.size, self.size),
         );
 
         let mut rects = Vec::new();
-        rects.push(RectInstance::new_from_corner(
-            x,
-            y,
-            w,
-            h,
-            if hover { EvenLighterGray } else { LighterGray },
-        ));
+        let slot_u = x + w / 2.;
+        let slot_v = y + h / 2.;
+        let slot_w = w / 2.;
+        let slot_h = h / 2.;
+        rects.push(RectRenderData {
+            u: slot_u,
+            v: slot_v,
+            w: slot_w,
+            h: slot_h,
+            color: if hover { EvenLighterGray } else { LighterGray },
+            is_font: false,
+            font_coords: None,
+            block_id: None,
+        });
 
         // draw the item as well
         if let Some((block, count)) = item {
-            let mut rect = RectInstance::new_from_corner(x, y, w, h, LighterGray);
-            rect.set_block_id(block as u8 as i8);
-            rects.push(rect);
+            rects.push(RectRenderData {
+                u: slot_u,
+                v: slot_v,
+                w: slot_w,
+                h: slot_h,
+                color: LighterGray,
+                is_font: false,
+                font_coords: None,
+                block_id: Some(block as u8 as i8),
+            });
 
             // and the count
             let text = format!("{count}");

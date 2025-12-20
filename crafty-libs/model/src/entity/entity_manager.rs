@@ -1,7 +1,7 @@
 use crate::entity::entity::{Entity, EntityKind};
 use crate::game::attack::EntityAttack;
 use crate::world::cube::Cube;
-use primitives::opengl::entity::EntityCube;
+use primitives::render_data::EntityRenderData;
 use primitives::position::Position;
 use primitives::vector::Vector3;
 use std::collections::HashMap;
@@ -40,11 +40,11 @@ impl EntityManager {
     }
 
     /// Returns the list of OpenGL attributes to be rendered
-    pub fn get_opengl_entities(&self) -> Vec<EntityCube> {
+    pub fn get_opengl_entities(&self) -> Vec<EntityRenderData> {
         self.entities
             .iter()
             .map(|(_, entity)| entity.get_opengl_entities())
-            .collect::<Vec<Vec<EntityCube>>>()
+            .collect::<Vec<Vec<EntityRenderData>>>()
             .concat()
     }
 

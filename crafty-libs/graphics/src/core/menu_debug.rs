@@ -1,5 +1,5 @@
 use crate::core::string_rect::StringRect;
-use primitives::opengl::rectangle::RectInstance;
+use crate::renderer::RectRenderData;
 use primitives::position::Position;
 use std::f32::consts::PI;
 
@@ -71,9 +71,9 @@ impl DebugMenuData {
 
 /// Implement the debug menu
 pub struct DebugMenu {
-    static_part: Vec<RectInstance>,
+    static_part: Vec<RectRenderData>,
     coord_to_update: Vec<[f32; 2]>,
-    rects: Vec<RectInstance>,
+    rects: Vec<RectRenderData>,
 }
 
 impl DebugMenu {
@@ -102,7 +102,7 @@ impl DebugMenu {
         }
     }
 
-    pub fn rects(&self) -> &Vec<RectInstance> {
+    pub fn rects(&self) -> &Vec<RectRenderData> {
         &self.rects
     }
 

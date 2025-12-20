@@ -1,13 +1,14 @@
 use crate::texture;
+use crate::vertices::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
+use crate::vertices::font::GLChar;
+use crate::vertices::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
+use crate::vertices::{CubeInstance, EntityCube, RectInstance};
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter};
 use glium::{Surface, VertexBuffer, uniform};
 use graphics::core::entity::{ENTITY_FRAGMENT_SHADER, ENTITY_VERTEX_SHADER};
 use graphics::renderer::{KeyCode, KeyEvent, MouseEvent, RendererBackend, ToDraw, WindowAction};
 use primitives::camera::perspective_matrix;
 use primitives::color::Color;
-use primitives::opengl::cube::{CUBE_FRAGMENT_SHADER, CUBE_VERTEX_SHADER, VERTICES};
-use primitives::opengl::font::GLChar;
-use primitives::opengl::rectangle::{RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER, RECT_VERTICES};
 use std::time::{Duration, Instant};
 use winit::event::{ElementState, MouseButton};
 use winit::keyboard::PhysicalKey;
@@ -151,6 +152,11 @@ impl graphics::renderer::Renderer for GliumRenderer {
                                 entity_buffer,
                                 hud_buffer,
                             } = backend.update(dt);
+
+                            // Convert abstract types to glium vertex types
+                            let cubes_buffer: Vec<CubeInstance> = cubes_buffer.iter().map(|d| (*d).into()).collect();
+                            let entity_buffer: Vec<EntityCube> = entity_buffer.iter().map(|d| d.clone().into()).collect();
+                            let hud_buffer: Vec<RectInstance> = hud_buffer.iter().map(|d| (*d).into()).collect();
 
                             // I) Draw the cubes
 

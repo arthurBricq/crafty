@@ -8,8 +8,8 @@ use crate::core::update_status::UpdateStatus;
 use model::game::health::Health;
 use model::game::player_items::{ItemStack, PlayerItems};
 use primitives::color::Color::Red;
-use primitives::opengl::font::GLChar;
-use primitives::opengl::rectangle::RectInstance;
+use primitives::font::GLChar;
+use crate::renderer::RectRenderData;
 
 use super::menu_debug;
 use super::menu_debug::DebugData;
@@ -23,10 +23,10 @@ pub struct HUDRenderer {
     /// Ratio of the W over the H
     aspect_ratio: f32,
     /// List of the tiles to be presented on the screen
-    rects: Vec<RectInstance>,
+    rects: Vec<RectRenderData>,
 
     /// The rects that are always present on the screen
-    base: Vec<RectInstance>,
+    base: Vec<RectRenderData>,
 
     help_menu: HelpMenu,
     show_help: bool,
@@ -69,46 +69,92 @@ impl HUDRenderer {
     pub fn add_cross(&mut self) {
         let w = 0.05;
         let s = 0.003;
-        self.base.push(RectInstance::new(0., 0., w / 1.5, s, Red));
-        self.base.push(RectInstance::new(0., 0., s / 2.5, w, Red));
+        self.base.push(RectRenderData {
+            u: 0.,
+            v: 0.,
+            w: w / 1.5,
+            h: s,
+            color: Red,
+            is_font: false,
+            font_coords: None,
+            block_id: None,
+        });
+        self.base.push(RectRenderData {
+            u: 0.,
+            v: 0.,
+            w: s / 2.5,
+            h: w,
+            color: Red,
+            is_font: false,
+            font_coords: None,
+            block_id: None,
+        });
     }
 
     pub fn add_crafty_label(&mut self) {
         let h = 0.4;
         let s = 0.05;
         let x0 = -0.3;
-        self.base
-            .push(RectInstance::new_with_char(x0, h, s, GLChar::C));
-        self.base.push(RectInstance::new_with_char(
-            x0 + 1. * s * 3.,
-            h,
-            s,
-            GLChar::R,
-        ));
-        self.base.push(RectInstance::new_with_char(
-            x0 + 2. * s * 3.,
-            h,
-            s,
-            GLChar::A,
-        ));
-        self.base.push(RectInstance::new_with_char(
-            x0 + 3. * s * 3.,
-            h,
-            s,
-            GLChar::F,
-        ));
-        self.base.push(RectInstance::new_with_char(
-            x0 + 4. * s * 3.,
-            h,
-            s,
-            GLChar::T,
-        ));
-        self.base.push(RectInstance::new_with_char(
-            x0 + 5. * s * 3.,
-            h,
-            s,
-            GLChar::Y,
-        ));
+        self.base.push(RectRenderData {
+            u: x0,
+            v: h,
+            w: s,
+            h: s,
+            color: primitives::color::Color::Transparent,
+            is_font: true,
+            font_coords: Some(GLChar::C.get_index()),
+            block_id: None,
+        });
+        self.base.push(RectRenderData {
+            u: x0 + 1. * s * 3.,
+            v: h,
+            w: s,
+            h: s,
+            color: primitives::color::Color::Transparent,
+            is_font: true,
+            font_coords: Some(GLChar::R.get_index()),
+            block_id: None,
+        });
+        self.base.push(RectRenderData {
+            u: x0 + 2. * s * 3.,
+            v: h,
+            w: s,
+            h: s,
+            color: primitives::color::Color::Transparent,
+            is_font: true,
+            font_coords: Some(GLChar::A.get_index()),
+            block_id: None,
+        });
+        self.base.push(RectRenderData {
+            u: x0 + 3. * s * 3.,
+            v: h,
+            w: s,
+            h: s,
+            color: primitives::color::Color::Transparent,
+            is_font: true,
+            font_coords: Some(GLChar::F.get_index()),
+            block_id: None,
+        });
+        self.base.push(RectRenderData {
+            u: x0 + 4. * s * 3.,
+            v: h,
+            w: s,
+            h: s,
+            color: primitives::color::Color::Transparent,
+            is_font: true,
+            font_coords: Some(GLChar::T.get_index()),
+            block_id: None,
+        });
+        self.base.push(RectRenderData {
+            u: x0 + 5. * s * 3.,
+            v: h,
+            w: s,
+            h: s,
+            color: primitives::color::Color::Transparent,
+            is_font: true,
+            font_coords: Some(GLChar::Y.get_index()),
+            block_id: None,
+        });
     }
 
     /// Add/Remove the help menu
@@ -152,7 +198,7 @@ impl HUDRenderer {
         self.update();
     }
 
-    pub fn rects(&self) -> Vec<RectInstance> {
+    pub fn rects(&self) -> Vec<RectRenderData> {
         self.rects.clone()
     }
 

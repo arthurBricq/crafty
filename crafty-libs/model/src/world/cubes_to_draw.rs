@@ -1,4 +1,4 @@
-use primitives::opengl::cube_instance::CubeInstance;
+use primitives::render_data::CubeRenderData;
 use crate::world::chunk::Chunk;
 use crate::world::cube::Cube;
 use primitives::vector::Vector3;
@@ -10,7 +10,7 @@ pub struct CubesToDraw {
     // it will be easier to load/unload a "physical" chunk
     // apparently glium can build its buffer vector from multiple references
     // so no need to copy everythink into one vector but it has to be tested (I haven't tested it)
-    cubes_to_draw: Vec<CubeInstance>,
+    cubes_to_draw: Vec<CubeRenderData>,
     selected_cube_index: Option<usize>,
 }
 
@@ -23,21 +23,29 @@ impl CubesToDraw {
     }
 
     /// Set the vector of CubeAttr from parameter
-    pub fn set_cube_to_draw(&mut self, cubes_to_draw: Vec<CubeInstance>) {
+    pub fn set_cube_to_draw(&mut self, cubes_to_draw: Vec<CubeRenderData>) {
         self.cubes_to_draw = cubes_to_draw;
     }
 
     /// Add a CubeAttr to the Vector from the parameter of a Cube
     pub fn add_cube(&mut self, c: &Cube) {
-        self.cubes_to_draw.push(CubeInstance::new(c.position().clone(), c.block_id()));
+        self.cubes_to_draw.push(CubeRenderData {
+            position: c.position().clone(),
+            block_id: c.block_id(),
+            is_selected: false,
+        });
     }
 
     /// Returns the OpenGL buffer with cubes to be drawn
     /// If you want to have one cube drawn as 'selected', pass it in the argument `selected`
-    pub fn get_cubes_buffer(&mut self, selected_cube: Option<Cube>) -> Vec<CubeInstance> {
+    pub fn get_cubes_buffer(&mut self, selected_cube: Option<Cube>) -> Vec<CubeRenderData> {
         if let Some(selected) = selected_cube {
             self.cubes_to_draw
-                .push(CubeInstance::new_selected(selected.position().clone(), selected.block_id()));
+                .push(CubeRenderData {
+                    position: selected.position().clone(),
+                    block_id: selected.block_id(),
+                    is_selected: true,
+                });
         }
         let buffer = self.cubes_to_draw.clone();
         if selected_cube.is_some() {
@@ -50,7 +58,7 @@ impl CubesToDraw {
     /// Will not panic if a cubeAttr is not present in the Vec
     pub fn remove_cube(&mut self, position: &Vector3) {
         for i in 0..self.cubes_to_draw.len() {
-            if self.cubes_to_draw[i].position() == position.as_array() {
+            if self.cubes_to_draw[i].position.as_array() == position.as_array() {
                 // Potentially unselect the cube if it was
                 if self.selected_cube_index == Some(i) {
                     self.selected_cube_index = None;
@@ -61,7 +69,7 @@ impl CubesToDraw {
         }
     }
 
-    pub fn cubes_to_draw(&self) -> &[CubeInstance] {
+    pub fn cubes_to_draw(&self) -> &[CubeRenderData] {
         &self.cubes_to_draw
     }
 

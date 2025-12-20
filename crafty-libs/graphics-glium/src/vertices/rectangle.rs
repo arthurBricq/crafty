@@ -1,5 +1,5 @@
-use crate::color::Color;
-use crate::opengl::font::GLChar;
+use primitives::color::Color;
+use crate::vertices::font::GLChar;
 use glium::implement_vertex;
 
 pub const RECT_VERTEX_SHADER: &str = r"
@@ -190,5 +190,21 @@ impl RectInstance {
 
     pub fn set_block_id(&mut self, block_id: i8) {
         self.block_id = block_id;
+    }
+
+    /// Creates a new rectangle that draws a font character using font coordinates directly
+    pub fn new_with_font_coords(u: f32, v: f32, w: f32, font_coords: [f32; 2]) -> Self {
+        Self {
+            transformation: [
+                [w, 0.0, 0.0, 0.0],
+                [0.0, w, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [u, v, 0.0, 1.0],
+            ],
+            color: [0., 0., 0., 0.],
+            is_font: true as u8,
+            font_coords,
+            block_id: -1,
+        }
     }
 }

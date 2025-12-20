@@ -1,4 +1,4 @@
-use primitives::opengl::rectangle::RectInstance;
+use crate::renderer::RectRenderData;
 use crate::core::string_rect::StringRect;
 
 /// Data in the help menu
@@ -49,7 +49,7 @@ impl HelpMenuData {
 
 /// Implement the help menu
 pub struct HelpMenu {
-    rects: Vec<RectInstance>,
+    rects: Vec<RectRenderData>,
 }
 
 impl HelpMenu {
@@ -65,7 +65,7 @@ impl HelpMenu {
         }
         Self { rects }
     }
-    pub fn rects(&self) -> &Vec<RectInstance> {
+    pub fn rects(&self) -> &Vec<RectRenderData> {
         &self.rects
     }
 }

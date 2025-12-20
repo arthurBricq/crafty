@@ -1,9 +1,9 @@
 use primitives::color::Color::Red;
-use primitives::opengl::rectangle::RectInstance;
+use crate::renderer::RectRenderData;
 
 pub struct HealthBar {
     health: u8,
-    rects: Vec<RectInstance>,
+    rects: Vec<RectRenderData>,
     aspect_ratio: f32,
 }
 
@@ -30,7 +30,7 @@ impl HealthBar {
         self.update();
     }
 
-    pub fn rects(&self) -> Vec<RectInstance> {
+    pub fn rects(&self) -> Vec<RectRenderData> {
         self.rects.clone()
     }
 
@@ -45,14 +45,20 @@ impl HealthBar {
 
         // Add the health points
         for n in 0..self.health {
-            let hp = RectInstance::square_from_corner(
-                X0 + n as f32 * (HP_SIDE + INNER_MARGIN),
-                Y0,
-                HP_SIDE,
-                self.aspect_ratio,
-                Red,
-            );
-            self.rects.push(hp);
+            let hp_u = X0 + n as f32 * (HP_SIDE + INNER_MARGIN) + HP_SIDE / 2.;
+            let hp_v = Y0 + HP_SIDE / 2.;
+            let hp_w = HP_SIDE / 2.;
+            let hp_h = HP_SIDE / 2.;
+            self.rects.push(RectRenderData {
+                u: hp_u,
+                v: hp_v,
+                w: hp_w,
+                h: hp_h,
+                color: Red,
+                is_font: false,
+                font_coords: None,
+                block_id: None,
+            });
         }
     }
 }
