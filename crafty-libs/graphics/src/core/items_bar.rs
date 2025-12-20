@@ -33,20 +33,12 @@ impl ItemBar {
 
         // Add the background tiles
         let mut rects = Vec::new();
-        let bg_u = -W / 2. + W / 2.;
-        let bg_v = BOTTOM - 1. + (H + 2. * PADDING) / 2.;
-        let bg_w = W / 2.;
-        let bg_h = (H + 2. * PADDING) / 2.;
-        rects.push(RectRenderData {
-            u: bg_u,
-            v: bg_v,
-            w: bg_w,
-            h: bg_h,
-            color: LightGray,
-            is_font: false,
-            font_coords: None,
-            block_id: None,
-        });
+        // Background: corner coordinates
+        let bg_u = -W / 2.;
+        let bg_v = BOTTOM - 1.;
+        let bg_w = W;
+        let bg_h = H + 2. * PADDING;
+        rects.push(RectRenderData::new_from_corner(bg_u, bg_v, bg_w, bg_h, LightGray));
 
         // Add the items
         let mut x0 = -W / 2. + PADDING;
@@ -56,36 +48,18 @@ impl ItemBar {
             if i == self.selected_item {
                 // Add an indication that this is the selected item
                 const DX: f32 = 0.015;
-                let sel_u = x0 - DX / self.aspect_ratio + (ITEM_SIDE + 2. * DX) / 2.;
-                let sel_v = BOTTOM - 1. + 2. * PADDING - DX + (ITEM_SIDE + 2. * DX) / 2.;
-                let sel_w = (ITEM_SIDE + 2. * DX) / 2.;
-                let sel_h = (ITEM_SIDE + 2. * DX) / 2.;
-                rects.push(RectRenderData {
-                    u: sel_u,
-                    v: sel_v,
-                    w: sel_w,
-                    h: sel_h,
-                    color: LightYellow,
-                    is_font: false,
-                    font_coords: None,
-                    block_id: None,
-                });
+                let sel_u = x0 - DX / self.aspect_ratio;
+                let sel_v = BOTTOM - 1. + 2. * PADDING - DX;
+                let sel_size = ITEM_SIDE + 2. * DX;
+                rects.push(RectRenderData::square_from_corner(sel_u, sel_v, sel_size, self.aspect_ratio, LightYellow));
             }
 
-            let item_u = x0 + ITEM_SIDE / 2.;
-            let item_v = BOTTOM - 1. + 2. * PADDING + ITEM_SIDE / 2.;
-            let item_w = ITEM_SIDE / 2.;
-            let item_h = ITEM_SIDE / 2.;
-            rects.push(RectRenderData {
-                u: item_u,
-                v: item_v,
-                w: item_w,
-                h: item_h,
-                color: Red,
-                is_font: false,
-                font_coords: None,
-                block_id: Some(kind as u8 as i8),
-            });
+            // Item slot: corner coordinates
+            let item_u = x0;
+            let item_v = BOTTOM - 1. + 2. * PADDING;
+            let mut item_rect = RectRenderData::square_from_corner(item_u, item_v, ITEM_SIDE, self.aspect_ratio, Red);
+            item_rect.block_id = Some(kind as u8 as i8);
+            rects.push(item_rect);
 
             // And we want to print the number of remaining items
             let text = format!("{quantity}");

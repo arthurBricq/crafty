@@ -216,16 +216,8 @@ impl InventoryMenu {
         self.ui_rect = inventory_space::ui_boundaries(self.aspect_ratio);
         {
             let (u, v, w, h) = self.ui_rect;
-            self.rects.push(RectRenderData {
-                u: u + w / 2.,
-                v: v + h / 2.,
-                w: w / 2.,
-                h: h / 2.,
-                color: LightGray,
-                is_font: false,
-                font_coords: None,
-                block_id: None,
-            });
+            // ui_boundaries returns corner coordinates (u, v) and full dimensions (w, h)
+            self.rects.push(RectRenderData::new_from_corner(u, v, w, h, LightGray));
         }
 
         // inventory slots
@@ -309,16 +301,9 @@ impl InventoryMenu {
                     &self.ui_rect,
                     &InventoryRect::new(self.cursor_pos.x, self.cursor_pos.y, item_size, item_size),
                 );
-                self.rects.push(RectRenderData {
-                    u: x + w / 2.,
-                    v: y + h / 2.,
-                    w: w / 2.,
-                    h: h / 2.,
-                    color: Red,
-                    is_font: false,
-                    font_coords: None,
-                    block_id: Some(block as u8 as i8),
-                });
+                let mut carried_rect = RectRenderData::new_from_corner(x, y, w, h, Red);
+                carried_rect.block_id = Some(block as u8 as i8);
+                self.rects.push(carried_rect);
             }
         }
     }

@@ -35,33 +35,15 @@ impl InventorySlot {
         );
 
         let mut rects = Vec::new();
-        let slot_u = x + w / 2.;
-        let slot_v = y + h / 2.;
-        let slot_w = w / 2.;
-        let slot_h = h / 2.;
-        rects.push(RectRenderData {
-            u: slot_u,
-            v: slot_v,
-            w: slot_w,
-            h: slot_h,
-            color: if hover { EvenLighterGray } else { LighterGray },
-            is_font: false,
-            font_coords: None,
-            block_id: None,
-        });
+        // from_ui_to_ndc_rect returns corner coordinates (x, y) and full dimensions (w, h)
+        let slot = RectRenderData::new_from_corner(x, y, w, h, if hover { EvenLighterGray } else { LighterGray });
+        rects.push(slot);
 
         // draw the item as well
         if let Some((block, count)) = item {
-            rects.push(RectRenderData {
-                u: slot_u,
-                v: slot_v,
-                w: slot_w,
-                h: slot_h,
-                color: LighterGray,
-                is_font: false,
-                font_coords: None,
-                block_id: Some(block as u8 as i8),
-            });
+            let mut item_rect = RectRenderData::new_from_corner(x, y, w, h, LighterGray);
+            item_rect.block_id = Some(block as u8 as i8);
+            rects.push(item_rect);
 
             // and the count
             let text = format!("{count}");

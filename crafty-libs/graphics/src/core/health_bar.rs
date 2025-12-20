@@ -47,8 +47,8 @@ impl HealthBar {
         for n in 0..self.health {
             let hp_u = X0 + n as f32 * (HP_SIDE + INNER_MARGIN) + HP_SIDE / 2.;
             let hp_v = Y0 + HP_SIDE / 2.;
-            let hp_w = HP_SIDE / 2.;
-            let hp_h = HP_SIDE / 2.;
+            let hp_w = HP_SIDE;  // Full width
+            let hp_h = HP_SIDE;  // Full height
             self.rects.push(RectRenderData {
                 u: hp_u,
                 v: hp_v,
