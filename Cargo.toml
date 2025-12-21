@@ -19,6 +19,7 @@ model = { path = "./crafty-libs/model" }
 network = { path = "./crafty-libs/network" }
 graphics = { path = "./crafty-libs/graphics" }
 graphics_glium = { path = "./crafty-libs/graphics-glium" }
+graphics_wgpu = { path = "./crafty-libs/graphics-wgpu" }
 primitives = { path = "./crafty-libs/primitives" }
 
 # OpenGL related

@@ -275,14 +275,14 @@ program, reducing shader switching overhead.
    buffer.write(&data);  // Update existing buffer
    ```
 
-   2. **Frustum Culling**:
-       - Calculate view frustum planes
-       - Cull cubes outside frustum before creating instance data
-       - Can reduce GPU work by 50-80% in typical scenes
+2. **Frustum Culling**:
+   - Calculate view frustum planes
+   - Cull cubes outside frustum before creating instance data
+   - Can reduce GPU work by 50-80% in typical scenes
 
-   3. **Occlusion Culling**:
-       - Use hierarchical Z-buffer or GPU-based occlusion queries
-       - Skip rendering of hidden cubes
+3. **Occlusion Culling**:
+   - Use hierarchical Z-buffer or GPU-based occlusion queries
+   - Skip rendering of hidden cubes
 
 4. **Spatial Data Structures**:
     - Use octree or chunk-based culling

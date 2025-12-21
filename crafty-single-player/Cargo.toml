@@ -8,6 +8,7 @@ model = { workspace = true }
 network = { workspace = true }
 graphics = { workspace = true }
 graphics_glium = { workspace = true }
+graphics_wgpu = { workspace = true }
 
 
 [[bin]]
