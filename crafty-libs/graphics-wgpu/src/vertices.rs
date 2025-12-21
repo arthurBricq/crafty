@@ -104,57 +104,59 @@ impl RectInstance {
 }
 
 /// Base cube mesh vertices (36 vertices)
+/// Texture coordinates are flipped for WebGPU (V coordinate: 1.0 - original_v)
 pub const CUBE_VERTICES: [CubeVertex; 36] = [
     // Right side (face 0)
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 0 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 },
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 0 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [1.0, 1.0], face: 0 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [1.0, 0.0], face: 0 },
+    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 0.0], face: 0 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 0 },
     // Front (face 1)
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 1 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 1 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 },
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 1 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 0.0], face: 1 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 1 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 1 },
+    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 1 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 1 },
     // Left side (face 2)
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 2 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 },
+    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 2 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [0.0, 1.0], face: 2 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [0.0, 0.0], face: 2 },
+    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 2 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 2 },
     // Back (face 3)
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 },
+    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [1.0, 0.0], face: 3 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [1.0, 1.0], face: 3 },
+    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [0.0, 1.0], face: 3 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [0.0, 0.0], face: 3 },
     // Top (face 4)
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
-    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 0.0], face: 4 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 },
-    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 4 },
-    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 },
+    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 0.0], face: 4 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [0.5, 0.5, -0.5], tex_coords: [0.0, 1.0], face: 4 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 4 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, 0.5, 0.5], tex_coords: [1.0, 1.0], face: 4 },
+    CubeVertex { position: [-0.5, 0.5, 0.5], tex_coords: [1.0, 0.0], face: 4 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [-0.5, 0.5, -0.5], tex_coords: [0.0, 0.0], face: 4 },
     // Bottom (face 5)
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
-    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 5 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 },
-    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 5 },
-    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 },
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 5 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [0.5, -0.5, -0.5], tex_coords: [0.0, 1.0], face: 5 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 5 }, // 0.0 -> 1.0 - 0.0 = 1.0
+    CubeVertex { position: [0.5, -0.5, 0.5], tex_coords: [1.0, 1.0], face: 5 },
+    CubeVertex { position: [-0.5, -0.5, 0.5], tex_coords: [1.0, 0.0], face: 5 }, // 1.0 -> 1.0 - 1.0 = 0.0
+    CubeVertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.0, 0.0], face: 5 },
 ];
 
 /// Base rectangle mesh vertices (6 vertices for a quad)
+/// Texture coordinates are flipped for WebGPU (V coordinate: 1.0 - original_v)
 pub const RECT_VERTICES: [RectVertex; 6] = [
-    RectVertex { position: [1.0, 1.0, 0.0], tex_coords: [1.0, 1.0] },
-    RectVertex { position: [1.0, -1.0, 0.0], tex_coords: [1.0, 0.0] },
-    RectVertex { position: [-1.0, 1.0, 0.0], tex_coords: [0.0, 1.0] },
-    RectVertex { position: [-1.0, 1.0, 0.0], tex_coords: [0.0, 1.0] },
-    RectVertex { position: [1.0, -1.0, 0.0], tex_coords: [1.0, 0.0] },
-    RectVertex { position: [-1.0, -1.0, 0.0], tex_coords: [0.0, 0.0] },
+    RectVertex { position: [1.0, 1.0, 0.0], tex_coords: [1.0, 0.0] }, // 1.0 -> 1.0 - 1.0 = 0.0
+    RectVertex { position: [1.0, -1.0, 0.0], tex_coords: [1.0, 1.0] }, // 0.0 -> 1.0 - 0.0 = 1.0
+    RectVertex { position: [-1.0, 1.0, 0.0], tex_coords: [0.0, 0.0] }, // 1.0 -> 1.0 - 1.0 = 0.0
+    RectVertex { position: [-1.0, 1.0, 0.0], tex_coords: [0.0, 0.0] },
+    RectVertex { position: [1.0, -1.0, 0.0], tex_coords: [1.0, 1.0] },
+    RectVertex { position: [-1.0, -1.0, 0.0], tex_coords: [0.0, 1.0] }, // 0.0 -> 1.0 - 0.0 = 1.0
 ];
