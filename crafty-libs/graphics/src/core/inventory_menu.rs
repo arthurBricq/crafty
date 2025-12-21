@@ -8,13 +8,13 @@ use model::game::crafting::{CraftingGrid, CraftingManager};
 use model::game::player_items::PlayerItems;
 use model::world::block_kind::Block;
 use primitives::color::Color::{LightGray, Red};
-use primitives::opengl::rectangle::RectInstance;
+use crate::renderer::RectRenderData;
 
 const INVENTORY_NROWS: usize = 4; // the 0th is the item bar
 const INVENTORY_NCOLS: usize = 8;
 
 pub struct InventoryMenu {
-    rects: Vec<RectInstance>,
+    rects: Vec<RectRenderData>,
     aspect_ratio: f32,
 
     items: PlayerItems,
@@ -59,7 +59,7 @@ impl InventoryMenu {
         self.update()
     }
 
-    pub fn rects(&self) -> &Vec<RectInstance> {
+    pub fn rects(&self) -> &Vec<RectRenderData> {
         &self.rects
     }
 
@@ -216,8 +216,8 @@ impl InventoryMenu {
         self.ui_rect = inventory_space::ui_boundaries(self.aspect_ratio);
         {
             let (u, v, w, h) = self.ui_rect;
-            self.rects
-                .push(RectInstance::new_from_corner(u, v, w, h, LightGray));
+            // ui_boundaries returns corner coordinates (u, v) and full dimensions (w, h)
+            self.rects.push(RectRenderData::new_from_corner(u, v, w, h, LightGray));
         }
 
         // inventory slots
@@ -301,9 +301,9 @@ impl InventoryMenu {
                     &self.ui_rect,
                     &InventoryRect::new(self.cursor_pos.x, self.cursor_pos.y, item_size, item_size),
                 );
-                let mut rect = RectInstance::new_from_corner(x, y, w, h, Red);
-                rect.set_block_id(block as u8 as i8);
-                self.rects.push(rect);
+                let mut carried_rect = RectRenderData::new_from_corner(x, y, w, h, Red);
+                carried_rect.block_id = Some(block as u8 as i8);
+                self.rects.push(carried_rect);
             }
         }
     }

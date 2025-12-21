@@ -1,7 +1,7 @@
-use primitives::opengl::cube_instance::CubeInstance;
-use primitives::opengl::entity::EntityCube;
-use primitives::opengl::rectangle::RectInstance;
 use std::time::Duration;
+
+// Re-export render data types from primitives for convenience
+pub use primitives::render_data::{CubeRenderData, EntityRenderData, RectRenderData};
 
 /// Trait that OpenGL frontends must implement.
 pub trait Renderer: Default {
@@ -26,11 +26,9 @@ pub struct ToDraw {
     pub selected_intensity: f32,
     // TODO: for performances, we should consider to have a borrowed type here.
     //       Having an owned value (Vec) was introduced when improving dependencies related to glium
-    pub cubes_buffer: Vec<CubeInstance>,
-    // TODO: Entity cube has to be moved to the glium crate
-    // idea: ToDraw<Cube, Rect> defined only at instantiation ?
-    pub entity_buffer: Vec<EntityCube>,
-    pub hud_buffer: Vec<RectInstance>,
+    pub cubes_buffer: Vec<CubeRenderData>,
+    pub entity_buffer: Vec<EntityRenderData>,
+    pub hud_buffer: Vec<RectRenderData>,
 }
 
 pub enum WindowAction {

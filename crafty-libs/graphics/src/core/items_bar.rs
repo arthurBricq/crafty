@@ -1,12 +1,12 @@
 use crate::core::string_rect::StringRect;
+use crate::renderer::RectRenderData;
 use model::game::player_items::ItemStack;
 use primitives::color::Color::{LightGray, LightYellow, Red};
-use primitives::opengl::rectangle::RectInstance;
 
 pub struct ItemBar {
     items: Vec<ItemStack>,
     selected_item: usize,
-    rects: Vec<RectInstance>,
+    rects: Vec<RectRenderData>,
     aspect_ratio: f32,
 }
 
@@ -33,9 +33,12 @@ impl ItemBar {
 
         // Add the background tiles
         let mut rects = Vec::new();
-        let background =
-            RectInstance::new_from_corner(-W / 2., BOTTOM - 1., W, H + 2. * PADDING, LightGray);
-        rects.push(background);
+        // Background: corner coordinates
+        let bg_u = -W / 2.;
+        let bg_v = BOTTOM - 1.;
+        let bg_w = W;
+        let bg_h = H + 2. * PADDING;
+        rects.push(RectRenderData::new_from_corner(bg_u, bg_v, bg_w, bg_h, LightGray));
 
         // Add the items
         let mut x0 = -W / 2. + PADDING;
@@ -45,25 +48,18 @@ impl ItemBar {
             if i == self.selected_item {
                 // Add an indication that this is the selected item
                 const DX: f32 = 0.015;
-                let cube = RectInstance::square_from_corner(
-                    x0 - DX / self.aspect_ratio,
-                    BOTTOM - 1. + 2. * PADDING - DX,
-                    ITEM_SIDE + 2. * DX,
-                    self.aspect_ratio,
-                    LightYellow,
-                );
-                rects.push(cube);
+                let sel_u = x0 - DX / self.aspect_ratio;
+                let sel_v = BOTTOM - 1. + 2. * PADDING - DX;
+                let sel_size = ITEM_SIDE + 2. * DX;
+                rects.push(RectRenderData::square_from_corner(sel_u, sel_v, sel_size, self.aspect_ratio, LightYellow));
             }
 
-            let mut cube = RectInstance::square_from_corner(
-                x0,
-                BOTTOM - 1. + 2. * PADDING,
-                ITEM_SIDE,
-                self.aspect_ratio,
-                Red,
-            );
-            cube.set_block_id(kind as u8 as i8);
-            rects.push(cube);
+            // Item slot: corner coordinates
+            let item_u = x0;
+            let item_v = BOTTOM - 1. + 2. * PADDING;
+            let mut item_rect = RectRenderData::square_from_corner(item_u, item_v, ITEM_SIDE, self.aspect_ratio, Red);
+            item_rect.block_id = Some(kind as u8 as i8);
+            rects.push(item_rect);
 
             // And we want to print the number of remaining items
             let text = format!("{quantity}");
@@ -77,7 +73,7 @@ impl ItemBar {
         self.rects = rects;
     }
 
-    pub fn rects(&self) -> Vec<RectInstance> {
+    pub fn rects(&self) -> Vec<RectRenderData> {
         self.rects.clone()
     }
 

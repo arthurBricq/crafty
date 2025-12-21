@@ -1,4 +1,4 @@
-use crate::position::Position;
+use primitives::position::Position;
 use glium::implement_vertex;
 
 /// An OpenGL type that contains the information for OpenGL's instancing

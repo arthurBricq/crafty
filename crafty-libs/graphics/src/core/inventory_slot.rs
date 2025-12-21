@@ -1,9 +1,9 @@
 use crate::core::inventory_space;
 use crate::core::inventory_space::{InventoryPosition, InventoryRect};
 use crate::core::string_rect::StringRect;
+use crate::renderer::RectRenderData;
 use model::game::player_items::ItemStack;
 use primitives::color::Color::{EvenLighterGray, LighterGray};
-use primitives::opengl::rectangle::RectInstance;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InventorySlot {
@@ -28,26 +28,22 @@ impl InventorySlot {
         ui_rect: &(f32, f32, f32, f32),
         item: Option<ItemStack>,
         hover: bool,
-    ) -> Vec<RectInstance> {
+    ) -> Vec<RectRenderData> {
         let (x, y, w, h) = inventory_space::from_ui_to_ndc_rect(
             ui_rect,
             &InventoryRect::new(self.position.x, self.position.y, self.size, self.size),
         );
 
         let mut rects = Vec::new();
-        rects.push(RectInstance::new_from_corner(
-            x,
-            y,
-            w,
-            h,
-            if hover { EvenLighterGray } else { LighterGray },
-        ));
+        // from_ui_to_ndc_rect returns corner coordinates (x, y) and full dimensions (w, h)
+        let slot = RectRenderData::new_from_corner(x, y, w, h, if hover { EvenLighterGray } else { LighterGray });
+        rects.push(slot);
 
         // draw the item as well
         if let Some((block, count)) = item {
-            let mut rect = RectInstance::new_from_corner(x, y, w, h, LighterGray);
-            rect.set_block_id(block as u8 as i8);
-            rects.push(rect);
+            let mut item_rect = RectRenderData::new_from_corner(x, y, w, h, LighterGray);
+            item_rect.block_id = Some(block as u8 as i8);
+            rects.push(item_rect);
 
             // and the count
             let text = format!("{count}");

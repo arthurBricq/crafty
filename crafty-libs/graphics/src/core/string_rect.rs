@@ -1,9 +1,9 @@
-use primitives::opengl::font::GLChar;
-use primitives::opengl::rectangle::RectInstance;
+use primitives::font::GLChar;
+use crate::renderer::RectRenderData;
 
 /// Represent a string with rectangles
 pub struct StringRect {
-    rects: Vec<RectInstance>,
+    rects: Vec<RectRenderData>,
 }
 
 impl StringRect {
@@ -13,24 +13,29 @@ impl StringRect {
         Self { rects }
     }
 
-    pub fn rects(&self) -> &Vec<RectInstance> {
+    pub fn rects(&self) -> &Vec<RectRenderData> {
         &self.rects
     }
 
-    /// Transform each character of a String into a RectVertexAttr and add them to a Vec
+    /// Transform each character of a String into a RectRenderData and add them to a Vec
     /// Return the u position of the last character
-    pub fn write_string(u: f32, v: f32, w: f32, st: &String, rects: &mut Vec<RectInstance>) -> f32 {
+    pub fn write_string(u: f32, v: f32, w: f32, st: &String, rects: &mut Vec<RectRenderData>) -> f32 {
         // This function could probably be moved somewhere else
         for (i, c) in st.chars().enumerate() {
             if c == ' ' {
                 continue;
             }
-            rects.push(RectInstance::new_with_char(
-                u + i as f32 * w * 3.,
+            let gl_char = GLChar::from_char(c);
+            rects.push(RectRenderData {
+                u: u + i as f32 * w * 3.,
                 v,
                 w,
-                GLChar::from_char(c),
-            ));
+                h: w,
+                color: primitives::color::Color::Transparent,
+                is_font: true,
+                font_coords: Some(gl_char.get_index()),
+                block_id: None,
+            });
         }
         u + st.len() as f32 * w * 3.
     }
@@ -39,7 +44,7 @@ impl StringRect {
         v: f32,
         w: f32,
         st: &String,
-        rects: &mut Vec<RectInstance>,
+        rects: &mut Vec<RectRenderData>,
     ) -> f32 {
         StringRect::write_string(-3. * w * (st.len() as f32 - 1.) / 2., v, w, st, rects)
     }

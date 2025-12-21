@@ -1,4 +1,4 @@
-use crate::vector::Vector3;
+use primitives::vector::Vector3;
 use glium::implement_vertex;
 
 /// An OpenGL type that contains the information for OpenGL's instancing

@@ -1,7 +1,7 @@
 use crate::collision::aabb::AABB;
 use crate::entity::humanoid;
 use crate::entity::humanoid::humanoid_aabb;
-use primitives::opengl::entity::EntityCube;
+use primitives::render_data::EntityRenderData;
 use primitives::position::Position;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -70,8 +70,8 @@ impl Entity {
         &self.entity_type
     }
 
-    /// Draw the entity and return a Vec of EntityCube
-    pub fn get_opengl_entities(&self) -> Vec<EntityCube> {
+    /// Draw the entity and return a Vec of EntityRenderData
+    pub fn get_opengl_entities(&self) -> Vec<EntityRenderData> {
         match self.entity_type {
             EntityKind::Player => humanoid::get_opengl_entities(self.position.clone(), 0),
             EntityKind::Monster1 => humanoid::get_opengl_entities(self.position.clone(), 1),

@@ -11,7 +11,7 @@ use crate::world::world_serializer::{
 use primitives::position::Position;
 use primitives::vector::Vector3;
 use strum::IntoEnumIterator;
-use primitives::opengl::cube_instance::CubeInstance;
+use primitives::render_data::CubeRenderData;
 
 pub struct World {
     /// The list of the chunks currently being displayed
@@ -104,14 +104,18 @@ impl World {
         // I know that this function looks bad, but... Trust the optimizer
         // I have tried to optimize this shit using a custom class that does not re-allocate everything
         // but it does not improve anything ... So let's keep the simple solution of always calling `push`
-        let mut positions: Vec<CubeInstance> = Vec::new();
+        let mut positions: Vec<CubeRenderData> = Vec::new();
         for chunk in &self.chunks {
             for layer in chunk.cubes() {
                 for row in layer {
                     for cube in row {
                         if let Some(c) = cube {
                             if c.is_visible() {
-                                positions.push(CubeInstance::new(c.position().clone(), c.block_id()));
+                                positions.push(CubeRenderData {
+                                    position: c.position().clone(),
+                                    block_id: c.block_id(),
+                                    is_selected: false,
+                                });
                             }
                         }
                     }
@@ -127,13 +131,13 @@ impl World {
             .set_cube_to_draw(positions);
     }
 
-    pub fn cube_to_draw(&self) -> &[CubeInstance] {
+    pub fn cube_to_draw(&self) -> &[CubeRenderData] {
         self.cubes_to_draw.as_ref().unwrap().cubes_to_draw()
     }
 
     /// Returns the OpenGL buffer with cubes to be drawn
     /// If you want to have one cube drawn as 'selected', pass it in the argument `selected`
-    pub fn get_cubes_buffer(&mut self, selected: Option<Cube>) -> Vec<CubeInstance> {
+    pub fn get_cubes_buffer(&mut self, selected: Option<Cube>) -> Vec<CubeRenderData> {
         self.cubes_to_draw
             .as_mut()
             .unwrap()
