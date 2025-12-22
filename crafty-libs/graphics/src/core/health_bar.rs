@@ -45,20 +45,15 @@ impl HealthBar {
 
         // Add the health points
         for n in 0..self.health {
-            let hp_u = X0 + n as f32 * (HP_SIDE + INNER_MARGIN) + HP_SIDE / 2.;
-            let hp_v = Y0 + HP_SIDE / 2.;
-            let hp_w = HP_SIDE;  // Full width
-            let hp_h = HP_SIDE;  // Full height
-            self.rects.push(RectRenderData {
-                u: hp_u,
-                v: hp_v,
-                w: hp_w,
-                h: hp_h,
-                color: Red,
-                is_font: false,
-                font_coords: None,
-                block_id: None,
-            });
+            let hp_u = X0 + n as f32 * (HP_SIDE + INNER_MARGIN);
+            let hp_v = Y0;
+            self.rects.push(RectRenderData::square_from_corner(
+                hp_u,
+                hp_v,
+                HP_SIDE,
+                self.aspect_ratio,
+                Red,
+            ));
         }
     }
 }

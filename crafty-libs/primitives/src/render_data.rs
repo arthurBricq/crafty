@@ -23,6 +23,7 @@ pub struct RectRenderData {
     pub w: f32,
     pub h: f32,
     pub color: crate::color::Color,
+    // TODO: I don't really like the fact that this `Rect` shader has this meta data to represent a font...
     pub is_font: bool,
     pub font_coords: Option<[f32; 2]>,
     pub block_id: Option<i8>,
