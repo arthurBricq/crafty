@@ -1,5 +1,5 @@
 [package]
-name = "Client"
+name = "crafty-multiplayer"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,10 +7,8 @@ edition = "2021"
 model = { workspace = true }
 network = { workspace = true }
 graphics = { workspace = true }
-graphics_glium = { workspace = true }
 graphics_wgpu = { workspace = true }
 
-
 [[bin]]
-name = "crafty"
+name = "crafty-multi"
 path = "src/main.rs"

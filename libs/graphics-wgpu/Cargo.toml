@@ -8,11 +8,12 @@ name = "graphics_wgpu"
 path = "src/lib.rs"
 
 [dependencies]
-wgpu = "0.20"
-pollster = "0.3"
 graphics = { workspace = true }
 primitives = { workspace = true }
 image = { workspace = true }
 model = { workspace = true }
-winit = { workspace = true }
+
 bytemuck = { version = "1.14", features = ["derive"] }
+wgpu = "0.20"
+winit = "0.29"
+pollster = "0.3"
