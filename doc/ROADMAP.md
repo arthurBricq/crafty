@@ -3,11 +3,9 @@
 ## Most important items
 
 - Use a tokio-compatible web-server instead of manually implemented http connections between clients and servers.
-- Fix the `glium` dependency leak into the core crate.
-- Write a `graphics-wgpu` frontend implementation (instead of `graphics-glium`)
 - Fix the collisions detection algorithm.
 
-## `glium` dependency leak
+## `glium` dependency leak [SOLVED]
 
 glium is leaking into primitives, which should be backend-agnostic. This forces glium into crates that shouldn't depend
 on it.

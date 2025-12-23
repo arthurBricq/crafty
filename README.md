@@ -33,7 +33,7 @@ Here are some `GIF` to show a little the gameplay... (**In multiplayer !**)
 ## Current list of features
 
 - **Graphics rendering**
-    - We use bindings to **OpenGL** (*glium.rs*) to render all the **cubes**. We are able to render tens-of-thousands of
+    - We use bindings to **OpenGL** with `wgpu` to render all the **cubes**. We are able to render tens-of-thousands of
       cubes using much different optimization.
     - Easy way to import new textures into the game, allowing to easily reproduce minecraft-like landscape.
     - Easy way to presents `Tiles` on the screen (menus) and a custom way to render text. We have implemented **debug
@@ -109,33 +109,22 @@ cargo run --bin client --release -- --server "YOUR.IP" --port "PORT" -- name "UN
 
 The goal of this for-fun side-project was to write a minecraft clone with **as little dependencies** as possible.
 
-The biggest dependency that we use is for a Rust binding of the OpenGL ports called `glium`. This library is
-unfortunately not maintained anymore, but hey, our code works with `0.34`.
-
 # Code architecture
 
-The code is divided in 3 libraries and 3 executables
+The code is divided into multiple libraries and threes executables
 
 The libraries are
 
+- `primitives`: defines the basic data structures used in the game.
 - `model`: defines the model of the game. Itself contains the following modules
     - `game`: model of the game
     - `entity`: model of the entities (players and monsters)
-    - `primitves`
     - `collision`: how collisions are handles
     - `server`: model of the server
-    - `world`
+    - `world`: representation of the world
 - `graphics`: defines an implementation of the graphics, using `glium`.
 - `network`: defines the network abstraction used for playing with multiple players.
 - `primitives`
-
-One major architecture flaw is that OpenGL sepcifics logic is in both `graphics` and `model` crate. The solution that
-I have in mind involves creating a new crate `graphics_glium`, that involves `glium` as a dependency, that defines the
-OpenGL specificities. Then, `graphics` would define traits (such as "drawable", or things like that) and
-`graphics_glium` would implement them. And then model would only depend on `graphics`, meaning that in theory you
-could totally replace glium by another library, and the code would still work.
-
-will depend on `graphics_glium` and `model` will depend on `graphics`.
 
 # Roadmap
 
@@ -152,14 +141,9 @@ This project works quite well, but... There is still a lot to do.
 - The collision often crashes, and when it happens the consequences are... terrible.
 - The multiplayer architecture and implementations should be improved, to support more players. There is a bunch of
   corner cases with multiplayer, most of them are not tracked.
-- The UI library is shit, because we have implemented everything ourselves using a dead-library. As a consequence, it
-  does not work well with macos and the performances are quite bad. I am not sure to which extent it will be easy to
-  create new bindings for another graphics library.
 
-On going steps
+ongoing steps
 
-- [ ] Better UI abstraction: this is a WIP, to really remove all `glium` dependencies from the model and graphics
-  crates.
 - [ ] Stop to `println`, instead use a logger.
 - [ ] Better collision detection: to solve the collision crashing problem.
 - [ ] Better multiplayer
