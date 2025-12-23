@@ -4,12 +4,13 @@ use model::game::player::Player;
 use model::server::game_server::{handle_entity_thread, GameServer};
 use model::world::generation::world_generator::WorldGenerator;
 use model::world::world::World;
-use network::proxy::Proxy;
 use network::single_player_proxy::SinglePlayerProxy;
+use network::ClientToServer;
 use std::sync::{Arc, Mutex};
 use tracing::info;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     tracing_subscriber::fmt::init();
 
     // Create the initial world
@@ -35,7 +36,7 @@ fn main() {
 
     // The proxy currently holds the server,
     let mut proxy = SinglePlayerProxy::new(server);
-    proxy.login("local_client".to_string());
+    proxy.login("local_client".to_string()).await;
 
     // The client is initialized with an empty world, as it will be the responsibility of the server
     // to provide it with the chunks.
@@ -47,5 +48,5 @@ fn main() {
     // renderer.run::<graphics_glium::runtime::GliumRenderer>();
 
     // Run the `wgpu`
-    renderer.run::<graphics_wgpu::runtime::WgpuRenderer>();
+    renderer.run::<graphics_wgpu::runtime::WgpuRenderer>().await;
 }

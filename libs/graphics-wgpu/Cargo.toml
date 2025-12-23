@@ -18,3 +18,5 @@ bytemuck = { version = "1.14", features = ["derive"] }
 wgpu = "0.20"
 winit = "0.29"
 pollster = "0.3"
+tokio = { version = "1", features = ["rt", "rt-multi-thread"] }
+futures = "0.3"

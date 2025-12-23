@@ -10,6 +10,7 @@ graphics = { workspace = true }
 graphics_wgpu = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 
 
 [[bin]]

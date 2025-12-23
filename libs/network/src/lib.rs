@@ -15,6 +15,9 @@ pub mod tcp_message_encoding;
 pub mod tcp_proxy;
 pub mod tcp_server;
 
+// Re-export traits for convenience
+pub use proxy::{ClientToServer, Proxy, ServerToClient};
+
 
 impl TcpSerialize for ServerUpdate {
     fn to_u8(&self) -> u8 {

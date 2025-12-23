@@ -16,16 +16,16 @@ use model::server::server_update::ServerUpdate;
 use model::world::block_kind::Block::{COBBELSTONE, OAKLOG, SWORD};
 use model::world::chunk::CHUNK_FLOOR;
 use model::world::world::World;
-use network::proxy::Proxy;
+use network::proxy::{ClientToServer, Proxy, ServerToClient};
 use primitives::position::Position;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 /// The struct in charge of drawing the world
-pub struct WorldRenderer {
+pub struct WorldRenderer<P> {
     /// Link with the server
     /// The proxy needs to be already logged-in
-    proxy: Arc<Mutex<dyn Proxy>>,
+    proxy: Arc<Mutex<P>>,
 
     /// Currently displayed world
     world: World,
@@ -52,14 +52,15 @@ pub struct WorldRenderer {
     fullscreen: bool,
 }
 
-impl RendererBackend for WorldRenderer {
-    fn update(&mut self, dt: Duration) -> ToDraw {
+impl<P: Proxy> RendererBackend for WorldRenderer<P> {
+    async fn update(&mut self, dt: Duration) -> ToDraw {
         // Step the camera with the elapsed time
         // Try to break the selected cube
         if self.player.is_time_to_break_over(dt.as_secs_f32()) {
             self.apply_action(Destroy {
                 at: self.player.selected_cube().unwrap().to_cube_coordinates(),
-            });
+            })
+            .await;
         }
 
         // Step
@@ -70,8 +71,9 @@ impl RendererBackend for WorldRenderer {
         self.proxy
             .lock()
             .unwrap()
-            .send_position_update(self.player.position().clone());
-        self.handle_server_updates();
+            .send_position_update(self.player.position().clone())
+            .await;
+        self.handle_server_updates().await;
 
         // HUD updates
         if self.hud_renderer.show_debug() {
@@ -104,7 +106,7 @@ impl RendererBackend for WorldRenderer {
         self.hud_renderer.set_dimension(dimension);
     }
 
-    fn handle_mouse_event(&mut self, event: MouseEvent) {
+    async fn handle_mouse_event(&mut self, event: MouseEvent) {
         if !self.hud_renderer.is_inventory_open() {
             match event.button {
                 MouseButton::Left => {
@@ -118,7 +120,7 @@ impl RendererBackend for WorldRenderer {
                         {
                             // Forward the attack to the server
                             attack.set_strength(self.items.attack_strength());
-                            self.proxy.lock().unwrap().on_new_attack(attack);
+                            self.proxy.lock().unwrap().on_new_attack(attack).await;
                         }
                     }
                 }
@@ -134,7 +136,7 @@ impl RendererBackend for WorldRenderer {
                                     self.player.position().pos(),
                                     self.player.direction(),
                                 ) {
-                                    self.apply_action(Add { at, block })
+                                    self.apply_action(Add { at, block }).await
                                 }
                             }
                         }
@@ -151,7 +153,7 @@ impl RendererBackend for WorldRenderer {
         }
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) -> Vec<WindowAction> {
+    async fn handle_key_event(&mut self, key_event: KeyEvent) -> Vec<WindowAction> {
         // Exit the program
         if key_event.state.is_pressed() {
             if let KeyCode::Escape = key_event.key {
@@ -163,7 +165,7 @@ impl RendererBackend for WorldRenderer {
         if self.hud_renderer.is_inventory_open() {
             self.handle_inventory_key_event(key_event, &mut actions);
         } else {
-            self.handle_game_key_event(key_event, &mut actions)
+            self.handle_game_key_event(key_event, &mut actions).await
         }
 
         actions
@@ -185,8 +187,8 @@ impl RendererBackend for WorldRenderer {
     }
 }
 
-impl WorldRenderer {
-    pub fn new(proxy: Arc<Mutex<dyn Proxy>>, world: World, player: Player) -> Self {
+impl<P: Proxy> WorldRenderer<P> {
+    pub fn new(proxy: Arc<Mutex<P>>, world: World, player: Player) -> Self {
         Self {
             proxy,
             world,
@@ -200,7 +202,7 @@ impl WorldRenderer {
         }
     }
 
-    pub fn run<R: Renderer>(&mut self) {
+    pub async fn run<R: Renderer>(&mut self) {
         // Add a few items
         self.items.collect(SWORD);
         for _ in 0..16 {
@@ -217,15 +219,16 @@ impl WorldRenderer {
         self.proxy
             .lock()
             .unwrap()
-            .send_position_update(self.player.position().clone());
-        self.handle_server_updates();
+            .send_position_update(self.player.position().clone())
+            .await;
+        self.handle_server_updates().await;
 
         // Initialize cube_to_draw, this SHOULD NOT go into handle_server_update as it is call at every loop !
         self.world.set_cubes_to_draw();
 
         // Run the game loop
         let renderer = R::default();
-        renderer.run(self)
+        renderer.run(self).await
     }
 
     fn handle_inventory_key_event(&mut self, event: KeyEvent, actions: &mut Vec<WindowAction>) {
@@ -243,7 +246,7 @@ impl WorldRenderer {
         }
     }
 
-    fn handle_game_key_event(&mut self, event: KeyEvent, actions: &mut Vec<WindowAction>) {
+    async fn handle_game_key_event(&mut self, event: KeyEvent, actions: &mut Vec<WindowAction>) {
         // if event.repeat {
         //     return;
         // }
@@ -317,7 +320,11 @@ impl WorldRenderer {
                     let mut monster_pos =
                         Position::new(self.player.position().pos().clone(), 0., 0.);
                     monster_pos.raise(CHUNK_FLOOR as f32);
-                    self.proxy.lock().unwrap().request_to_spawn(monster_pos);
+                    self.proxy
+                        .lock()
+                        .unwrap()
+                        .request_to_spawn(monster_pos)
+                        .await;
                 }
                 KeyCode::F3 => self.hud_renderer.toggle_debug_menu(),
                 KeyCode::F10 => self.toggle_fullscreen(actions),
@@ -328,7 +335,7 @@ impl WorldRenderer {
         }
     }
 
-    fn apply_action(&mut self, action: Action) {
+    async fn apply_action(&mut self, action: Action) {
         // Handle items
         match action {
             Destroy { at } => {
@@ -359,7 +366,7 @@ impl WorldRenderer {
         self.world.apply_action(&action);
 
         // Forward to server
-        self.proxy.lock().unwrap().on_new_action(action);
+        self.proxy.lock().unwrap().on_new_action(action).await;
     }
 
     fn update_items_bar(&mut self) {
@@ -377,25 +384,31 @@ impl WorldRenderer {
         }
     }
 
-    fn handle_server_updates(&mut self) {
-        let updates = self.proxy.lock().unwrap().consume_server_updates();
-        for update in updates {
-            match update {
-                ServerUpdate::LoadChunk(chunk) => self.world.add_chunk(chunk),
-                ServerUpdate::LoggedIn(client_id, position) => {
-                    tracing::info!("Client registered ID: {client_id} with position: {position:?}");
-                    self.player.set_position(position)
+    async fn handle_server_updates(&mut self) {
+        // Process all available updates
+        if let Some(updates) = self.proxy.lock().unwrap().next_updates().await {
+            for update in updates {
+                match update {
+                    ServerUpdate::LoadChunk(chunk) => self.world.add_chunk(chunk),
+                    ServerUpdate::LoggedIn(client_id, position) => {
+                        tracing::info!(
+                            "Client registered ID: {client_id} with position: {position:?}"
+                        );
+                        self.player.set_position(position)
+                    }
+                    ServerUpdate::SendAction(action) => self.world.apply_action(&action),
+                    ServerUpdate::RegisterEntity(id, entity_kind, pos) => self
+                        .entity_manager
+                        .register_new_entity(id, entity_kind, pos),
+                    ServerUpdate::UpdatePosition(id, pos) => {
+                        self.entity_manager.set_position(id, pos)
+                    }
+                    ServerUpdate::Attack(attack) => {
+                        self.health.damage(attack.strength());
+                        self.hud_renderer.set_health(&self.health);
+                    }
+                    ServerUpdate::RemoveEntity(id) => self.entity_manager.remove_entity(id as u8),
                 }
-                ServerUpdate::SendAction(action) => self.world.apply_action(&action),
-                ServerUpdate::RegisterEntity(id, entity_kind, pos) => self
-                    .entity_manager
-                    .register_new_entity(id, entity_kind, pos),
-                ServerUpdate::UpdatePosition(id, pos) => self.entity_manager.set_position(id, pos),
-                ServerUpdate::Attack(attack) => {
-                    self.health.damage(attack.strength());
-                    self.hud_renderer.set_health(&self.health);
-                }
-                ServerUpdate::RemoveEntity(id) => self.entity_manager.remove_entity(id as u8),
             }
         }
     }
