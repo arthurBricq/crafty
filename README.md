@@ -144,7 +144,6 @@ This project works quite well, but... There is still a lot to do.
 
 ongoing steps
 
-- [ ] Stop to `println`, instead use a logger.
 - [ ] Better collision detection: to solve the collision crashing problem.
 - [ ] Better multiplayer
 
