@@ -33,7 +33,7 @@ impl StringRect {
                 h: w,
                 color: primitives::color::Color::Transparent,
                 is_font: true,
-                font_coords: Some(gl_char.get_index()),
+                font_coords: Some(gl_char.get_webgl_altas_coordinate()),
                 block_id: None,
             });
         }

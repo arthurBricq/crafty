@@ -1,0 +1,19 @@
+[package]
+name = "graphics_wgpu"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "graphics_wgpu"
+path = "src/lib.rs"
+
+[dependencies]
+graphics = { workspace = true }
+primitives = { workspace = true }
+image = { workspace = true }
+model = { workspace = true }
+
+bytemuck = { version = "1.14", features = ["derive"] }
+wgpu = "0.20"
+winit = "0.29"
+pollster = "0.3"

@@ -2,40 +2,30 @@
 resolver = "2"
 
 members = [
-    "crafty-single-player",
-    "crafty-server",
-    "crafty-multiplayer",
-    "crafty-libs/*"
+    "bins/*",
+    "libs/*"
 ]
 
-# Enable link-time optimisation, only in release mode.
+# Enable link-time optimization, only in release mode.
 [profile.release]
 lto = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [workspace.dependencies]
-model = { path = "./crafty-libs/model" }
-network = { path = "./crafty-libs/network" }
-graphics = { path = "./crafty-libs/graphics" }
-graphics_glium = { path = "./crafty-libs/graphics-glium" }
-primitives = { path = "./crafty-libs/primitives" }
+model = { path = "libs/model" }
+network = { path = "libs/network" }
+graphics = { path = "libs/graphics" }
+graphics_wgpu = { path = "libs/graphics-wgpu" }
+primitives = { path = "libs/primitives" }
 
-# OpenGL related
-glium = "0.34"
-winit = "0.29"
+# Our 1st frontend implementation was with `glium`.
+# The code is still available, but not anymore part of the compiled workspace.
+# Uncomment this line if you want the `glium` frontend
+#graphics_glium = { path = "./crafty-libs/graphics-glium" }
+
 image = "0.24"
-
-# Iterate over the variants of an enum
 strum = { version = "0.26", features = ["derive"] }
-
-# A double-ended queue with an upper bound on its length.
 bounded-vec-deque = "0.1.1"
-
-# For serializing and de-serializing data
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
-
-# For parsing command line arguments
 clap = { version = "4.5.17", features = ["derive"] }

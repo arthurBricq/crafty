@@ -39,5 +39,10 @@ fn main() {
     // Currently, the client 'owns' the proxy, this is really the part that sucks for now.
     let mut renderer =
         WorldRenderer::new(Arc::new(Mutex::new(proxy)), World::empty(), Player::new());
-    renderer.run::<graphics_glium::runtime::GliumRenderer>();
+
+    // Run with `glium`
+    // renderer.run::<graphics_glium::runtime::GliumRenderer>();
+
+    // Run the `wgpu`
+    renderer.run::<graphics_wgpu::runtime::WgpuRenderer>();
 }

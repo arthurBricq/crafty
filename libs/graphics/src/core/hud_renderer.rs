@@ -22,6 +22,7 @@ use super::inventory_menu::InventoryMenu;
 pub struct HUDRenderer {
     /// Ratio of the W over the H
     aspect_ratio: f32,
+
     /// List of the tiles to be presented on the screen
     rects: Vec<RectRenderData>,
 
@@ -102,7 +103,7 @@ impl HUDRenderer {
             h: s,
             color: primitives::color::Color::Transparent,
             is_font: true,
-            font_coords: Some(GLChar::C.get_index()),
+            font_coords: Some(GLChar::C.get_webgl_altas_coordinate()),
             block_id: None,
         });
         self.base.push(RectRenderData {
@@ -112,7 +113,7 @@ impl HUDRenderer {
             h: s,
             color: primitives::color::Color::Transparent,
             is_font: true,
-            font_coords: Some(GLChar::R.get_index()),
+            font_coords: Some(GLChar::R.get_webgl_altas_coordinate()),
             block_id: None,
         });
         self.base.push(RectRenderData {
@@ -122,7 +123,7 @@ impl HUDRenderer {
             h: s,
             color: primitives::color::Color::Transparent,
             is_font: true,
-            font_coords: Some(GLChar::A.get_index()),
+            font_coords: Some(GLChar::A.get_webgl_altas_coordinate()),
             block_id: None,
         });
         self.base.push(RectRenderData {
@@ -132,7 +133,7 @@ impl HUDRenderer {
             h: s,
             color: primitives::color::Color::Transparent,
             is_font: true,
-            font_coords: Some(GLChar::F.get_index()),
+            font_coords: Some(GLChar::F.get_webgl_altas_coordinate()),
             block_id: None,
         });
         self.base.push(RectRenderData {
@@ -142,7 +143,7 @@ impl HUDRenderer {
             h: s,
             color: primitives::color::Color::Transparent,
             is_font: true,
-            font_coords: Some(GLChar::T.get_index()),
+            font_coords: Some(GLChar::T.get_webgl_altas_coordinate()),
             block_id: None,
         });
         self.base.push(RectRenderData {
@@ -152,7 +153,7 @@ impl HUDRenderer {
             h: s,
             color: primitives::color::Color::Transparent,
             is_font: true,
-            font_coords: Some(GLChar::Y.get_index()),
+            font_coords: Some(GLChar::Y.get_webgl_altas_coordinate()),
             block_id: None,
         });
     }

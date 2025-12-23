@@ -168,6 +168,7 @@ impl RendererBackend for WorldRenderer {
 
         actions
     }
+
     fn cursor_moved(&mut self, x: f32, y: f32) {
         self.hud_renderer
             .maybe_forward_inventory_event(InventoryEvent::CursorMoved(x, y));
