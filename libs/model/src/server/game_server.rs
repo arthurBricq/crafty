@@ -1,16 +1,18 @@
 use crate::entity::entity::EntityKind;
-use primitives::position::Position;
+use crate::game::actions::Action;
+use crate::game::attack::EntityAttack;
 use crate::server::monster_manager::MonsterManager;
 use crate::server::server_state::ServerState;
+use crate::server::server_update::ServerUpdate;
+use crate::server::server_update::ServerUpdate::{
+    Attack, LoggedIn, RegisterEntity, RemoveEntity, SendAction, UpdatePosition,
+};
 use crate::server::world_dispatcher::WorldDispatcher;
+use crate::world::world::World;
+use primitives::position::Position;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use crate::game::actions::Action;
-use crate::game::attack::EntityAttack;
-use crate::server::server_update::ServerUpdate;
-use crate::server::server_update::ServerUpdate::{Attack, LoggedIn, RegisterEntity, RemoveEntity, SendAction, UpdatePosition};
-use crate::world::world::World;
 use tracing::{debug, info};
 
 /// Main function of the thread in charge of entities

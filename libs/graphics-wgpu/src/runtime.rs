@@ -14,6 +14,7 @@ use wgpu::util::DeviceExt;
 use winit::event::{ElementState, MouseButton};
 use winit::keyboard::PhysicalKey;
 use winit::window::{CursorGrabMode, Fullscreen};
+use futures::executor::block_on;
 
 /// 16ms => 60 FPS roughly
 const TARGET_FRAME_DURATION: Duration = Duration::from_millis(16);
@@ -56,7 +57,10 @@ fn convert_perspective_matrix(opengl_matrix: [[f32; 4]; 4]) -> [[f32; 4]; 4] {
 pub struct WgpuRenderer {}
 
 impl Renderer for WgpuRenderer {
-    fn run<B: RendererBackend>(&self, backend: &mut B) {
+    async fn run<B: RendererBackend>(&self, backend: &mut B) {
+        // Get tokio runtime handle (must be called from within a tokio runtime context)
+        // We'll use this to bridge between winit's synchronous event loop and async backend calls
+        let rt_handle = tokio::runtime::Handle::current();
         // Create event loop
         let event_loop = winit::event_loop::EventLoopBuilder::new()
             .build()
@@ -910,14 +914,17 @@ impl Renderer for WgpuRenderer {
                             let dt = t.elapsed();
                             t = Instant::now();
 
-                            // Get render data from backend
+                            // Get render data from backend (async)
                             let ToDraw {
                                 player_view_matrix,
                                 selected_intensity,
                                 cubes_buffer,
                                 entity_buffer,
                                 hud_buffer,
-                            } = backend.update(dt);
+                            } = {
+                                let _guard = rt_handle.enter();
+                                block_on(backend.update(dt))
+                            };
 
                             // Convert abstract types to wgpu instance types
                             let cube_instances: Vec<CubeInstance> =
@@ -1133,7 +1140,8 @@ impl Renderer for WgpuRenderer {
                                     graphics::renderer::PressedOrReleased::Released
                                 }
                             };
-                            backend.handle_mouse_event(MouseEvent { button, state });
+                            let _guard = rt_handle.enter();
+                            block_on(backend.handle_mouse_event(MouseEvent { button, state }));
                         }
                         winit::event::WindowEvent::KeyboardInput {
                             device_id: _,
@@ -1149,10 +1157,13 @@ impl Renderer for WgpuRenderer {
                                 }
                             };
                             let window_actions = match event.physical_key {
-                                PhysicalKey::Code(key) => backend.handle_key_event(KeyEvent {
-                                    state,
-                                    key: winit_keycode_to_custom(key),
-                                }),
+                                PhysicalKey::Code(key) => {
+                                    let _guard = rt_handle.enter();
+                                    block_on(backend.handle_key_event(KeyEvent {
+                                        state,
+                                        key: winit_keycode_to_custom(key),
+                                    }))
+                                },
                                 PhysicalKey::Unidentified(_) => vec![],
                             };
                             for action in window_actions {

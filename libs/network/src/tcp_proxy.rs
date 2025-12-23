@@ -1,17 +1,17 @@
-use std::collections::VecDeque;
+use crate::message_to_server::MessageToServer;
+use crate::proxy::{ClientToServer, Proxy, ServerToClient};
+use crate::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
+use async_channel::{Receiver as AsyncReceiver, Sender as AsyncSender};
+use model::game::actions::Action;
+use model::game::attack::EntityAttack;
+use model::server::server_update::ServerUpdate;
+use primitives::position::Position;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
 use std::{io, thread};
-use model::game::actions::Action;
-use model::game::attack::EntityAttack;
-use primitives::position::Position;
-use model::server::server_update::ServerUpdate;
 use tracing::{error, info};
-use crate::message_to_server::MessageToServer;
-use crate::proxy::Proxy;
-use crate::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
 
 /// Function that handles the thread that
 /// - sends messages to server
@@ -20,6 +20,7 @@ fn handle_stream_with_server(
     mut stream: TcpStream,
     proxy: Arc<Mutex<TcpProxy>>,
     updates_receiver: Receiver<MessageToServer>,
+    updates_sender: AsyncSender<Vec<ServerUpdate>>,
 ) {
     // Buffer of data for the stream
     let mut data = [0u8; 2_usize.pow(17)];
@@ -30,8 +31,16 @@ fn handle_stream_with_server(
         // Continuously read the bytes received by the server
         match stream.read(&mut data) {
             Ok(size) => {
-                for update in from_tcp_repr(&data[0..size], &mut context).unwrap() {
-                    proxy.lock().unwrap().push_server_update(update);
+                match from_tcp_repr(&data[0..size], &mut context) {
+                    Ok(updates) => {
+                        // Send updates to async channel
+                        if updates_sender.try_send(updates).is_err() {
+                            error!("Failed to send update to async channel");
+                        }
+                    }
+                    Err(e) => {
+                        error!("Failed to parse TCP message: {}", e);
+                    }
                 }
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {}
@@ -52,7 +61,7 @@ fn handle_stream_with_server(
 /// A connection to the server using a TCP stream over the network
 pub struct TcpProxy {
     updates_transmitter: Sender<MessageToServer>,
-    pending_updates: VecDeque<ServerUpdate>,
+    updates_receiver: AsyncReceiver<Vec<ServerUpdate>>,
 }
 
 impl TcpProxy {
@@ -60,10 +69,11 @@ impl TcpProxy {
     /// A new thread is instantiated that contains the logic of communicating with the remote server
     pub fn new(server_address: &str) -> Arc<Mutex<Self>> {
         let (tx, rx) = mpsc::channel();
+        let (async_tx, async_rx) = async_channel::unbounded();
 
         let proxy = Arc::new(Mutex::new(Self {
             updates_transmitter: tx,
-            pending_updates: VecDeque::new(),
+            updates_receiver: async_rx,
         }));
 
         // Start a stream on a new thread
@@ -74,7 +84,7 @@ impl TcpProxy {
                     .set_nonblocking(true)
                     .expect("Cannot set non-blocking");
                 let new_proxy = proxy.clone();
-                thread::spawn(move || handle_stream_with_server(stream, new_proxy, rx));
+                thread::spawn(move || handle_stream_with_server(stream, new_proxy, rx, async_tx));
             }
             Err(e) => {
                 error!("Failed to connect: {}", e);
@@ -83,22 +93,17 @@ impl TcpProxy {
 
         proxy
     }
-
-    /// Adds a server update to be read by the client
-    pub fn push_server_update(&mut self, update: ServerUpdate) {
-        self.pending_updates.push_back(update);
-    }
 }
 
-impl Proxy for TcpProxy {
-    fn login(&mut self, name: String) {
+impl ClientToServer for TcpProxy {
+    async fn login(&mut self, name: String) {
         match self.updates_transmitter.send(MessageToServer::Login(name)) {
             Ok(_) => {}
             Err(err) => panic!("Error while logging in: {err}"),
         }
     }
 
-    fn send_position_update(&mut self, position: Position) {
+    async fn send_position_update(&mut self, position: Position) {
         match self
             .updates_transmitter
             .send(MessageToServer::OnNewPosition(position))
@@ -108,7 +113,7 @@ impl Proxy for TcpProxy {
         }
     }
 
-    fn on_new_action(&mut self, action: Action) {
+    async fn on_new_action(&mut self, action: Action) {
         match self
             .updates_transmitter
             .send(MessageToServer::OnNewAction(action))
@@ -118,7 +123,7 @@ impl Proxy for TcpProxy {
         }
     }
 
-    fn on_new_attack(&mut self, attack: EntityAttack) {
+    async fn on_new_attack(&mut self, attack: EntityAttack) {
         match self
             .updates_transmitter
             .send(MessageToServer::Attack(attack))
@@ -128,7 +133,7 @@ impl Proxy for TcpProxy {
         }
     }
 
-    fn request_to_spawn(&mut self, position: Position) {
+    async fn request_to_spawn(&mut self, position: Position) {
         match self
             .updates_transmitter
             .send(MessageToServer::SpawnRequest(position))
@@ -137,21 +142,12 @@ impl Proxy for TcpProxy {
             Err(err) => error!("Error while sending: {err}"),
         }
     }
+}
 
-    fn consume_server_updates(&mut self) -> Vec<ServerUpdate> {
-        // TODO change the API to get something that complies more with the circular buffer
-        //      for instance returning an iterator that consumes the front of the queue ?
-        //      or just providing an interface like `pop(&mut self) -> Option<ServerUpdate>
-        //      this seems like a better idea...
-        // Read the updates sent by the server
-        let mut tmp = vec![];
-        while let Some(update) = self.pending_updates.pop_front() {
-            tmp.push(update);
-        }
-        tmp
-    }
-
-    fn loading_delay(&self) -> u64 {
-        3000
+impl ServerToClient for TcpProxy {
+    async fn next_updates(&mut self) -> Option<Vec<ServerUpdate>> {
+        self.updates_receiver.recv().await.ok()
     }
 }
+
+impl Proxy for TcpProxy {}

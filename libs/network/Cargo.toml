@@ -11,3 +11,4 @@ path = "src/lib.rs"
 model = { workspace = true }
 primitives = { workspace = true }
 tracing = { workspace = true }
+async-channel = "2.1"
