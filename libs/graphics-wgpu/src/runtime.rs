@@ -76,7 +76,7 @@ impl Renderer for WgpuRenderer {
             println!("Could not lock the mouse")
         }
 
-        #[cfg(not(target_os = "macos"))]
+        // #[cfg(not(target_os = "macos"))]
         {
             window.set_cursor_visible(false);
         }
@@ -156,7 +156,8 @@ impl Renderer for WgpuRenderer {
         let depth_view_cell = RefCell::new(depth_view);
 
         // Load textures
-        let (_block_textures, block_textures_view) = texture::build_block_textures_array(&device, &queue);
+        let (_block_textures, block_textures_view) =
+            texture::build_block_textures_array(&device, &queue);
         let (_entity_textures, entity_textures_view) =
             texture::load_humanoid_textures(&device, &queue, "./resources/entity/");
         let (_font_texture, font_texture_view) = texture::load_texture_2d(
@@ -251,157 +252,160 @@ impl Renderer for WgpuRenderer {
         });
 
         // Create bind group layouts
-        let cube_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("cube_bind_group_layout"),
-            entries: &[
-                // Camera uniforms
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
+        let cube_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("cube_bind_group_layout"),
+                entries: &[
+                    // Camera uniforms
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-                // Block textures array
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        multisampled: false,
-                        view_dimension: wgpu::TextureViewDimension::D2Array,
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    // Block textures array
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2Array,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-                // Block textures sampler
-                wgpu::BindGroupLayoutEntry {
-                    binding: 2,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-                // Selected texture
-                wgpu::BindGroupLayoutEntry {
-                    binding: 3,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        multisampled: false,
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    // Block textures sampler
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
                     },
-                    count: None,
-                },
-                // Selected texture sampler
-                wgpu::BindGroupLayoutEntry {
-                    binding: 4,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-                // Fragment uniforms (selected_intensity)
-                wgpu::BindGroupLayoutEntry {
-                    binding: 5,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
+                    // Selected texture
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 3,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-            ],
-        });
+                    // Selected texture sampler
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 4,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                    // Fragment uniforms (selected_intensity)
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 5,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+                ],
+            });
 
-        let entity_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("entity_bind_group_layout"),
-            entries: &[
-                // Camera uniforms
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
+        let entity_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("entity_bind_group_layout"),
+                entries: &[
+                    // Camera uniforms
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-                // Entity textures array
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        multisampled: false,
-                        view_dimension: wgpu::TextureViewDimension::D2Array,
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    // Entity textures array
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2Array,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-                // Entity textures sampler
-                wgpu::BindGroupLayoutEntry {
-                    binding: 2,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-            ],
-        });
+                    // Entity textures sampler
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+            });
 
-        let rect_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("rect_bind_group_layout"),
-            entries: &[
-                // Font atlas
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        multisampled: false,
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+        let rect_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("rect_bind_group_layout"),
+                entries: &[
+                    // Font atlas
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-                // Font atlas sampler
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-                // Block textures array (for block icons)
-                wgpu::BindGroupLayoutEntry {
-                    binding: 2,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        multisampled: false,
-                        view_dimension: wgpu::TextureViewDimension::D2Array,
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    // Font atlas sampler
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
                     },
-                    count: None,
-                },
-                // Block textures sampler
-                wgpu::BindGroupLayoutEntry {
-                    binding: 3,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-                // Font offsets uniform
-                wgpu::BindGroupLayoutEntry {
-                    binding: 4,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
+                    // Block textures array (for block icons)
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2Array,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-            ],
-        });
+                    // Block textures sampler
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 3,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                    // Font offsets uniform
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 4,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+                ],
+            });
 
         // Create bind groups
         let cube_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -512,7 +516,9 @@ impl Renderer for WgpuRenderer {
                                 format: wgpu::VertexFormat::Float32x2,
                             },
                             wgpu::VertexAttribute {
-                                offset: (std::mem::size_of::<[f32; 3]>() + std::mem::size_of::<[f32; 2]>()) as u64,
+                                offset: (std::mem::size_of::<[f32; 3]>()
+                                    + std::mem::size_of::<[f32; 2]>())
+                                    as u64,
                                 shader_location: 2,
                                 format: wgpu::VertexFormat::Uint32,
                             },
@@ -549,7 +555,9 @@ impl Renderer for WgpuRenderer {
                                 format: wgpu::VertexFormat::Uint32,
                             },
                             wgpu::VertexAttribute {
-                                offset: (std::mem::size_of::<[f32; 4]>() * 4 + std::mem::size_of::<u32>()) as u64,
+                                offset: (std::mem::size_of::<[f32; 4]>() * 4
+                                    + std::mem::size_of::<u32>())
+                                    as u64,
                                 shader_location: 8,
                                 format: wgpu::VertexFormat::Uint32,
                             },
@@ -591,11 +599,12 @@ impl Renderer for WgpuRenderer {
             multiview: None,
         });
 
-        let entity_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("entity_pipeline_layout"),
-            bind_group_layouts: &[&entity_bind_group_layout],
-            push_constant_ranges: &[],
-        });
+        let entity_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("entity_pipeline_layout"),
+                bind_group_layouts: &[&entity_bind_group_layout],
+                push_constant_ranges: &[],
+            });
 
         let entity_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("entity_pipeline"),
@@ -621,7 +630,9 @@ impl Renderer for WgpuRenderer {
                                 format: wgpu::VertexFormat::Float32x2,
                             },
                             wgpu::VertexAttribute {
-                                offset: (std::mem::size_of::<[f32; 3]>() + std::mem::size_of::<[f32; 2]>()) as u64,
+                                offset: (std::mem::size_of::<[f32; 3]>()
+                                    + std::mem::size_of::<[f32; 2]>())
+                                    as u64,
                                 shader_location: 2,
                                 format: wgpu::VertexFormat::Uint32,
                             },
@@ -658,7 +669,9 @@ impl Renderer for WgpuRenderer {
                                 format: wgpu::VertexFormat::Uint32,
                             },
                             wgpu::VertexAttribute {
-                                offset: (std::mem::size_of::<[f32; 4]>() * 4 + std::mem::size_of::<u32>()) as u64,
+                                offset: (std::mem::size_of::<[f32; 4]>() * 4
+                                    + std::mem::size_of::<u32>())
+                                    as u64,
                                 shader_location: 8,
                                 format: wgpu::VertexFormat::Uint32,
                             },
@@ -767,12 +780,17 @@ impl Renderer for WgpuRenderer {
                                 format: wgpu::VertexFormat::Uint32,
                             },
                             wgpu::VertexAttribute {
-                                offset: (std::mem::size_of::<[f32; 4]>() * 5 + std::mem::size_of::<u32>()) as u64,
+                                offset: (std::mem::size_of::<[f32; 4]>() * 5
+                                    + std::mem::size_of::<u32>())
+                                    as u64,
                                 shader_location: 8,
                                 format: wgpu::VertexFormat::Float32x2,
                             },
                             wgpu::VertexAttribute {
-                                offset: (std::mem::size_of::<[f32; 4]>() * 5 + std::mem::size_of::<u32>() + std::mem::size_of::<[f32; 2]>()) as u64,
+                                offset: (std::mem::size_of::<[f32; 4]>() * 5
+                                    + std::mem::size_of::<u32>()
+                                    + std::mem::size_of::<[f32; 2]>())
+                                    as u64,
                                 shader_location: 9,
                                 format: wgpu::VertexFormat::Sint32,
                             },
@@ -816,11 +834,11 @@ impl Renderer for WgpuRenderer {
         let mut rect_instance_buffer: Option<wgpu::Buffer> = None;
         let mut rect_instance_capacity = 0usize;
 
-
         // Event loop
         let mut t = Instant::now();
         let initial_waiting_delay = Duration::from_secs(1);
         let mut is_initializing = true;
+        let mut is_focused = true; // Track window focus state
 
         event_loop
             .run(move |event, window_target| {
@@ -836,27 +854,46 @@ impl Renderer for WgpuRenderer {
                 match event {
                     winit::event::Event::WindowEvent { event, .. } => match event {
                         winit::event::WindowEvent::CloseRequested => window_target.exit(),
+                        winit::event::WindowEvent::Focused(focused) => {
+                            is_focused = focused;
+                            if focused {
+                                // Window gained focus: re-acquire mouse lock and hide cursor
+                                let lock_mouse = window
+                                    .set_cursor_grab(CursorGrabMode::Confined)
+                                    .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
+                                if lock_mouse.is_err() {
+                                    println!("Could not lock the mouse after regaining focus");
+                                }
+                                window.set_cursor_visible(false);
+                            } else {
+                                // Window lost focus: release mouse lock and show cursor
+                                let _ = window.set_cursor_grab(CursorGrabMode::None);
+                                window.set_cursor_visible(true);
+                            }
+                        }
                         winit::event::WindowEvent::Resized(new_size) => {
                             config.width = new_size.width.max(1);
                             config.height = new_size.height.max(1);
                             surface.configure(&device, &config);
-                            
+
                             // Recreate depth texture
-                            let new_depth_texture = device.create_texture(&wgpu::TextureDescriptor {
-                                label: Some("depth_texture"),
-                                size: wgpu::Extent3d {
-                                    width: config.width,
-                                    height: config.height,
-                                    depth_or_array_layers: 1,
-                                },
-                                mip_level_count: 1,
-                                sample_count: 1,
-                                dimension: wgpu::TextureDimension::D2,
-                                format: wgpu::TextureFormat::Depth32Float,
-                                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                                view_formats: &[],
-                            });
-                            let new_depth_view = new_depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+                            let new_depth_texture =
+                                device.create_texture(&wgpu::TextureDescriptor {
+                                    label: Some("depth_texture"),
+                                    size: wgpu::Extent3d {
+                                        width: config.width,
+                                        height: config.height,
+                                        depth_or_array_layers: 1,
+                                    },
+                                    mip_level_count: 1,
+                                    sample_count: 1,
+                                    dimension: wgpu::TextureDimension::D2,
+                                    format: wgpu::TextureFormat::Depth32Float,
+                                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                                    view_formats: &[],
+                                });
+                            let new_depth_view = new_depth_texture
+                                .create_view(&wgpu::TextureViewDescriptor::default());
                             {
                                 let mut depth_tex = depth_texture_cell.borrow_mut();
                                 *depth_tex = new_depth_texture;
@@ -865,7 +902,7 @@ impl Renderer for WgpuRenderer {
                                 let mut depth_v = depth_view_cell.borrow_mut();
                                 *depth_v = new_depth_view;
                             }
-                            
+
                             backend.set_dimension((config.width, config.height));
                         }
                         winit::event::WindowEvent::RedrawRequested => {
@@ -882,28 +919,27 @@ impl Renderer for WgpuRenderer {
                             } = backend.update(dt);
 
                             // Convert abstract types to wgpu instance types
-                            let cube_instances: Vec<CubeInstance> = cubes_buffer
-                                .iter()
-                                .map(|data| (*data).into())
-                                .collect();
+                            let cube_instances: Vec<CubeInstance> =
+                                cubes_buffer.iter().map(|data| (*data).into()).collect();
 
                             let entity_instances: Vec<EntityInstance> = entity_buffer
                                 .iter()
                                 .map(|data| data.clone().into())
                                 .collect();
 
-                            let rect_instances: Vec<RectInstance> = hud_buffer
-                                .iter()
-                                .map(|data| (*data).into())
-                                .collect();
+                            let rect_instances: Vec<RectInstance> =
+                                hud_buffer.iter().map(|data| (*data).into()).collect();
 
                             // Update or create instance buffers
                             if cube_instances.len() > cube_instance_capacity {
-                                cube_instance_buffer = Some(device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                                    label: Some("cube_instance_buffer"),
-                                    contents: cast_slice(&cube_instances),
-                                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                                }));
+                                cube_instance_buffer = Some(device.create_buffer_init(
+                                    &wgpu::util::BufferInitDescriptor {
+                                        label: Some("cube_instance_buffer"),
+                                        contents: cast_slice(&cube_instances),
+                                        usage: wgpu::BufferUsages::VERTEX
+                                            | wgpu::BufferUsages::COPY_DST,
+                                    },
+                                ));
                                 cube_instance_capacity = cube_instances.len();
                             } else if !cube_instances.is_empty() {
                                 if let Some(ref buffer) = cube_instance_buffer {
@@ -912,11 +948,14 @@ impl Renderer for WgpuRenderer {
                             }
 
                             if entity_instances.len() > entity_instance_capacity {
-                                entity_instance_buffer = Some(device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                                    label: Some("entity_instance_buffer"),
-                                    contents: cast_slice(&entity_instances),
-                                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                                }));
+                                entity_instance_buffer = Some(device.create_buffer_init(
+                                    &wgpu::util::BufferInitDescriptor {
+                                        label: Some("entity_instance_buffer"),
+                                        contents: cast_slice(&entity_instances),
+                                        usage: wgpu::BufferUsages::VERTEX
+                                            | wgpu::BufferUsages::COPY_DST,
+                                    },
+                                ));
                                 entity_instance_capacity = entity_instances.len();
                             } else if !entity_instances.is_empty() {
                                 if let Some(ref buffer) = entity_instance_buffer {
@@ -925,11 +964,14 @@ impl Renderer for WgpuRenderer {
                             }
 
                             if rect_instances.len() > rect_instance_capacity {
-                                rect_instance_buffer = Some(device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                                    label: Some("rect_instance_buffer"),
-                                    contents: cast_slice(&rect_instances),
-                                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                                }));
+                                rect_instance_buffer = Some(device.create_buffer_init(
+                                    &wgpu::util::BufferInitDescriptor {
+                                        label: Some("rect_instance_buffer"),
+                                        contents: cast_slice(&rect_instances),
+                                        usage: wgpu::BufferUsages::VERTEX
+                                            | wgpu::BufferUsages::COPY_DST,
+                                    },
+                                ));
                                 rect_instance_capacity = rect_instances.len();
                             } else if !rect_instances.is_empty() {
                                 if let Some(ref buffer) = rect_instance_buffer {
@@ -946,60 +988,76 @@ impl Renderer for WgpuRenderer {
                                 view: player_view_matrix,
                                 projection: proj_matrix,
                             };
-                            queue.write_buffer(&camera_uniform_buffer, 0, cast_slice(&[camera_uniforms]));
+                            queue.write_buffer(
+                                &camera_uniform_buffer,
+                                0,
+                                cast_slice(&[camera_uniforms]),
+                            );
 
                             // Update fragment uniforms
-                            let fragment_uniforms = FragmentUniforms {
-                                selected_intensity,
-                            };
-                            queue.write_buffer(&fragment_uniforms_buffer, 0, cast_slice(&[fragment_uniforms]));
+                            let fragment_uniforms = FragmentUniforms { selected_intensity };
+                            queue.write_buffer(
+                                &fragment_uniforms_buffer,
+                                0,
+                                cast_slice(&[fragment_uniforms]),
+                            );
 
                             // Get surface texture
                             let output = surface.get_current_texture().unwrap();
-                            let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+                            let view = output
+                                .texture
+                                .create_view(&wgpu::TextureViewDescriptor::default());
 
                             // Create command encoder
-                            let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                                label: Some("render_encoder"),
-                            });
+                            let mut encoder =
+                                device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                                    label: Some("render_encoder"),
+                                });
 
                             {
                                 // Render pass for 3D (cubes and entities)
                                 let depth_view_borrowed = depth_view_cell.borrow();
-                                let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                                    label: Some("3d_render_pass"),
-                                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                                        view: &view,
-                                        resolve_target: None,
-                                        ops: wgpu::Operations {
-                                            load: wgpu::LoadOp::Clear(wgpu::Color {
-                                                r: Color::Sky1.to_tuple().0 as f64,
-                                                g: Color::Sky1.to_tuple().1 as f64,
-                                                b: Color::Sky1.to_tuple().2 as f64,
-                                                a: Color::Sky1.to_tuple().3 as f64,
-                                            }),
-                                            store: wgpu::StoreOp::Store,
-                                        },
-                                    })],
-                                    depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                                        view: &*depth_view_borrowed,
-                                        depth_ops: Some(wgpu::Operations {
-                                            load: wgpu::LoadOp::Clear(1.0),
-                                            store: wgpu::StoreOp::Store,
-                                        }),
-                                        stencil_ops: None,
-                                    }),
-                                    occlusion_query_set: None,
-                                    timestamp_writes: None,
-                                });
+                                let mut render_pass =
+                                    encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                                        label: Some("3d_render_pass"),
+                                        color_attachments: &[Some(
+                                            wgpu::RenderPassColorAttachment {
+                                                view: &view,
+                                                resolve_target: None,
+                                                ops: wgpu::Operations {
+                                                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                                                        r: Color::Sky1.to_tuple().0 as f64,
+                                                        g: Color::Sky1.to_tuple().1 as f64,
+                                                        b: Color::Sky1.to_tuple().2 as f64,
+                                                        a: Color::Sky1.to_tuple().3 as f64,
+                                                    }),
+                                                    store: wgpu::StoreOp::Store,
+                                                },
+                                            },
+                                        )],
+                                        depth_stencil_attachment: Some(
+                                            wgpu::RenderPassDepthStencilAttachment {
+                                                view: &*depth_view_borrowed,
+                                                depth_ops: Some(wgpu::Operations {
+                                                    load: wgpu::LoadOp::Clear(1.0),
+                                                    store: wgpu::StoreOp::Store,
+                                                }),
+                                                stencil_ops: None,
+                                            },
+                                        ),
+                                        occlusion_query_set: None,
+                                        timestamp_writes: None,
+                                    });
 
                                 // Draw cubes
                                 if !cube_instances.is_empty() {
                                     if let Some(ref cube_instance_buf) = cube_instance_buffer {
                                         render_pass.set_pipeline(&cube_pipeline);
                                         render_pass.set_bind_group(0, &cube_bind_group, &[]);
-                                        render_pass.set_vertex_buffer(0, cube_vertex_buffer.slice(..));
-                                        render_pass.set_vertex_buffer(1, cube_instance_buf.slice(..));
+                                        render_pass
+                                            .set_vertex_buffer(0, cube_vertex_buffer.slice(..));
+                                        render_pass
+                                            .set_vertex_buffer(1, cube_instance_buf.slice(..));
                                         render_pass.draw(0..36, 0..cube_instances.len() as u32);
                                     }
                                 }
@@ -1009,8 +1067,10 @@ impl Renderer for WgpuRenderer {
                                     if let Some(ref entity_instance_buf) = entity_instance_buffer {
                                         render_pass.set_pipeline(&entity_pipeline);
                                         render_pass.set_bind_group(0, &entity_bind_group, &[]);
-                                        render_pass.set_vertex_buffer(0, cube_vertex_buffer.slice(..));
-                                        render_pass.set_vertex_buffer(1, entity_instance_buf.slice(..));
+                                        render_pass
+                                            .set_vertex_buffer(0, cube_vertex_buffer.slice(..));
+                                        render_pass
+                                            .set_vertex_buffer(1, entity_instance_buf.slice(..));
                                         render_pass.draw(0..36, 0..entity_instances.len() as u32);
                                     }
                                 }
@@ -1018,28 +1078,33 @@ impl Renderer for WgpuRenderer {
 
                             {
                                 // Render pass for UI (no depth)
-                                let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                                    label: Some("ui_render_pass"),
-                                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                                        view: &view,
-                                        resolve_target: None,
-                                        ops: wgpu::Operations {
-                                            load: wgpu::LoadOp::Load, // Don't clear, draw on top
-                                            store: wgpu::StoreOp::Store,
-                                        },
-                                    })],
-                                    depth_stencil_attachment: None,
-                                    occlusion_query_set: None,
-                                    timestamp_writes: None,
-                                });
+                                let mut render_pass =
+                                    encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                                        label: Some("ui_render_pass"),
+                                        color_attachments: &[Some(
+                                            wgpu::RenderPassColorAttachment {
+                                                view: &view,
+                                                resolve_target: None,
+                                                ops: wgpu::Operations {
+                                                    load: wgpu::LoadOp::Load, // Don't clear, draw on top
+                                                    store: wgpu::StoreOp::Store,
+                                                },
+                                            },
+                                        )],
+                                        depth_stencil_attachment: None,
+                                        occlusion_query_set: None,
+                                        timestamp_writes: None,
+                                    });
 
                                 // Draw UI rectangles
                                 if !rect_instances.is_empty() {
                                     if let Some(ref rect_instance_buf) = rect_instance_buffer {
                                         render_pass.set_pipeline(&rect_pipeline);
                                         render_pass.set_bind_group(0, &rect_bind_group, &[]);
-                                        render_pass.set_vertex_buffer(0, rect_vertex_buffer.slice(..));
-                                        render_pass.set_vertex_buffer(1, rect_instance_buf.slice(..));
+                                        render_pass
+                                            .set_vertex_buffer(0, rect_vertex_buffer.slice(..));
+                                        render_pass
+                                            .set_vertex_buffer(1, rect_instance_buf.slice(..));
                                         render_pass.draw(0..6, 0..rect_instances.len() as u32);
                                     }
                                 }
@@ -1060,8 +1125,12 @@ impl Renderer for WgpuRenderer {
                                 _ => graphics::renderer::MouseButton::Other,
                             };
                             let state: graphics::renderer::PressedOrReleased = match state {
-                                ElementState::Pressed => graphics::renderer::PressedOrReleased::Pressed,
-                                ElementState::Released => graphics::renderer::PressedOrReleased::Released,
+                                ElementState::Pressed => {
+                                    graphics::renderer::PressedOrReleased::Pressed
+                                }
+                                ElementState::Released => {
+                                    graphics::renderer::PressedOrReleased::Released
+                                }
                             };
                             backend.handle_mouse_event(MouseEvent { button, state });
                         }
@@ -1071,8 +1140,12 @@ impl Renderer for WgpuRenderer {
                             is_synthetic: _,
                         } => {
                             let state: graphics::renderer::PressedOrReleased = match event.state {
-                                ElementState::Pressed => graphics::renderer::PressedOrReleased::Pressed,
-                                ElementState::Released => graphics::renderer::PressedOrReleased::Released,
+                                ElementState::Pressed => {
+                                    graphics::renderer::PressedOrReleased::Pressed
+                                }
+                                ElementState::Released => {
+                                    graphics::renderer::PressedOrReleased::Released
+                                }
                             };
                             let window_actions = match event.physical_key {
                                 PhysicalKey::Code(key) => backend.handle_key_event(KeyEvent {
@@ -1085,8 +1158,11 @@ impl Renderer for WgpuRenderer {
                                 match action {
                                     WindowAction::SetFullscreen(state) => {
                                         if state {
-                                            let monitor_handle = window.available_monitors().next().unwrap();
-                                            window.set_fullscreen(Some(Fullscreen::Borderless(Some(monitor_handle))));
+                                            let monitor_handle =
+                                                window.available_monitors().next().unwrap();
+                                            window.set_fullscreen(Some(Fullscreen::Borderless(
+                                                Some(monitor_handle),
+                                            )));
                                         } else {
                                             window.set_fullscreen(None);
                                         }
@@ -1106,12 +1182,16 @@ impl Renderer for WgpuRenderer {
                         _ => (),
                     },
                     winit::event::Event::AboutToWait => {
-                        let opt_time_to_sleep = (t + TARGET_FRAME_DURATION - MIN_SLEEP_TIME)
-                            .checked_duration_since(Instant::now());
-                        if let Some(time_to_sleep) = opt_time_to_sleep {
-                            std::thread::sleep(time_to_sleep + MIN_SLEEP_TIME);
+                        // Only request redraw if window is focused
+                        // This reduces CPU/GPU usage when window is in background
+                        if is_focused {
+                            let opt_time_to_sleep = (t + TARGET_FRAME_DURATION - MIN_SLEEP_TIME)
+                                .checked_duration_since(Instant::now());
+                            if let Some(time_to_sleep) = opt_time_to_sleep {
+                                std::thread::sleep(time_to_sleep + MIN_SLEEP_TIME);
+                            }
+                            window.request_redraw();
                         }
-                        window.request_redraw();
                     }
                     winit::event::Event::DeviceEvent { event, .. } => match event {
                         winit::event::DeviceEvent::Motion { axis, value } => {
