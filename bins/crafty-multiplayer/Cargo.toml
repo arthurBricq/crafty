@@ -8,6 +8,8 @@ model = { workspace = true }
 network = { workspace = true }
 graphics = { workspace = true }
 graphics_wgpu = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 [[bin]]
 name = "crafty-multi"

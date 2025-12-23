@@ -12,6 +12,7 @@ graphics = { workspace = true }
 primitives = { workspace = true }
 image = { workspace = true }
 model = { workspace = true }
+tracing = { workspace = true }
 
 bytemuck = { version = "1.14", features = ["derive"] }
 wgpu = "0.20"

@@ -77,7 +77,7 @@ impl World {
         match std::fs::read_to_string(name) {
             Ok(data) => Some(Self::from_json(data)),
             Err(err) => {
-                println!("Could not read: {name} with error: {err}");
+                tracing::warn!("Could not read: {name} with error: {err}");
                 None
             }
         }
@@ -89,9 +89,9 @@ impl World {
         //       There seems to be many options suited for us: https://serde.rs/#data-formats
         let serialized = self.to_json();
         match std::fs::write(name, serialized) {
-            Ok(_) => println!("Map was saved at {name}"),
+            Ok(_) => tracing::info!("Map was saved at {name}"),
             Err(err) => {
-                println!("Error while saving {name}: {err}")
+                tracing::error!("Error while saving {name}: {err}")
             }
         }
     }

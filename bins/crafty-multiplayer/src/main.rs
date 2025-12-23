@@ -6,6 +6,7 @@ use network::proxy::Proxy;
 use network::tcp_proxy::TcpProxy;
 
 pub fn main() {
+    tracing_subscriber::fmt::init();
     let args = Args::from_args();
     let url = args.url();
 

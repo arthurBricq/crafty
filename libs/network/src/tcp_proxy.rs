@@ -8,6 +8,7 @@ use model::game::actions::Action;
 use model::game::attack::EntityAttack;
 use primitives::position::Position;
 use model::server::server_update::ServerUpdate;
+use tracing::{error, info};
 use crate::message_to_server::MessageToServer;
 use crate::proxy::Proxy;
 use crate::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
@@ -34,7 +35,7 @@ fn handle_stream_with_server(
                 }
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {}
-            Err(e) => println!("Failed to receive data: {}", e),
+            Err(e) => error!("Failed to receive data: {}", e),
         }
 
         // Try to read if the WorldRenderer tried to communicate something to the server
@@ -68,7 +69,7 @@ impl TcpProxy {
         // Start a stream on a new thread
         match TcpStream::connect(server_address) {
             Ok(stream) => {
-                println!("Successfully connected to server");
+                info!("Successfully connected to server");
                 stream
                     .set_nonblocking(true)
                     .expect("Cannot set non-blocking");
@@ -76,7 +77,7 @@ impl TcpProxy {
                 thread::spawn(move || handle_stream_with_server(stream, new_proxy, rx));
             }
             Err(e) => {
-                println!("Failed to connect: {}", e);
+                error!("Failed to connect: {}", e);
             }
         }
 
@@ -103,7 +104,7 @@ impl Proxy for TcpProxy {
             .send(MessageToServer::OnNewPosition(position))
         {
             Ok(_) => {}
-            Err(err) => println!("Error while sending: {err}"),
+            Err(err) => error!("Error while sending: {err}"),
         }
     }
 
@@ -113,7 +114,7 @@ impl Proxy for TcpProxy {
             .send(MessageToServer::OnNewAction(action))
         {
             Ok(_) => {}
-            Err(err) => println!("Error while sending: {err}"),
+            Err(err) => error!("Error while sending: {err}"),
         }
     }
 
@@ -123,7 +124,7 @@ impl Proxy for TcpProxy {
             .send(MessageToServer::Attack(attack))
         {
             Ok(_) => {}
-            Err(err) => println!("Error while sending: {err}"),
+            Err(err) => error!("Error while sending: {err}"),
         }
     }
 
@@ -133,7 +134,7 @@ impl Proxy for TcpProxy {
             .send(MessageToServer::SpawnRequest(position))
         {
             Ok(_) => {}
-            Err(err) => println!("Error while sending: {err}"),
+            Err(err) => error!("Error while sending: {err}"),
         }
     }
 

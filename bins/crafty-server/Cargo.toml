@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 model = { workspace = true }
 network = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 [[bin]]
 name = "crafty-server"

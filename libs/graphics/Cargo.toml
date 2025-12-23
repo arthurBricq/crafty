@@ -12,3 +12,4 @@ primitives = { workspace = true }
 model = { workspace = true }
 network = { workspace = true }
 bounded-vec-deque = { workspace = true }
+tracing = { workspace = true }

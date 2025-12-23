@@ -1,5 +1,6 @@
 use clap::{Parser, ValueEnum};
 use std::env;
+use tracing::debug;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, ValueEnum)]
@@ -12,7 +13,7 @@ pub enum WorldInitializer {
 impl WorldInitializer {
     pub fn from_args() -> Self {
         let args: Vec<String> = env::args().collect();
-        println!("args = {args:?}");
+        debug!("args = {args:?}");
         if args.contains(&"--random".to_string()) {
             Self::RANDOM
         } else if args.contains(&"--flat".to_string()) {

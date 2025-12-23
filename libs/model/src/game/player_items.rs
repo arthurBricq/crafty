@@ -140,9 +140,9 @@ impl PlayerItems {
     }
 
     pub fn debug(&self) {
-        println!("Debugging items...");
+        tracing::debug!("Debugging items...");
         for i in 0..CURRENT_ITEMS_SIZE {
-            println!("{:?}", self.bar_items[i])
+            tracing::debug!("{:?}", self.bar_items[i])
         }
     }
 

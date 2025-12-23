@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::{io, thread};
 use model::server::game_server::GameServer;
+use tracing::{error, info, warn};
 use crate::message_to_server::MessageToServer;
 use crate::tcp_message_encoding::{from_tcp_repr, to_tcp_repr, ParseContext};
 
@@ -16,13 +17,13 @@ impl TcpServer {
         listener
             .set_nonblocking(true)
             .expect("Cannot set non-blocking");
-        println!("Server is running: {}", listener.local_addr().unwrap());
+        info!("Server is running: {}", listener.local_addr().unwrap());
 
         // Accept connections and process them, spawning a new thread for each one
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    println!("New connection: {}", stream.peer_addr().unwrap());
+                    info!("New connection: {}", stream.peer_addr().unwrap());
                     // Set the stream also as non-blocking on the server-side.
                     stream
                         .set_nonblocking(true)
@@ -39,7 +40,7 @@ impl TcpServer {
                     continue;
                 }
                 Err(e) => {
-                    println!("Error: {}", e);
+                    error!("Error: {}", e);
                     /* connection failed */
                 }
             }
@@ -78,7 +79,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                                         .on_new_position_update(client_id.unwrap(), new_pos);
                                 }
                                 MessageToServer::OnNewAction(action) => {
-                                    println!(
+                                    info!(
                                         "Client {client_id:?} has submitted an action: {action:?}"
                                     );
                                     game.lock()
@@ -95,14 +96,14 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                         }
                     }
                     Err(_) => {
-                        println!("Error while communicating with client: {client_id:?}");
+                        warn!("Error while communicating with client: {client_id:?}");
                         if let Some(id) = client_id {
                             game.lock().unwrap().logout(id)
                         }
-                        println!("Trying to safely shutdown...");
+                        info!("Trying to safely shutdown...");
                         match stream.shutdown(Shutdown::Write) {
-                            Ok(_) => println!("   ... Shutdown successfull"),
-                            Err(err) => println!("   ... Error while closing socket: {err}"),
+                            Ok(_) => info!("   ... Shutdown successfull"),
+                            Err(err) => error!("   ... Error while closing socket: {err}"),
                         }
                         return;
                     }
@@ -112,7 +113,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                 // Read: https://doc.rust-lang.org/std/net/struct.TcpListener.html#method.set_nonblocking
             }
             Err(_) => {
-                println!(
+                error!(
                     "An error occurred, terminating connection with {}",
                     stream.peer_addr().unwrap()
                 );
@@ -130,7 +131,7 @@ fn handle_client(mut stream: TcpStream, game: Arc<Mutex<GameServer>>) {
                     match stream.write_all(msg.as_slice()) {
                         Ok(_) => {}
                         Err(e) => {
-                            println!("Error while sending message to client {client_id:?}: {e}");
+                            error!("Error while sending message to client {client_id:?}: {e}");
                             return;
                         }
                     }

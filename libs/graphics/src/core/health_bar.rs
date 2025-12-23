@@ -1,4 +1,5 @@
 use primitives::color::Color::Red;
+use tracing::debug;
 use crate::renderer::RectRenderData;
 
 pub struct HealthBar {
@@ -35,7 +36,7 @@ impl HealthBar {
     }
 
     fn update(&mut self) {
-        println!("there are {}", self.health);
+        debug!("there are {}", self.health);
         self.rects = Vec::new();
 
         const X0: f32 = 0.12 - 1.;

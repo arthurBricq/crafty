@@ -5,6 +5,7 @@ use primitives::render_data::EntityRenderData;
 use primitives::position::Position;
 use primitives::vector::Vector3;
 use std::collections::HashMap;
+use tracing::{debug, info};
 
 /// Contain all the entities
 pub struct EntityManager {
@@ -20,7 +21,7 @@ impl EntityManager {
 
     /// Register another player, provided its id and initial position
     pub fn register_new_entity(&mut self, id: u8, entity_kind: EntityKind, pos: Position) {
-        println!("New player has joined the game: {id}");
+        info!("New player has joined the game: {id}");
         let entity = Entity::new(id as usize, entity_kind, pos.clone());
         self.entities.insert(id, entity);
     }
@@ -55,7 +56,7 @@ impl EntityManager {
             .map(|(id, entity)| (id, entity.aabb().faces()))
             .find(|(_, faces)| Cube::intersection_with_faces(&faces, position, direction).is_some())
         {
-            println!("Player {id} was hit !");
+            debug!("Player {id} was hit !");
             return Some(EntityAttack::new(*id));
         }
         None

@@ -4,18 +4,21 @@ use model::server::game_server::{handle_entity_thread, GameServer};
 use model::world::generation::world_generator::WorldGenerator;
 use model::world::world::World;
 use network::tcp_server::TcpServer;
+use tracing::info;
 
 fn main() {
+    tracing_subscriber::fmt::init();
+
     let args = Args::from_args();
 
     // Create the initial world
-    println!("[Server] Creating a world ...");
+    info!("[Server] Creating a world ...");
     let world = match args.init {
         WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(10),
         WorldInitializer::FLAT => WorldGenerator::create_new_flat_world(10),
         WorldInitializer::DISK => World::from_file("map.json").unwrap(),
     };
-    println!("                          ... Finished !");
+    info!("                          ... Finished !");
 
     // Create the game model of the server.
     // It holds the 'full' world

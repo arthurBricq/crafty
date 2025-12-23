@@ -9,6 +9,7 @@ use primitives::camera::perspective_matrix;
 use primitives::color::Color;
 use primitives::font::GLChar;
 use std::time::{Duration, Instant};
+use tracing::warn;
 use wgpu::util::DeviceExt;
 use winit::event::{ElementState, MouseButton};
 use winit::keyboard::PhysicalKey;
@@ -73,7 +74,7 @@ impl Renderer for WgpuRenderer {
             .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
 
         if lock_mouse.is_err() {
-            println!("Could not lock the mouse")
+            warn!("Could not lock the mouse")
         }
 
         // #[cfg(not(target_os = "macos"))]
@@ -862,7 +863,7 @@ impl Renderer for WgpuRenderer {
                                     .set_cursor_grab(CursorGrabMode::Confined)
                                     .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
                                 if lock_mouse.is_err() {
-                                    println!("Could not lock the mouse after regaining focus");
+                                    warn!("Could not lock the mouse after regaining focus");
                                 }
                                 window.set_cursor_visible(false);
                             } else {

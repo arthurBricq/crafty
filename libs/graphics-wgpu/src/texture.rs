@@ -2,6 +2,7 @@ use image::GenericImageView;
 use model::entity::humanoid::{HUMANOID_TEXTURES_PATH, PLAYER_CUT_TEMPLATE};
 use model::world::block_kind::Block;
 use primitives::math;
+use tracing;
 use wgpu::{Device, Queue, Texture, TextureFormat, TextureView, TextureViewDescriptor};
 
 /// Builds a 2D array texture containing all block textures
@@ -19,7 +20,7 @@ pub fn build_block_textures_array(
     let mut max_height = 0u32;
     
     for name in all_textures {
-        println!("Adding texture {name} into texture array");
+        tracing::debug!("Adding texture {name} into texture array");
         let data = std::fs::read(format!("{}{}{}", root, name, extension)).unwrap();
         let image = image::load(std::io::Cursor::new(data), image::ImageFormat::Png)
             .unwrap()
@@ -182,7 +183,7 @@ pub fn load_humanoid_textures(
     let mut texture_array_data = Vec::new();
     
     for name in HUMANOID_TEXTURES_PATH.iter() {
-        println!("Adding texture {} into texture array", format!("{}{}", root, name));
+        tracing::debug!("Adding texture {} into texture array", format!("{}{}", root, name));
         let data = std::fs::read(format!("{}{}", root, name)).unwrap();
         let image = image::load(std::io::Cursor::new(data), image::ImageFormat::Png)
             .unwrap()

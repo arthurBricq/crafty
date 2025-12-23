@@ -10,6 +10,7 @@ use graphics::renderer::{KeyCode, KeyEvent, MouseEvent, RendererBackend, ToDraw,
 use primitives::camera::perspective_matrix;
 use primitives::color::Color;
 use std::time::{Duration, Instant};
+use tracing;
 use winit::event::{ElementState, MouseButton};
 use winit::keyboard::PhysicalKey;
 use winit::window::{CursorGrabMode, Fullscreen};
@@ -46,7 +47,7 @@ impl graphics::renderer::Renderer for GliumRenderer {
             .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked));
 
         if lock_mouse.is_err() {
-            println!("Could not lock the mouse")
+            tracing::warn!("Could not lock the mouse")
         }
 
         #[cfg(not(target_os = "macos"))]
@@ -133,7 +134,7 @@ impl graphics::renderer::Renderer for GliumRenderer {
                         // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.
                         winit::event::WindowEvent::CloseRequested => window_target.exit(),
                         winit::event::WindowEvent::Resized(tmp) => {
-                            println!("Resized to {:?}", tmp);
+                            tracing::debug!("Resized to {:?}", tmp);
                             backend.set_dimension(display.get_framebuffer_dimensions());
                         }
                         winit::event::WindowEvent::RedrawRequested => {

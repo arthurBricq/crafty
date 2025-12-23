@@ -5,6 +5,7 @@ use image::{GenericImageView, ImageBuffer, Rgba};
 use model::entity::humanoid::{HUMANOID_TEXTURES_PATH, ImageCut, PLAYER_CUT_TEMPLATE};
 use model::world::block_kind::Block;
 use primitives::math;
+use tracing;
 
 /// Builds the array of 2D textures using all the blocks
 /// Each block is associated with 3 textures: side, top and bottom
@@ -18,7 +19,7 @@ pub fn build_textures_array(display: &Display<WindowSurface>) -> Texture2dArray 
     let source = all_textures
         .iter()
         .map(|name| {
-            println!(" Adding texture {name} into texture array");
+            tracing::debug!(" Adding texture {name} into texture array");
             let data = std::fs::read(root.to_string() + name + extension).unwrap();
             let image = image::load(std::io::Cursor::new(data), image::ImageFormat::Png)
                 .unwrap()
@@ -58,7 +59,7 @@ pub fn load_texture_cut(
     let source: Vec<ImageBuffer<Rgba<u8>, Vec<u8>>> = all_textures_name
         .iter()
         .map(|name| {
-            println!(
+            tracing::debug!(
                 " Adding texture {} into texture array",
                 root.to_string() + name
             );

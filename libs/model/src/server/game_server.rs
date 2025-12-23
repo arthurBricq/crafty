@@ -11,6 +11,7 @@ use crate::game::attack::EntityAttack;
 use crate::server::server_update::ServerUpdate;
 use crate::server::server_update::ServerUpdate::{Attack, LoggedIn, RegisterEntity, RemoveEntity, SendAction, UpdatePosition};
 use crate::world::world::World;
+use tracing::{debug, info};
 
 /// Main function of the thread in charge of entities
 pub fn handle_entity_thread(server: Arc<Mutex<GameServer>>) {
@@ -67,11 +68,11 @@ impl GameServer {
     pub fn login(&mut self, name: String) -> usize {
         // Create the new ID
         let player = self.state.login(name.clone());
-        println!(
+        info!(
             "[SERVER] New player registered: {name} (ID={}, pos={:?})",
             player.id, player.pos
         );
-        println!("Connected players: {}", self.state.n_players_connected());
+        info!("Connected players: {}", self.state.n_players_connected());
 
         // Create a new buffer of updates for this client,
         let mut initial_updates = vec![LoggedIn(player.id as u8, player.pos.clone())];
@@ -114,7 +115,7 @@ impl GameServer {
     }
 
     pub fn logout(&mut self, id: usize) {
-        println!("Logging out user: {id}");
+        info!("Logging out user: {id}");
         // The world dispatcher must be informed that this client loose all of its chunks
         self.state.logout(id);
         self.world_dispatcher.logout(id);
@@ -179,7 +180,7 @@ impl GameServer {
     }
 
     pub fn on_new_attack(&mut self, attack: EntityAttack) {
-        println!("Attacked received: {attack:?}");
+        debug!("Attacked received: {attack:?}");
         let victim = attack.victim_id() as usize;
 
         // Communicate the attack to victim, if the victim is a player.

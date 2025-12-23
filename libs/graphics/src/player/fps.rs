@@ -1,5 +1,6 @@
 use std::time::Duration;
 use bounded_vec_deque::BoundedVecDeque;
+use tracing::debug;
 
 const TIME_TO_PRINT: f32 = 1.5;
 const BUFFER_LEN: usize = 10;
@@ -32,7 +33,7 @@ impl FpsManager {
     }
 
     fn print_statistics(&self) {
-        println!("fps = {}", self.fps);
+        debug!("fps = {}", self.fps);
     }
 
     pub fn fps(&self) -> f32 {

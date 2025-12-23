@@ -6,6 +6,10 @@ members = [
     "libs/*"
 ]
 
+exclude = [
+    "libs/graphics-glium"
+]
+
 # Enable link-time optimization, only in release mode.
 [profile.release]
 lto = true
@@ -29,3 +33,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
 clap = { version = "4.5.17", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"

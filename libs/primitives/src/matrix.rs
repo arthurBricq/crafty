@@ -147,7 +147,7 @@ mod tests {
     const EPSILON: f32 = 0.0001;
 
     pub fn assert_near(left: Vector3, right: Vector3) {
-        println!("{left:?} vs {right:?}");
+        tracing::debug!("{left:?} vs {right:?}");
         assert!(f32::abs(left.x() - right.x()) < EPSILON);
         assert!(f32::abs(left.y() - right.y()) < EPSILON);
         assert!(f32::abs(left.z() - right.z()) < EPSILON);

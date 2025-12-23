@@ -328,7 +328,7 @@ mod tests {
                 let z = rng.next_u64() % 8;
                 let t = rng.next_u64() % NUM_BIOMES;
 
-                println!("n= {}  x= {}  z= {}  t= {}", n, x, z, t);
+                tracing::debug!("n= {}  x= {}  z= {}  t= {}", n, x, z, t);
             }
         }
     }

@@ -7,13 +7,16 @@ use model::world::world::World;
 use network::proxy::Proxy;
 use network::single_player_proxy::SinglePlayerProxy;
 use std::sync::{Arc, Mutex};
+use tracing::info;
 
 fn main() {
+    tracing_subscriber::fmt::init();
+
     // Create the initial world
     let init = WorldInitializer::from_args();
 
-    println!("Loading world using : {:?}", init);
-    println!("[Server] Creating a world ...");
+    info!("Loading world using : {:?}", init);
+    info!("[Server] Creating a world ...");
     let world = match init {
         WorldInitializer::RANDOM => WorldGenerator::create_new_random_world(5),
         WorldInitializer::FLAT => WorldGenerator::create_new_flat_world(10),
@@ -21,7 +24,7 @@ fn main() {
             World::from_file("map.json").unwrap_or(WorldGenerator::create_new_random_world(10))
         }
     };
-    println!("                          ... Finished !");
+    info!("                          ... Finished !");
 
     // The server holds the 'full' world
     let server = Arc::new(Mutex::new(GameServer::new(world)));

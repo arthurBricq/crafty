@@ -307,13 +307,13 @@ impl WorldRenderer {
                     self.update_items_bar();
                 }
                 KeyCode::KeyP => {
-                    println!("=================");
-                    println!("Debug Information");
-                    println!("=================");
+                    tracing::debug!("=================");
+                    tracing::debug!("Debug Information");
+                    tracing::debug!("=================");
                     self.player.debug();
                 }
                 KeyCode::KeyX => {
-                    println!("Ask to spawn a monster");
+                    tracing::info!("Ask to spawn a monster");
                     let mut monster_pos =
                         Position::new(self.player.position().pos().clone(), 0., 0.);
                     monster_pos.raise(CHUNK_FLOOR as f32);
@@ -383,7 +383,7 @@ impl WorldRenderer {
             match update {
                 ServerUpdate::LoadChunk(chunk) => self.world.add_chunk(chunk),
                 ServerUpdate::LoggedIn(client_id, position) => {
-                    println!("Client registered ID: {client_id} with position: {position:?}");
+                    tracing::info!("Client registered ID: {client_id} with position: {position:?}");
                     self.player.set_position(position)
                 }
                 ServerUpdate::SendAction(action) => self.world.apply_action(&action),

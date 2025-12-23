@@ -1,4 +1,5 @@
 use strum::IntoEnumIterator;
+use tracing;
 use crate::collision::aabb::AABB;
 use crate::collision::collidable::{Collidable, CollisionData};
 use primitives::position::Position;
@@ -276,7 +277,7 @@ impl Chunk {
             for i in 0..CHUNK_SIZE {
                 for j in 0..CHUNK_SIZE {
                     if let Some(cube) = self.cubes[k][i][j] {
-                        println!("* [{k},{i},{j}]{cube:?}")
+                        tracing::debug!("* [{k},{i},{j}]{cube:?}")
                     }
                 }
             }

@@ -191,8 +191,8 @@ impl Player {
     }
 
     pub fn debug(&mut self) {
-        println!("* Camera - position   : {:?}", self.position);
-        println!("*        - orientation: {:?}", self.direction());
+        tracing::debug!("* Camera - position   : {:?}", self.position);
+        tracing::debug!("*        - orientation: {:?}", self.direction());
     }
 
     /// Returns the velocity vector due to the controls purely (ignoring
